@@ -18,11 +18,10 @@ import org.slf4j.LoggerFactory
  *
  * @param username 关联的用户名。
  */
-class BykcClient(private val username: String) {
+open class BykcClient(private val username: String) {
 
   private val log = LoggerFactory.getLogger(BykcClient::class.java)
   private val sessionManager: SessionManager = GlobalSessionManager.instance
-  private var session: SessionManager.UserSession? = null
   private val json = Json { ignoreUnknownKeys = true }
 
   // 博雅系统特有的 auth_token，从 SSO 重定向 URL 中提取
@@ -31,8 +30,7 @@ class BykcClient(private val username: String) {
 
   /** 确保当前用户存在活跃的后台会话。 */
   private suspend fun ensureSession(): SessionManager.UserSession {
-    session = sessionManager.requireSession(username)
-    return session ?: throw IllegalStateException("No active session for $username")
+    return sessionManager.requireSession(username)
   }
 
   /**
@@ -360,5 +358,10 @@ class BykcClient(private val username: String) {
       throw RuntimeException("BYKC queryStatisticByUserId failed: ${apiResp.errmsg}")
 
     return apiResp.data
+  }
+
+  open fun close() {
+    bykcToken = null
+    lastLoginMillis = 0L
   }
 }

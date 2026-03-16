@@ -4,8 +4,6 @@ import io.ktor.http.Cookie
 import io.ktor.http.CookieEncoding
 import io.ktor.http.Url
 import io.ktor.util.date.GMTDate
-import io.lettuce.core.RedisClient
-import io.lettuce.core.api.StatefulRedisConnection
 import io.lettuce.core.api.sync.RedisCommands
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.sync.Mutex
@@ -13,18 +11,32 @@ import kotlinx.coroutines.sync.withLock
 import kotlinx.coroutines.withContext
 
 /**
- * 基于 Redis 实现的持久化 Cookie 存储。 为每个用户提供隔离的 Cookie 空间，确保重启后用户在上游系统（如 SSO）的登录状态依然有效。
+ * 基于 Redis 实现的持久化 Cookie 存储，带内存写回缓存。
  *
- * @param redisUri Redis 连接 URI，如 "redis://localhost:6379"。
- * @param username 关联的用户名（隔离标识）。
+ * 在登录等密集 HTTP 交互期间，Ktor 的 HttpCookies 插件会在 **每个请求前** 调用 [get]、 在 **每个响应 Set-Cookie** 时调用
+ * [addCookie]。一次 CAS 登录流程涉及 15-20 个 HTTP 请求，如果每次都直接读写 Redis 会产生 40-80 次同步阻塞调用，成为严重性能瓶颈。
+ *
+ * 优化策略：
+ * - 首次 [get] 时从 Redis 加载全量 Cookie 到内存缓存
+ * - 后续 [get] 直接读取内存缓存，不再访问 Redis
+ * - [addCookie] 仅更新内存缓存，标记为脏
+ * - [flush] 将脏数据批量写回 Redis（由外部在会话提交等关键节点调用）
+ * - [clear] / [migrateTo] 会先刷新脏数据再操作
+ *
+ * @param commands 工厂提供的共享 Redis 同步命令对象。
+ * @param initialSubject 关联的用户名或预登录标识（隔离标识）。
  */
-class RedisCookieStorage(private val redisUri: String, private val username: String) : ManagedCookieStorage {
+class RedisCookieStorage(
+        private val commands: RedisCommands<String, String>,
+        initialSubject: String,
+) : ManagedCookieStorage {
   private val mutex = Mutex()
-  private val client: RedisClient by lazy { RedisClient.create(redisUri) }
-  private val connection: StatefulRedisConnection<String, String> by lazy { client.connect() }
-  private val commands: RedisCommands<String, String> by lazy { connection.sync() }
-  private val key = storageKey(username)
+  @Volatile private var key = storageKey(initialSubject)
   private val keyTtlSeconds = 1800L
+
+  // 内存缓存：field -> serializedCookie。null 表示尚未从 Redis 加载。
+  private var cache: MutableMap<String, String>? = null
+  private val dirtyFields = mutableSetOf<String>()
 
   override suspend fun addCookie(requestUrl: Url, cookie: Cookie) {
     val domain = (cookie.domain ?: requestUrl.host).lowercase()
@@ -34,40 +46,42 @@ class RedisCookieStorage(private val redisUri: String, private val username: Str
     val maxAge = cookie.maxAge ?: -1
     val createdAt = System.currentTimeMillis()
     val value =
-      serializeCookie(
-        name = cookie.name,
-        value = cookie.value,
-        domain = domain,
-        path = path,
-        expiresAt = expiresAt,
-        secure = cookie.secure,
-        httpOnly = cookie.httpOnly,
-        maxAge = maxAge,
-        createdAt = createdAt,
-      )
+            serializeCookie(
+                    name = cookie.name,
+                    value = cookie.value,
+                    domain = domain,
+                    path = path,
+                    expiresAt = expiresAt,
+                    secure = cookie.secure,
+                    httpOnly = cookie.httpOnly,
+                    maxAge = maxAge,
+                    createdAt = createdAt,
+            )
 
     mutex.withLock {
-      redis {
-        commands.hset(key, field, value)
-        commands.expire(key, computeKeyTtlSeconds(expiresAt, maxAge, createdAt))
-      }
+      ensureCacheLoaded()
+      cache!![field] = value
+      dirtyFields.add(field)
     }
   }
 
   override suspend fun get(requestUrl: Url): List<Cookie> {
     val now = System.currentTimeMillis()
     return mutex.withLock {
-      val cookieMap = redis { commands.hgetall(key) }.orEmpty()
+      ensureCacheLoaded()
+      val cookieMap = cache!!
       if (cookieMap.isEmpty()) return@withLock emptyList()
 
       val results = mutableListOf<Cookie>()
       val expiredFields = mutableListOf<String>()
 
       for ((field, encodedCookie) in cookieMap) {
-        val record = decodeCookie(encodedCookie) ?: run {
-          expiredFields.add(field)
-          continue
-        }
+        val record =
+                decodeCookie(encodedCookie)
+                        ?: run {
+                          expiredFields.add(field)
+                          continue
+                        }
         if (isExpired(now, record.expiresAt, record.maxAge, record.createdAt)) {
           expiredFields.add(field)
           continue
@@ -77,118 +91,141 @@ class RedisCookieStorage(private val redisUri: String, private val username: Str
         if (record.secure && !isHttps(requestUrl)) continue
 
         results.add(
-          Cookie(
-            name = record.name,
-            value = record.value,
-            domain = record.domain,
-            path = record.path,
-            expires = record.expiresAt?.let { GMTDate(it) },
-            secure = record.secure,
-            httpOnly = record.httpOnly,
-            maxAge = record.maxAge,
-            encoding = CookieEncoding.RAW,
-          )
+                Cookie(
+                        name = record.name,
+                        value = record.value,
+                        domain = record.domain,
+                        path = record.path,
+                        expires = record.expiresAt?.let { GMTDate(it) },
+                        secure = record.secure,
+                        httpOnly = record.httpOnly,
+                        maxAge = record.maxAge,
+                        encoding = CookieEncoding.RAW,
+                )
         )
       }
 
-      if (expiredFields.isNotEmpty()) {
-        redis {
-          commands.hdel(key, *expiredFields.toTypedArray())
-          if ((commands.hlen(key) ?: 0L) == 0L) {
-            commands.del(key)
-          }
-        }
+      for (f in expiredFields) {
+        cookieMap.remove(f)
+        dirtyFields.remove(f) // 不需要写回已过期的
       }
 
       results
     }
   }
 
+  /** 将内存中的脏数据批量刷回 Redis。 在会话提交、迁移等关键节点调用。 */
+  override suspend fun flush() {
+    mutex.withLock { flushInternal() }
+  }
+
   override fun close() {
-    try {
-      runCatching { connection.close() }
-      client.shutdown()
-    } catch (_: Exception) {
-    }
+    // No-op: Redis 连接生命周期由 RedisCookieStorageFactory 统一管理
   }
 
   override suspend fun clear() {
-    mutex.withLock { redis { commands.del(key) } }
+    mutex.withLock {
+      cache = mutableMapOf()
+      dirtyFields.clear()
+      redis { commands.del(key) }
+    }
   }
 
-  override suspend fun migrateTo(newUsername: String) {
-    val targetKey = storageKey(newUsername)
+  override suspend fun migrateTo(newSubject: String) {
+    val targetKey = storageKey(newSubject)
     mutex.withLock {
+      // 先刷回本地修改
+      flushInternal()
+
       redis {
         val cookieMap = commands.hgetall(key)
         if (cookieMap.isEmpty()) {
           commands.del(key)
-          return@redis
-        }
-        commands.del(targetKey)
-        commands.hset(targetKey, cookieMap)
-        val ttl = commands.ttl(key)
-        if (ttl != null && ttl > 0) {
-          commands.expire(targetKey, ttl)
         } else {
-          commands.expire(targetKey, keyTtlSeconds)
+          commands.del(targetKey)
+          commands.hset(targetKey, cookieMap)
+          val ttl = commands.ttl(key)
+          if (ttl != null && ttl > 0) {
+            commands.expire(targetKey, ttl)
+          } else {
+            commands.expire(targetKey, keyTtlSeconds)
+          }
+          commands.del(key)
         }
-        commands.del(key)
       }
+
+      key = targetKey
+      cache = null // 下次访问时重新从新 key 加载
     }
+  }
+
+  private suspend fun ensureCacheLoaded() {
+    if (cache != null) return
+    cache = redis { commands.hgetall(key) }?.toMutableMap() ?: mutableMapOf()
+  }
+
+  private suspend fun flushInternal() {
+    val map = cache ?: return
+    if (dirtyFields.isEmpty()) return
+    val batch = dirtyFields.mapNotNull { f -> map[f]?.let { f to it } }.toMap()
+    redis {
+      if (batch.isNotEmpty()) commands.hset(key, batch)
+      commands.expire(key, keyTtlSeconds)
+    }
+    dirtyFields.clear()
   }
 
   private suspend fun <T> redis(block: () -> T): T = withContext(Dispatchers.IO) { block() }
 
   private fun serializeCookie(
-    name: String,
-    value: String,
-    domain: String,
-    path: String,
-    expiresAt: Long?,
-    secure: Boolean,
-    httpOnly: Boolean,
-    maxAge: Int,
-    createdAt: Long,
+          name: String,
+          value: String,
+          domain: String,
+          path: String,
+          expiresAt: Long?,
+          secure: Boolean,
+          httpOnly: Boolean,
+          maxAge: Int,
+          createdAt: Long,
   ): String {
     return listOf(
-        escape(name),
-        escape(value),
-        escape(domain),
-        escape(path),
-        expiresAt?.toString().orEmpty(),
-        secure.toString(),
-        httpOnly.toString(),
-        maxAge.toString(),
-        createdAt.toString(),
-      )
-      .joinToString("\u001F")
+                    escape(name),
+                    escape(value),
+                    escape(domain),
+                    escape(path),
+                    expiresAt?.toString().orEmpty(),
+                    secure.toString(),
+                    httpOnly.toString(),
+                    maxAge.toString(),
+                    createdAt.toString(),
+            )
+            .joinToString("\u001F")
   }
 
   private fun decodeCookie(encoded: String): StoredCookie? {
     val parts = encoded.split("\u001F")
     if (parts.size != 9) return null
     return StoredCookie(
-      name = unescape(parts[0]),
-      value = unescape(parts[1]),
-      domain = unescape(parts[2]),
-      path = unescape(parts[3]),
-      expiresAt = parts[4].ifBlank { null }?.toLongOrNull(),
-      secure = parts[5].toBooleanStrictOrNull() ?: false,
-      httpOnly = parts[6].toBooleanStrictOrNull() ?: false,
-      maxAge = parts[7].toIntOrNull() ?: -1,
-      createdAt = parts[8].toLongOrNull() ?: 0L,
+            name = unescape(parts[0]),
+            value = unescape(parts[1]),
+            domain = unescape(parts[2]),
+            path = unescape(parts[3]),
+            expiresAt = parts[4].ifBlank { null }?.toLongOrNull(),
+            secure = parts[5].toBooleanStrictOrNull() ?: false,
+            httpOnly = parts[6].toBooleanStrictOrNull() ?: false,
+            maxAge = parts[7].toIntOrNull() ?: -1,
+            createdAt = parts[8].toLongOrNull() ?: 0L,
     )
   }
 
   private fun computeKeyTtlSeconds(expiresAt: Long?, maxAge: Int, createdAt: Long): Long {
     val now = System.currentTimeMillis()
     val cookieExpiryMs =
-      listOfNotNull(
-          expiresAt,
-          maxAge.takeIf { it >= 0 }?.let { createdAt + it * 1000L },
-        )
-        .minOrNull()
+            listOfNotNull(
+                            expiresAt,
+                            maxAge.takeIf { it >= 0 }?.let { createdAt + it * 1000L },
+                    )
+                    .minOrNull()
     return if (cookieExpiryMs == null) {
       keyTtlSeconds
     } else {
@@ -197,17 +234,11 @@ class RedisCookieStorage(private val redisUri: String, private val username: Str
   }
 
   private fun escape(value: String): String {
-    return value
-      .replace("\\", "\\\\")
-      .replace("\u001F", "\\u001F")
-      .replace("\n", "\\n")
+    return value.replace("\\", "\\\\").replace("\u001F", "\\u001F").replace("\n", "\\n")
   }
 
   private fun unescape(value: String): String {
-    return value
-      .replace("\\u001F", "\u001F")
-      .replace("\\n", "\n")
-      .replace("\\\\", "\\")
+    return value.replace("\\u001F", "\u001F").replace("\\n", "\n").replace("\\\\", "\\")
   }
 
   private fun isExpired(now: Long, expiresAt: Long?, maxAge: Int, createdAt: Long): Boolean {
@@ -231,33 +262,21 @@ class RedisCookieStorage(private val redisUri: String, private val username: Str
   private fun isHttps(url: Url): Boolean = url.protocol.name.equals("https", true)
 
   private data class StoredCookie(
-    val name: String,
-    val value: String,
-    val domain: String,
-    val path: String,
-    val expiresAt: Long?,
-    val secure: Boolean,
-    val httpOnly: Boolean,
-    val maxAge: Int,
-    val createdAt: Long,
+          val name: String,
+          val value: String,
+          val domain: String,
+          val path: String,
+          val expiresAt: Long?,
+          val secure: Boolean,
+          val httpOnly: Boolean,
+          val maxAge: Int,
+          val createdAt: Long,
   )
 
   companion object {
-    private fun storageKey(subject: String): String = "cookies:$subject"
+    internal fun storageKey(subject: String): String = "cookies:$subject"
 
-    private fun cookieField(name: String, domain: String, path: String): String = "$domain|$path|$name"
-
-    suspend fun clearSubject(redisUri: String, subject: String) {
-      withContext(Dispatchers.IO) {
-        val client = RedisClient.create(redisUri)
-        val connection = client.connect()
-        try {
-          connection.sync().del(storageKey(subject))
-        } finally {
-          runCatching { connection.close() }
-          client.shutdown()
-        }
-      }
-    }
+    private fun cookieField(name: String, domain: String, path: String): String =
+            "$domain|$path|$name"
   }
 }

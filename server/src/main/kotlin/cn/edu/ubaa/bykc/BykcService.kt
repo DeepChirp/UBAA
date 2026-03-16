@@ -30,7 +30,10 @@ import org.slf4j.LoggerFactory
  * 4. 签到逻辑，包括签到点地理位置随机生成（模拟真实坐标）。
  * 5. 课程统计信息的汇总与分类处理。
  */
-class BykcService(private val sessionManager: SessionManager = GlobalSessionManager.instance) {
+class BykcService(
+  private val sessionManager: SessionManager = GlobalSessionManager.instance,
+  private val clientProvider: (String) -> BykcClient = ::BykcClient,
+) {
   private val log = LoggerFactory.getLogger(BykcService::class.java)
   private val json = Json { ignoreUnknownKeys = true }
 
@@ -48,7 +51,9 @@ class BykcService(private val sessionManager: SessionManager = GlobalSessionMana
       clientCache.compute(username) { _, existing ->
         existing?.also { it.lastAccessAt = now }
           ?: CachedClient(
-            BykcClient(username).also { log.debug("Created new BykcClient for user: {}", username) },
+            clientProvider(username).also {
+              log.debug("Created new BykcClient for user: {}", username)
+            },
             now,
           )
       }!!
@@ -296,6 +301,7 @@ class BykcService(private val sessionManager: SessionManager = GlobalSessionMana
     for ((username, cached) in clientCache.entries.toList()) {
       if (cached.lastAccessAt >= cutoff) continue
       if (!clientCache.remove(username, cached)) continue
+      cached.client.close()
       removed++
     }
     return removed
@@ -304,8 +310,19 @@ class BykcService(private val sessionManager: SessionManager = GlobalSessionMana
   fun cacheSize(): Int = clientCache.size
 
   fun clearCache() {
+    clientCache.values.forEach { it.client.close() }
     clientCache.clear()
   }
+
+  internal fun cacheClientForTesting(
+    username: String,
+    client: BykcClient,
+    lastAccessAt: Long = System.currentTimeMillis(),
+  ) {
+    clientCache[username] = CachedClient(client, lastAccessAt)
+  }
+
+  internal fun cachedClientForTesting(username: String): BykcClient? = clientCache[username]?.client
 
   private suspend fun getSignConfig(client: BykcClient, courseId: Long): BykcSignConfigDto? {
     return try {

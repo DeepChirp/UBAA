@@ -99,19 +99,26 @@ class SessionManagerJwtTest {
   }
 
   @Test
-  fun testCleanupExpiredSessionsRemovesExpiredSession() = runBlocking {
-    val sessionManager = createSessionManager(sessionTtl = Duration.ofSeconds(1))
-    val username = "expired-user"
-    val userData = UserData("Expired User", "10002")
+  fun testInvalidateSessionClearsCookieStorageBeforeClosingIt() = runBlocking {
+    val trackingCookieStorageFactory = TrackingCookieStorageFactory()
+    val sessionManager =
+      SessionManager(
+        sessionStore = InMemorySessionStore(),
+        cookieStorageFactory = trackingCookieStorageFactory,
+      )
+    val username = "logout-user"
+    val userData = UserData("Logout User", "10003")
 
     val candidate = sessionManager.prepareSession(username)
-    val sessionWithToken = sessionManager.commitSessionWithToken(candidate, userData)
-    assertNotNull(sessionManager.getSession(username, SessionManager.SessionAccess.READ_ONLY))
+    sessionManager.commitSessionWithToken(candidate, userData)
+    val baselineEventCount = trackingCookieStorageFactory.events.size
 
-    Thread.sleep(1200)
+    sessionManager.invalidateSession(username)
 
-    val removed = sessionManager.cleanupExpiredSessions()
-    assertEquals(1, removed)
-    assertNull(sessionManager.getSession(username, SessionManager.SessionAccess.READ_ONLY))
+    val invalidateEvents = trackingCookieStorageFactory.events.drop(baselineEventCount)
+    assertTrue(invalidateEvents.contains("clear"))
+    assertTrue(invalidateEvents.contains("close"))
+    assertTrue(invalidateEvents.indexOf("clear") < invalidateEvents.indexOf("close"))
   }
+
 }

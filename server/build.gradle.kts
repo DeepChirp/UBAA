@@ -64,6 +64,7 @@ dependencies {
   implementation(libs.redis.kotlin) // Redis 缓存支持
 
   testImplementation(libs.ktor.serverTestHost)
+  testImplementation(libs.ktor.client.mock)
   testImplementation(libs.kotlin.testJunit)
 }
 

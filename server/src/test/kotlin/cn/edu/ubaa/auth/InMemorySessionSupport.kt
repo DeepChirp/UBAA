@@ -33,11 +33,11 @@ class InMemorySessionStore : SessionPersistence {
   }
 }
 
-class InMemoryCookieStorageFactory : ManagedCookieStorageFactory {
+open class InMemoryCookieStorageFactory : ManagedCookieStorageFactory {
   private val storages = ConcurrentHashMap<String, InMemoryCookieStorage>()
 
   override fun create(subject: String): ManagedCookieStorage {
-    return storages.computeIfAbsent(subject) { InMemoryCookieStorage() }
+    return storages.computeIfAbsent(subject) { createStorage() }
   }
 
   override suspend fun clearSubject(subject: String) {
@@ -45,10 +45,12 @@ class InMemoryCookieStorageFactory : ManagedCookieStorageFactory {
   }
 
   private fun storage(subject: String): InMemoryCookieStorage {
-    return storages.computeIfAbsent(subject) { InMemoryCookieStorage() }
+    return storages.computeIfAbsent(subject) { createStorage() }
   }
 
-  private inner class InMemoryCookieStorage : ManagedCookieStorage {
+  protected open fun createStorage(): InMemoryCookieStorage = InMemoryCookieStorage()
+
+  protected open inner class InMemoryCookieStorage : ManagedCookieStorage {
     private val cookies = ConcurrentHashMap<String, StoredCookie>()
 
     override suspend fun addCookie(requestUrl: Url, cookie: Cookie) {
@@ -107,5 +109,23 @@ class InMemoryCookieStorageFactory : ManagedCookieStorageFactory {
     val req = requestPath.ifBlank { "/" }
     val norm = if (cookiePath.endsWith("/")) cookiePath else "$cookiePath/"
     return req.startsWith(norm.removeSuffix("/"))
+  }
+}
+
+class TrackingCookieStorageFactory : InMemoryCookieStorageFactory() {
+  val events = mutableListOf<String>()
+
+  override fun createStorage(): InMemoryCookieStorage = TrackingCookieStorage()
+
+  private inner class TrackingCookieStorage : InMemoryCookieStorage() {
+    override suspend fun clear() {
+      events += "clear"
+      super.clear()
+    }
+
+    override fun close() {
+      events += "close"
+      super.close()
+    }
   }
 }
