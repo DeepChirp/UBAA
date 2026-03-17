@@ -356,14 +356,12 @@ class AuthService(private val sessionManager: SessionManager = GlobalSessionMana
    *
    * @param initialResponse 初始 HTTP 响应。
    * @param noRedirectClient 配置为不跟随重定向的 HttpClient。
-   * @param client 用于执行最终请求的 HttpClient。
    * @return 最终的 HTTP 响应。
    * @throws LoginException 当检测到登录失败、凭据错误或异常信息时抛出。
    */
   private suspend fun followRedirectsAndCheckError(
           initialResponse: HttpResponse,
           noRedirectClient: HttpClient,
-          client: HttpClient,
   ): HttpResponse {
     var currentResponse = initialResponse
     log.debug("Following redirects starting from: {}", initialResponse.request.url)
