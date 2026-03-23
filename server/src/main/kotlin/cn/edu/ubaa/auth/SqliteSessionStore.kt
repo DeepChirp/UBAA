@@ -15,22 +15,22 @@ class SqliteSessionStore(private val dbPath: String) {
 
   /** 会话记录实体。 */
   data class SessionRecord(
-    val userData: UserData,
-    val authenticatedAt: Instant,
-    val lastActivity: Instant,
+      val userData: UserData,
+      val authenticatedAt: Instant,
+      val lastActivity: Instant,
   )
 
   /** 保存或更新会话信息。 */
   fun saveSession(
-    username: String,
-    userData: UserData,
-    authenticatedAt: Instant,
-    lastActivity: Instant,
+      username: String,
+      userData: UserData,
+      authenticatedAt: Instant,
+      lastActivity: Instant,
   ) {
     getConnection().use { conn ->
       conn
-        .prepareStatement(
-          """
+          .prepareStatement(
+              """
                             INSERT INTO sessions(username, name, schoolid, authenticated_at, last_activity)
                             VALUES(?,?,?,?,?)
                             ON CONFLICT(username) DO UPDATE SET
@@ -39,16 +39,16 @@ class SqliteSessionStore(private val dbPath: String) {
                                 authenticated_at=excluded.authenticated_at,
                                 last_activity=excluded.last_activity
                             """
-        )
-        .apply {
-          setString(1, username)
-          setString(2, userData.name)
-          setString(3, userData.schoolid)
-          setLong(4, authenticatedAt.toEpochMilli())
-          setLong(5, lastActivity.toEpochMilli())
-          executeUpdate()
-          close()
-        }
+          )
+          .apply {
+            setString(1, username)
+            setString(2, userData.name)
+            setString(3, userData.schoolid)
+            setLong(4, authenticatedAt.toEpochMilli())
+            setLong(5, lastActivity.toEpochMilli())
+            executeUpdate()
+            close()
+          }
     }
   }
 
@@ -68,23 +68,23 @@ class SqliteSessionStore(private val dbPath: String) {
   fun loadSession(username: String): SessionRecord? {
     getConnection().use { conn ->
       conn
-        .prepareStatement(
-          "SELECT name, schoolid, authenticated_at, last_activity FROM sessions WHERE username=?"
-        )
-        .apply {
-          setString(1, username)
-          val rs = executeQuery()
-          val record =
-            if (rs.next()) {
-              SessionRecord(
-                userData = UserData(name = rs.getString(1), schoolid = rs.getString(2)),
-                authenticatedAt = Instant.ofEpochMilli(rs.getLong(3)),
-                lastActivity = Instant.ofEpochMilli(rs.getLong(4)),
-              )
-            } else null
-          close()
-          return record
-        }
+          .prepareStatement(
+              "SELECT name, schoolid, authenticated_at, last_activity FROM sessions WHERE username=?"
+          )
+          .apply {
+            setString(1, username)
+            val rs = executeQuery()
+            val record =
+                if (rs.next()) {
+                  SessionRecord(
+                      userData = UserData(name = rs.getString(1), schoolid = rs.getString(2)),
+                      authenticatedAt = Instant.ofEpochMilli(rs.getLong(3)),
+                      lastActivity = Instant.ofEpochMilli(rs.getLong(4)),
+                  )
+                } else null
+            close()
+            return record
+          }
     }
   }
 
@@ -117,7 +117,7 @@ class SqliteSessionStore(private val dbPath: String) {
     getConnection().use { conn ->
       conn.createStatement().use { stmt ->
         stmt.execute(
-          """
+            """
                         CREATE TABLE IF NOT EXISTS sessions (
                             username TEXT PRIMARY KEY,
                             name TEXT NOT NULL,

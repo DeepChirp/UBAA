@@ -21,9 +21,9 @@ object ApiClientProvider {
  */
 @Serializable
 data class SessionStatusResponse(
-  val user: UserData,
-  val lastActivity: String,
-  val authenticatedAt: String,
+    val user: UserData,
+    val lastActivity: String,
+    val authenticatedAt: String,
 )
 
 /**
@@ -47,10 +47,10 @@ class AuthService(private val apiClient: ApiClient = ApiClientProvider.shared) {
     return try {
       val clientId = ClientIdStore.getOrCreate()
       val response =
-        apiClient.getClient().post("api/v1/auth/preload") {
-          contentType(ContentType.Application.Json)
-          setBody(LoginPreloadRequest(clientId))
-        }
+          apiClient.getClient().post("api/v1/auth/preload") {
+            contentType(ContentType.Application.Json)
+            setBody(LoginPreloadRequest(clientId))
+          }
       when (response.status) {
         HttpStatusCode.OK -> {
           Result.success(response.body<LoginPreloadResponse>())
@@ -74,18 +74,18 @@ class AuthService(private val apiClient: ApiClient = ApiClientProvider.shared) {
    * @return 登录结果，成功则返回 LoginResponse 并自动更新 ApiClient 令牌。
    */
   suspend fun login(
-    username: String,
-    password: String,
-    captcha: String? = null,
-    execution: String? = null,
+      username: String,
+      password: String,
+      captcha: String? = null,
+      execution: String? = null,
   ): Result<LoginResponse> {
     return try {
       val clientId = ClientIdStore.get()
       val response =
-        apiClient.getClient().post("api/v1/auth/login") {
-          contentType(ContentType.Application.Json)
-          setBody(LoginRequest(username, password, captcha, execution, clientId))
-        }
+          apiClient.getClient().post("api/v1/auth/login") {
+            contentType(ContentType.Application.Json)
+            setBody(LoginRequest(username, password, captcha, execution, clientId))
+          }
 
       when (response.status) {
         HttpStatusCode.OK -> {
@@ -102,11 +102,11 @@ class AuthService(private val apiClient: ApiClient = ApiClientProvider.shared) {
         HttpStatusCode.UnprocessableEntity -> { // 422 - 需要验证码
           val captchaResponse = response.body<CaptchaRequiredResponse>()
           Result.failure(
-            CaptchaRequiredClientException(
-              captchaResponse.captcha,
-              captchaResponse.execution,
-              captchaResponse.message,
-            )
+              CaptchaRequiredClientException(
+                  captchaResponse.captcha,
+                  captchaResponse.execution,
+                  captchaResponse.message,
+              )
           )
         }
         else -> {

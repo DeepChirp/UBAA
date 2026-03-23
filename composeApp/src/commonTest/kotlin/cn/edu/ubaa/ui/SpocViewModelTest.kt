@@ -46,13 +46,13 @@ class SpocViewModelTest {
   fun `load assignments failure exposes error`() = runTest {
     setMainDispatcher(testScheduler)
     val viewModel =
-      createViewModel(
-        object : SpocApi() {
-          override suspend fun getAssignments(): Result<SpocAssignmentsResponse> {
-            return Result.failure(IllegalStateException("network failed"))
-          }
-        }
-      )
+        createViewModel(
+            object : SpocApi() {
+              override suspend fun getAssignments(): Result<SpocAssignmentsResponse> {
+                return Result.failure(IllegalStateException("network failed"))
+              }
+            }
+        )
 
     advanceUntilIdle()
 
@@ -66,7 +66,10 @@ class SpocViewModelTest {
 
     advanceUntilIdle()
 
-    assertEquals(listOf("a1", "a2"), viewModel.uiState.value.visibleAssignments.map { it.assignmentId })
+    assertEquals(
+        listOf("a1", "a2"),
+        viewModel.uiState.value.visibleAssignments.map { it.assignmentId },
+    )
   }
 
   @Test
@@ -77,7 +80,10 @@ class SpocViewModelTest {
     advanceUntilIdle()
     viewModel.setShowExpired(true)
 
-    assertEquals(listOf("a3", "a1", "a2"), viewModel.uiState.value.visibleAssignments.map { it.assignmentId })
+    assertEquals(
+        listOf("a3", "a1", "a2"),
+        viewModel.uiState.value.visibleAssignments.map { it.assignmentId },
+    )
   }
 
   @Test
@@ -121,7 +127,10 @@ class SpocViewModelTest {
     advanceUntilIdle()
     viewModel.setSortField(SpocSortField.START_TIME)
 
-    assertEquals(listOf("a2", "a1"), viewModel.uiState.value.visibleAssignments.map { it.assignmentId })
+    assertEquals(
+        listOf("a2", "a1"),
+        viewModel.uiState.value.visibleAssignments.map { it.assignmentId },
+    )
   }
 
   @Test
@@ -132,7 +141,10 @@ class SpocViewModelTest {
     advanceUntilIdle()
     viewModel.toggleSortDirection()
 
-    assertEquals(listOf("a2", "a1"), viewModel.uiState.value.visibleAssignments.map { it.assignmentId })
+    assertEquals(
+        listOf("a2", "a1"),
+        viewModel.uiState.value.visibleAssignments.map { it.assignmentId },
+    )
   }
 
   @Test
@@ -178,49 +190,49 @@ class SpocViewModelTest {
     return object : SpocApi() {
       override suspend fun getAssignments(): Result<SpocAssignmentsResponse> {
         return Result.success(
-          SpocAssignmentsResponse(
-            termCode = "2025-20262",
-            termName = "2026年春季学期",
-            assignments =
-              listOf(
-                SpocAssignmentSummaryDto(
-                  assignmentId = "a1",
-                  courseId = "c1",
-                  courseName = "操作系统",
-                  teacherName = "牛虹婷",
-                  title = "第一次大作业",
-                  startTime = "2026-03-15 08:00:00",
-                  dueTime = "2026-03-18 18:00:00",
-                  score = "100",
-                  submissionStatus = SpocSubmissionStatus.UNSUBMITTED,
-                  submissionStatusText = "未提交",
-                ),
-                SpocAssignmentSummaryDto(
-                  assignmentId = "a2",
-                  courseId = "c2",
-                  courseName = "数据结构",
-                  teacherName = "张老师",
-                  title = "实验报告",
-                  startTime = "2026-03-14 09:00:00",
-                  dueTime = "2026-03-20 20:00:00",
-                  score = "80",
-                  submissionStatus = SpocSubmissionStatus.SUBMITTED,
-                  submissionStatusText = "已提交",
-                ),
-                SpocAssignmentSummaryDto(
-                  assignmentId = "a3",
-                  courseId = "c3",
-                  courseName = "编译原理",
-                  teacherName = "李老师",
-                  title = "过期作业",
-                  startTime = "2026-03-10 08:00:00",
-                  dueTime = "2026-03-16 12:00:00",
-                  score = "60",
-                  submissionStatus = SpocSubmissionStatus.UNSUBMITTED,
-                  submissionStatusText = "未提交",
-                ),
-              ),
-          )
+            SpocAssignmentsResponse(
+                termCode = "2025-20262",
+                termName = "2026年春季学期",
+                assignments =
+                    listOf(
+                        SpocAssignmentSummaryDto(
+                            assignmentId = "a1",
+                            courseId = "c1",
+                            courseName = "操作系统",
+                            teacherName = "牛虹婷",
+                            title = "第一次大作业",
+                            startTime = "2026-03-15 08:00:00",
+                            dueTime = "2026-03-18 18:00:00",
+                            score = "100",
+                            submissionStatus = SpocSubmissionStatus.UNSUBMITTED,
+                            submissionStatusText = "未提交",
+                        ),
+                        SpocAssignmentSummaryDto(
+                            assignmentId = "a2",
+                            courseId = "c2",
+                            courseName = "数据结构",
+                            teacherName = "张老师",
+                            title = "实验报告",
+                            startTime = "2026-03-14 09:00:00",
+                            dueTime = "2026-03-20 20:00:00",
+                            score = "80",
+                            submissionStatus = SpocSubmissionStatus.SUBMITTED,
+                            submissionStatusText = "已提交",
+                        ),
+                        SpocAssignmentSummaryDto(
+                            assignmentId = "a3",
+                            courseId = "c3",
+                            courseName = "编译原理",
+                            teacherName = "李老师",
+                            title = "过期作业",
+                            startTime = "2026-03-10 08:00:00",
+                            dueTime = "2026-03-16 12:00:00",
+                            score = "60",
+                            submissionStatus = SpocSubmissionStatus.UNSUBMITTED,
+                            submissionStatusText = "未提交",
+                        ),
+                    ),
+            )
         )
       }
     }
@@ -228,27 +240,28 @@ class SpocViewModelTest {
 
   private fun apiWithAssignmentsAndDetail(): SpocApi {
     return object : SpocApi() {
-      override suspend fun getAssignments(): Result<SpocAssignmentsResponse> = apiWithAssignments().getAssignments()
+      override suspend fun getAssignments(): Result<SpocAssignmentsResponse> =
+          apiWithAssignments().getAssignments()
 
       override suspend fun getAssignmentDetail(
-        assignmentId: String
+          assignmentId: String
       ): Result<SpocAssignmentDetailDto> {
         return Result.success(
-          SpocAssignmentDetailDto(
-            assignmentId = assignmentId,
-            courseId = "c1",
-            courseName = "操作系统",
-            teacherName = "牛虹婷",
-            title = "第一次大作业",
-            startTime = "2026-03-15 08:00:00",
-            dueTime = "2026-03-18 18:00:00",
-            score = "100",
-            submissionStatus = SpocSubmissionStatus.UNSUBMITTED,
-            submissionStatusText = "未提交",
-            contentPlainText = "请提交 PDF",
-            contentHtml = "<p>请提交 PDF</p>",
-            submittedAt = null,
-          )
+            SpocAssignmentDetailDto(
+                assignmentId = assignmentId,
+                courseId = "c1",
+                courseName = "操作系统",
+                teacherName = "牛虹婷",
+                title = "第一次大作业",
+                startTime = "2026-03-15 08:00:00",
+                dueTime = "2026-03-18 18:00:00",
+                score = "100",
+                submissionStatus = SpocSubmissionStatus.UNSUBMITTED,
+                submissionStatusText = "未提交",
+                contentPlainText = "请提交 PDF",
+                contentHtml = "<p>请提交 PDF</p>",
+                submittedAt = null,
+            )
         )
       }
     }

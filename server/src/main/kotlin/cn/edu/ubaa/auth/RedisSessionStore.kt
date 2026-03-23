@@ -21,26 +21,26 @@ class RedisSessionStore(private val redisUri: String) : SessionPersistence {
   private val sessionTtl = 1800L
 
   data class SessionRecord(
-    val userData: UserData,
-    val authenticatedAt: Instant,
-    val lastActivity: Instant,
+      val userData: UserData,
+      val authenticatedAt: Instant,
+      val lastActivity: Instant,
   )
 
   override suspend fun saveSession(
-    username: String,
-    userData: UserData,
-    authenticatedAt: Instant,
-    lastActivity: Instant,
+      username: String,
+      userData: UserData,
+      authenticatedAt: Instant,
+      lastActivity: Instant,
   ) {
     withUserLock(username) {
       val key = keyFor(username)
       val sessionData =
-        mapOf(
-          "name" to userData.name,
-          "schoolid" to userData.schoolid,
-          "authenticated_at" to authenticatedAt.toEpochMilli().toString(),
-          "last_activity" to lastActivity.toEpochMilli().toString(),
-        )
+          mapOf(
+              "name" to userData.name,
+              "schoolid" to userData.schoolid,
+              "authenticated_at" to authenticatedAt.toEpochMilli().toString(),
+              "last_activity" to lastActivity.toEpochMilli().toString(),
+          )
 
       redis {
         commands.hset(key, sessionData)
@@ -66,21 +66,20 @@ class RedisSessionStore(private val redisUri: String) : SessionPersistence {
 
       val name = sessionMap["name"] ?: return@withUserLock null
       val schoolid = sessionMap["schoolid"] ?: return@withUserLock null
-      val authenticatedAtMs = sessionMap["authenticated_at"]?.toLongOrNull() ?: return@withUserLock null
+      val authenticatedAtMs =
+          sessionMap["authenticated_at"]?.toLongOrNull() ?: return@withUserLock null
       val lastActivityMs = sessionMap["last_activity"]?.toLongOrNull() ?: return@withUserLock null
 
       SessionPersistence.SessionRecord(
-        userData = UserData(name = name, schoolid = schoolid),
-        authenticatedAt = Instant.ofEpochMilli(authenticatedAtMs),
-        lastActivity = Instant.ofEpochMilli(lastActivityMs),
+          userData = UserData(name = name, schoolid = schoolid),
+          authenticatedAt = Instant.ofEpochMilli(authenticatedAtMs),
+          lastActivity = Instant.ofEpochMilli(lastActivityMs),
       )
     }
   }
 
   override suspend fun deleteSession(username: String) {
-    withUserLock(username) {
-      redis { commands.del(keyFor(username)) }
-    }
+    withUserLock(username) { redis { commands.del(keyFor(username)) } }
     mutexes.remove(username)
   }
 
@@ -98,8 +97,7 @@ class RedisSessionStore(private val redisUri: String) : SessionPersistence {
     try {
       runCatching { connection.close() }
       client.shutdown()
-    } catch (_: Exception) {
-    }
+    } catch (_: Exception) {}
   }
 
   private suspend fun <T> withUserLock(username: String, block: suspend () -> T): T {

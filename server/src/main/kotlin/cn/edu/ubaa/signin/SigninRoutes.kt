@@ -18,8 +18,8 @@ fun Route.signinRouting() {
     post("/do") {
       val session = call.requireUserSession()
       val courseId =
-        call.parameters["courseId"]
-          ?: return@post call.respond(io.ktor.http.HttpStatusCode.BadRequest)
+          call.parameters["courseId"]
+              ?: return@post call.respond(io.ktor.http.HttpStatusCode.BadRequest)
       call.respond(SigninService.performSignin(session.userData.schoolid, courseId))
     }
   }

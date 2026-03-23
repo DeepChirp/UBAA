@@ -32,16 +32,16 @@ class AuthServiceResourceTest {
     var closeCount = 0
 
     authService.derivedClientFactory =
-      AuthService.DerivedClientFactory { _ ->
-        object : AuthService.DerivedClientHandle {
-          override val client: HttpClient = derivedClient
+        AuthService.DerivedClientFactory { _ ->
+          object : AuthService.DerivedClientHandle {
+            override val client: HttpClient = derivedClient
 
-          override fun close() {
-            closeCount++
-            client.close()
+            override fun close() {
+              closeCount++
+              client.close()
+            }
           }
         }
-      }
 
     try {
       val result = authService.withNoRedirectClient(baseClient) { "ok" }
@@ -60,16 +60,16 @@ class AuthServiceResourceTest {
     var closeCount = 0
 
     authService.derivedClientFactory =
-      AuthService.DerivedClientFactory { _ ->
-        object : AuthService.DerivedClientHandle {
-          override val client: HttpClient = derivedClient
+        AuthService.DerivedClientFactory { _ ->
+          object : AuthService.DerivedClientHandle {
+            override val client: HttpClient = derivedClient
 
-          override fun close() {
-            closeCount++
-            client.close()
+            override fun close() {
+              closeCount++
+              client.close()
+            }
           }
         }
-      }
 
     try {
       assertFailsWith<IllegalStateException> {
@@ -85,11 +85,11 @@ class AuthServiceResourceTest {
   fun disposeSessionCandidateClearsCookieStorageBeforeClosingIt() = runBlocking {
     val trackingCookieStorageFactory = TrackingCookieStorageFactory()
     val sessionManager =
-      SessionManager(
-        sessionStore = InMemorySessionStore(),
-        cookieStorageFactory = trackingCookieStorageFactory,
-        clientFactory = { mockClient() },
-      )
+        SessionManager(
+            sessionStore = InMemorySessionStore(),
+            cookieStorageFactory = trackingCookieStorageFactory,
+            clientFactory = { mockClient() },
+        )
 
     val candidate = sessionManager.prepareSession("candidate-user")
     val baselineEventCount = trackingCookieStorageFactory.events.size
@@ -106,27 +106,31 @@ class AuthServiceResourceTest {
   @Test
   fun restoreSessionBuildsSingleClientUnderConcurrentLoad() = runBlocking {
     val record =
-      SessionPersistence.SessionRecord(
-        userData = UserData("Restored User", "10010"),
-        authenticatedAt = Instant.now(),
-        lastActivity = Instant.now(),
-      )
+        SessionPersistence.SessionRecord(
+            userData = UserData("Restored User", "10010"),
+            authenticatedAt = Instant.now(),
+            lastActivity = Instant.now(),
+        )
     val sessionStore = DelayedSessionStore(record)
     val clientBuildCount = AtomicInteger(0)
     val sessionManager =
-      SessionManager(
-        sessionStore = sessionStore,
-        cookieStorageFactory = InMemoryCookieStorageFactory(),
-        clientFactory = { _: CookiesStorage ->
-          clientBuildCount.incrementAndGet()
-          mockClient()
-        },
-      )
+        SessionManager(
+            sessionStore = sessionStore,
+            cookieStorageFactory = InMemoryCookieStorageFactory(),
+            clientFactory = { _: CookiesStorage ->
+              clientBuildCount.incrementAndGet()
+              mockClient()
+            },
+        )
 
     try {
       coroutineScope {
-        val first = async { sessionManager.getSession("restored", SessionManager.SessionAccess.READ_ONLY) }
-        val second = async { sessionManager.getSession("restored", SessionManager.SessionAccess.READ_ONLY) }
+        val first = async {
+          sessionManager.getSession("restored", SessionManager.SessionAccess.READ_ONLY)
+        }
+        val second = async {
+          sessionManager.getSession("restored", SessionManager.SessionAccess.READ_ONLY)
+        }
 
         val firstSession = first.await()
         val secondSession = second.await()
@@ -151,18 +155,19 @@ class AuthServiceResourceTest {
     val userData = UserData("Persistent User", "10086")
 
     val firstManager =
-      SessionManager(
-        sessionStore = sessionStore,
-        cookieStorageFactory = cookieFactory,
-        clientFactory = { _: CookiesStorage -> mockClient() },
-      )
+        SessionManager(
+            sessionStore = sessionStore,
+            cookieStorageFactory = cookieFactory,
+            clientFactory = { _: CookiesStorage -> mockClient() },
+        )
 
     try {
       val candidate = firstManager.prepareSession("persistent-user")
       candidate.cookieStorage.addCookie(requestUrl, Cookie("initial", "v1"))
       firstManager.commitSessionWithToken(candidate, userData)
 
-      val active = firstManager.getSession("persistent-user", SessionManager.SessionAccess.READ_ONLY)
+      val active =
+          firstManager.getSession("persistent-user", SessionManager.SessionAccess.READ_ONLY)
       assertNotNull(active)
       active.cookieStorage.addCookie(requestUrl, Cookie("afterCommit", "v2"))
     } finally {
@@ -170,15 +175,15 @@ class AuthServiceResourceTest {
     }
 
     val secondManager =
-      SessionManager(
-        sessionStore = sessionStore,
-        cookieStorageFactory = cookieFactory,
-        clientFactory = { _: CookiesStorage -> mockClient() },
-      )
+        SessionManager(
+            sessionStore = sessionStore,
+            cookieStorageFactory = cookieFactory,
+            clientFactory = { _: CookiesStorage -> mockClient() },
+        )
 
     try {
       val restored =
-        secondManager.getSession("persistent-user", SessionManager.SessionAccess.READ_ONLY)
+          secondManager.getSession("persistent-user", SessionManager.SessionAccess.READ_ONLY)
       assertNotNull(restored)
       val restoredCookies = restored.cookieStorage.get(requestUrl).associateBy { it.name }
       assertEquals("v1", restoredCookies["initial"]?.value)
@@ -190,15 +195,15 @@ class AuthServiceResourceTest {
     }
 
     val thirdManager =
-      SessionManager(
-        sessionStore = sessionStore,
-        cookieStorageFactory = cookieFactory,
-        clientFactory = { _: CookiesStorage -> mockClient() },
-      )
+        SessionManager(
+            sessionStore = sessionStore,
+            cookieStorageFactory = cookieFactory,
+            clientFactory = { _: CookiesStorage -> mockClient() },
+        )
 
     try {
       val restoredAgain =
-        thirdManager.getSession("persistent-user", SessionManager.SessionAccess.READ_ONLY)
+          thirdManager.getSession("persistent-user", SessionManager.SessionAccess.READ_ONLY)
       assertNotNull(restoredAgain)
       val cookies = restoredAgain.cookieStorage.get(requestUrl).associateBy { it.name }
       assertEquals("v1", cookies["initial"]?.value)
@@ -212,19 +217,23 @@ class AuthServiceResourceTest {
   @Test
   fun restoreSessionMissDoesNotLeakMutexes() = runBlocking {
     val sessionManager =
-      SessionManager(
-        sessionStore = NullSessionStore(),
-        cookieStorageFactory = InMemoryCookieStorageFactory(),
-        clientFactory = { _: CookiesStorage -> mockClient() },
-      )
+        SessionManager(
+            sessionStore = NullSessionStore(),
+            cookieStorageFactory = InMemoryCookieStorageFactory(),
+            clientFactory = { _: CookiesStorage -> mockClient() },
+        )
 
     try {
       assertNull(sessionManager.getSession("missing-user", SessionManager.SessionAccess.READ_ONLY))
       assertEquals(0, sessionManager.restoreMutexCountForTesting())
 
       coroutineScope {
-        val first = async { sessionManager.getSession("missing-a", SessionManager.SessionAccess.READ_ONLY) }
-        val second = async { sessionManager.getSession("missing-b", SessionManager.SessionAccess.READ_ONLY) }
+        val first = async {
+          sessionManager.getSession("missing-a", SessionManager.SessionAccess.READ_ONLY)
+        }
+        val second = async {
+          sessionManager.getSession("missing-b", SessionManager.SessionAccess.READ_ONLY)
+        }
         assertNull(first.await())
         assertNull(second.await())
       }
@@ -237,21 +246,19 @@ class AuthServiceResourceTest {
 
   private fun mockClient(): HttpClient {
     return HttpClient(MockEngine) {
-      engine {
-        addHandler { respond(content = "", status = HttpStatusCode.OK) }
-      }
+      engine { addHandler { respond(content = "", status = HttpStatusCode.OK) } }
     }
   }
 
   private class DelayedSessionStore(private val record: SessionPersistence.SessionRecord) :
-    SessionPersistence {
+      SessionPersistence {
     val loadCount = AtomicInteger(0)
 
     override suspend fun saveSession(
-      username: String,
-      userData: UserData,
-      authenticatedAt: Instant,
-      lastActivity: Instant,
+        username: String,
+        userData: UserData,
+        authenticatedAt: Instant,
+        lastActivity: Instant,
     ) {}
 
     override suspend fun updateLastActivity(username: String, lastActivity: Instant) {}
@@ -269,10 +276,10 @@ class AuthServiceResourceTest {
 
   private class NullSessionStore : SessionPersistence {
     override suspend fun saveSession(
-      username: String,
-      userData: UserData,
-      authenticatedAt: Instant,
-      lastActivity: Instant,
+        username: String,
+        userData: UserData,
+        authenticatedAt: Instant,
+        lastActivity: Instant,
     ) {}
 
     override suspend fun updateLastActivity(username: String, lastActivity: Instant) {}
@@ -288,10 +295,10 @@ class AuthServiceResourceTest {
     private val sessions = ConcurrentHashMap<String, SessionPersistence.SessionRecord>()
 
     override suspend fun saveSession(
-      username: String,
-      userData: UserData,
-      authenticatedAt: Instant,
-      lastActivity: Instant,
+        username: String,
+        userData: UserData,
+        authenticatedAt: Instant,
+        lastActivity: Instant,
     ) {
       sessions[username] = SessionPersistence.SessionRecord(userData, authenticatedAt, lastActivity)
     }
@@ -301,7 +308,8 @@ class AuthServiceResourceTest {
       sessions[username] = current.copy(lastActivity = lastActivity)
     }
 
-    override suspend fun loadSession(username: String): SessionPersistence.SessionRecord? = sessions[username]
+    override suspend fun loadSession(username: String): SessionPersistence.SessionRecord? =
+        sessions[username]
 
     override suspend fun deleteSession(username: String) {
       sessions.remove(username)

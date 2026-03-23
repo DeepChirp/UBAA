@@ -74,7 +74,7 @@ class AuthService(private val sessionManager: SessionManager = GlobalSessionMana
     // 1. 尝试复用或准备会话环境
     if (!hasClientId && !hasExecution) {
       sessionManager.getSession(request.username, SessionManager.SessionAccess.READ_ONLY)?.let {
-              existingSession ->
+          existingSession ->
         val cachedUser = runCatching { verifySession(existingSession.client) }.getOrNull()
         if (cachedUser != null) {
           val newToken = JwtUtil.generateToken(request.username, Duration.ofMinutes(30))
@@ -89,16 +89,16 @@ class AuthService(private val sessionManager: SessionManager = GlobalSessionMana
 
     try {
       sessionCandidate =
-              if (hasClientId) {
-                sessionManager.promotePreLoginSession(request.clientId!!, request.username)
-                        ?: run {
-                          sessionManager.invalidateSession(request.username)
-                          sessionManager.prepareSession(request.username)
-                        }
-              } else {
-                sessionManager.invalidateSession(request.username)
-                sessionManager.prepareSession(request.username)
-              }
+          if (hasClientId) {
+            sessionManager.promotePreLoginSession(request.clientId!!, request.username)
+                ?: run {
+                  sessionManager.invalidateSession(request.username)
+                  sessionManager.prepareSession(request.username)
+                }
+          } else {
+            sessionManager.invalidateSession(request.username)
+            sessionManager.prepareSession(request.username)
+          }
 
       val activeCandidate = requireNotNull(sessionCandidate)
       val client = activeCandidate.client
@@ -109,21 +109,22 @@ class AuthService(private val sessionManager: SessionManager = GlobalSessionMana
           // 直接提交（来自客户端的 preload 结果）
           val execution = request.execution!!
           val loginFormParameters =
-                  if (!request.captcha.isNullOrBlank()) {
-                    CasParser.buildCaptchaLoginParameters(request)
-                  } else {
-                    CasParser.buildDefaultParameters(request, execution)
-                  }
+              if (!request.captcha.isNullOrBlank()) {
+                CasParser.buildCaptchaLoginParameters(request)
+              } else {
+                CasParser.buildDefaultParameters(request, execution)
+              }
 
           val loginSubmitResponse =
-                  noRedirectClient.post(LOGIN_URL) { setBody(FormDataContent(loginFormParameters)) }
+              noRedirectClient.post(LOGIN_URL) { setBody(FormDataContent(loginFormParameters)) }
 
           followRedirectsAndCheckError(loginSubmitResponse, noRedirectClient)
         } else {
           // 标准流程：先拉取登录页获取 execution
           val loginPageResponse = noRedirectClient.get(LOGIN_URL)
-          if (!loginPageResponse.status.isSuccess() &&
-                          loginPageResponse.status != HttpStatusCode.Found
+          if (
+              !loginPageResponse.status.isSuccess() &&
+                  loginPageResponse.status != HttpStatusCode.Found
           ) {
             failLogin("load login page status=" + loginPageResponse.status)
           }
@@ -139,27 +140,22 @@ class AuthService(private val sessionManager: SessionManager = GlobalSessionMana
               if (request.captcha.isNullOrBlank()) {
                 val captchaImageBytes = getCaptchaImage(client, captchaInfo.id)
                 val base64Image =
-                        captchaImageBytes?.let {
-                          "data:image/jpeg;base64," +
-                                  java.util.Base64.getEncoder().encodeToString(it)
-                        }
+                    captchaImageBytes?.let {
+                      "data:image/jpeg;base64," + java.util.Base64.getEncoder().encodeToString(it)
+                    }
                 throw CaptchaRequiredException(
-                        captchaInfo.copy(base64Image = base64Image),
-                        execution
+                    captchaInfo.copy(base64Image = base64Image),
+                    execution,
                 )
               }
               val loginFormParameters = CasParser.buildCaptchaLoginParameters(request)
               val loginSubmitResponse =
-                      noRedirectClient.post(LOGIN_URL) {
-                        setBody(FormDataContent(loginFormParameters))
-                      }
+                  noRedirectClient.post(LOGIN_URL) { setBody(FormDataContent(loginFormParameters)) }
               followRedirectsAndCheckError(loginSubmitResponse, noRedirectClient)
             } else {
               val loginFormParameters = CasParser.buildCasLoginParameters(loginPageHtml, request)
               val loginSubmitResponse =
-                      noRedirectClient.post(LOGIN_URL) {
-                        setBody(FormDataContent(loginFormParameters))
-                      }
+                  noRedirectClient.post(LOGIN_URL) { setBody(FormDataContent(loginFormParameters)) }
               followRedirectsAndCheckError(loginSubmitResponse, noRedirectClient)
             }
           }
@@ -168,9 +164,9 @@ class AuthService(private val sessionManager: SessionManager = GlobalSessionMana
 
       // 3. 激活相关子系统会话并验证（UC + BYXT 并行）
       client.get(
-              VpnCipher.toVpnUrl(
-                      "https://uc.buaa.edu.cn/api/login?target=https%3A%2F%2Fuc.buaa.edu.cn%2F%23%2Fuser%2Flogin"
-              )
+          VpnCipher.toVpnUrl(
+              "https://uc.buaa.edu.cn/api/login?target=https%3A%2F%2Fuc.buaa.edu.cn%2F%23%2Fuser%2Flogin"
+          )
       )
 
       val userData: UserData?
@@ -190,13 +186,14 @@ class AuthService(private val sessionManager: SessionManager = GlobalSessionMana
       if (!committed) {
         sessionCandidate?.let {
           log.debug("Disposing incomplete session candidate for user: {}", it.username)
-          runCatching { sessionManager.disposeSessionCandidate(it) }.onFailure { disposeError ->
-            log.warn(
+          runCatching { sessionManager.disposeSessionCandidate(it) }
+              .onFailure { disposeError ->
+                log.warn(
                     "Failed to dispose incomplete session candidate for user: {}",
                     it.username,
                     disposeError,
-            )
-          }
+                )
+              }
         }
       }
     }
@@ -233,9 +230,9 @@ class AuthService(private val sessionManager: SessionManager = GlobalSessionMana
         // 检测自动登录（已在 SSO 登录）
         if (loginPageResponse.status.value in 300..399) {
           client.get(
-                  VpnCipher.toVpnUrl(
-                          "https://uc.buaa.edu.cn/api/login?target=https%3A%2F%2Fuc.buaa.edu.cn%2F%23%2Fuser%2Flogin"
-                  )
+              VpnCipher.toVpnUrl(
+                  "https://uc.buaa.edu.cn/api/login?target=https%3A%2F%2Fuc.buaa.edu.cn%2F%23%2Fuser%2Flogin"
+              )
           )
 
           val userData: UserData?
@@ -247,29 +244,29 @@ class AuthService(private val sessionManager: SessionManager = GlobalSessionMana
 
           if (userData != null && !userData.schoolid.isNullOrBlank()) {
             val sessionCandidate =
-                    sessionManager.promotePreLoginSession(clientId, userData.schoolid)
+                sessionManager.promotePreLoginSession(clientId, userData.schoolid)
             if (sessionCandidate != null) {
               val sessionWithToken =
-                      sessionManager.commitSessionWithToken(sessionCandidate, userData)
+                  sessionManager.commitSessionWithToken(sessionCandidate, userData)
               return@withNoRedirectClient LoginPreloadResponse(
-                      captchaRequired = false,
-                      clientId = clientId,
-                      token = sessionWithToken.jwtToken,
-                      userData = userData,
+                  captchaRequired = false,
+                  clientId = clientId,
+                  token = sessionWithToken.jwtToken,
+                  userData = userData,
               )
             }
           }
           return@withNoRedirectClient LoginPreloadResponse(
-                  captchaRequired = false,
-                  clientId = clientId,
+              captchaRequired = false,
+              clientId = clientId,
           )
         }
 
         if (loginPageResponse.status != HttpStatusCode.OK)
-                return@withNoRedirectClient LoginPreloadResponse(
-                        captchaRequired = false,
-                        clientId = clientId,
-                )
+            return@withNoRedirectClient LoginPreloadResponse(
+                captchaRequired = false,
+                clientId = clientId,
+            )
 
         val loginPageHtml = loginPageResponse.bodyAsText()
         val execution = CasParser.extractExecution(loginPageHtml)
@@ -278,20 +275,20 @@ class AuthService(private val sessionManager: SessionManager = GlobalSessionMana
         if (captchaInfo != null) {
           val captchaImageBytes = getCaptchaImage(client, captchaInfo.id)
           val base64Image =
-                  captchaImageBytes?.let {
-                    "data:image/jpeg;base64," + java.util.Base64.getEncoder().encodeToString(it)
-                  }
+              captchaImageBytes?.let {
+                "data:image/jpeg;base64," + java.util.Base64.getEncoder().encodeToString(it)
+              }
           LoginPreloadResponse(
-                  captchaRequired = true,
-                  captcha = captchaInfo.copy(base64Image = base64Image),
-                  execution = execution,
-                  clientId = clientId,
+              captchaRequired = true,
+              captcha = captchaInfo.copy(base64Image = base64Image),
+              execution = execution,
+              clientId = clientId,
           )
         } else {
           LoginPreloadResponse(
-                  captchaRequired = false,
-                  execution = execution.takeIf { it.isNotBlank() },
-                  clientId = clientId,
+              captchaRequired = false,
+              execution = execution.takeIf { it.isNotBlank() },
+              clientId = clientId,
           )
         }
       }
@@ -302,8 +299,8 @@ class AuthService(private val sessionManager: SessionManager = GlobalSessionMana
   }
 
   internal suspend fun <T> withNoRedirectClient(
-          baseClient: HttpClient,
-          block: suspend (HttpClient) -> T,
+      baseClient: HttpClient,
+      block: suspend (HttpClient) -> T,
   ): T {
     val derivedClient = derivedClientFactory.create(baseClient)
     return try {
@@ -316,10 +313,10 @@ class AuthService(private val sessionManager: SessionManager = GlobalSessionMana
   /** 访问状态接口验证当前客户端是否已成功认证。 */
   private suspend fun verifySession(client: HttpClient): UserData? {
     val statusResponse =
-            client.get(VpnCipher.toVpnUrl(UC_STATUS_URL)) {
-              header(HttpHeaders.Accept, "application/json, text/javascript, */*; q=0.01")
-              header("X-Requested-With", "XMLHttpRequest")
-            }
+        client.get(VpnCipher.toVpnUrl(UC_STATUS_URL)) {
+          header(HttpHeaders.Accept, "application/json, text/javascript, */*; q=0.01")
+          header("X-Requested-With", "XMLHttpRequest")
+        }
     if (statusResponse.status != HttpStatusCode.OK) return null
     val body = statusResponse.bodyAsText()
     if (!body.trimStart().startsWith("{")) return null
@@ -364,20 +361,20 @@ class AuthService(private val sessionManager: SessionManager = GlobalSessionMana
    * @throws LoginException 当检测到登录失败、凭据错误或异常信息时抛出。
    */
   private suspend fun followRedirectsAndCheckError(
-          initialResponse: HttpResponse,
-          noRedirectClient: HttpClient,
+      initialResponse: HttpResponse,
+      noRedirectClient: HttpClient,
   ): HttpResponse {
     var currentResponse = initialResponse
     log.debug("Following redirects starting from: {}", initialResponse.request.url)
     while (currentResponse.status.value in 300..399) {
       val location = currentResponse.headers[HttpHeaders.Location] ?: break
       val nextUrl =
-              try {
-                val base = java.net.URI.create(currentResponse.request.url.toString())
-                base.resolve(location).toURL().toString()
-              } catch (e: Exception) {
-                location
-              }
+          try {
+            val base = java.net.URI.create(currentResponse.request.url.toString())
+            base.resolve(location).toURL().toString()
+          } catch (e: Exception) {
+            location
+          }
       log.debug("Redirecting to: {}", nextUrl)
       currentResponse = noRedirectClient.get(nextUrl)
     }
@@ -388,8 +385,9 @@ class AuthService(private val sessionManager: SessionManager = GlobalSessionMana
     if (url.contains("exception.message=")) {
       failLogin(url.substringAfter("exception.message=").decodeURLQueryComponent())
     }
-    if (currentResponse.status == HttpStatusCode.Unauthorized ||
-                    CasParser.findLoginError(bodyText) != null
+    if (
+        currentResponse.status == HttpStatusCode.Unauthorized ||
+            CasParser.findLoginError(bodyText) != null
     ) {
       failLogin(CasParser.findLoginError(bodyText) ?: CasParser.extractTipText(bodyText))
     }

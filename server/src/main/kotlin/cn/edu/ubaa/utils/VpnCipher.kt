@@ -24,8 +24,8 @@ object VpnCipher {
 
     try {
       val connection =
-        URI.create("https://byxt.buaa.edu.cn").toURL().openConnection()
-          as java.net.HttpURLConnection
+          URI.create("https://byxt.buaa.edu.cn").toURL().openConnection()
+              as java.net.HttpURLConnection
       connection.requestMethod = "HEAD"
       connection.connectTimeout = 3000
       connection.connect()
@@ -65,12 +65,12 @@ object VpnCipher {
       val u = URI.create(url).toURL()
       if (u.host == "d.buaa.edu.cn") return url
       val p =
-        when {
-          u.port == -1 -> u.protocol
-          u.protocol == "http" && u.port == 80 -> "http"
-          u.protocol == "https" && u.port == 443 -> "https"
-          else -> "${u.protocol}-${u.port}"
-        }
+          when {
+            u.port == -1 -> u.protocol
+            u.protocol == "http" && u.port == 80 -> "http"
+            u.protocol == "https" && u.port == 443 -> "https"
+            else -> "${u.protocol}-${u.port}"
+          }
       "https://d.buaa.edu.cn/$p/${encrypt(u.host)}${u.path}${u.query?.let { "?$it" } ?: ""}${u.ref?.let { "#$it" } ?: ""}"
     } catch (_: Exception) {
       url
@@ -82,7 +82,7 @@ object VpnCipher {
 
   /** 将十六进制字符串转换为字节数组。 */
   private fun hexToBytes(hex: String): ByteArray =
-    ByteArray(hex.length / 2) {
-      ((hex[it * 2].digitToInt(16) shl 4) or hex[it * 2 + 1].digitToInt(16)).toByte()
-    }
+      ByteArray(hex.length / 2) {
+        ((hex[it * 2].digitToInt(16) shl 4) or hex[it * 2 + 1].digitToInt(16)).toByte()
+      }
 }

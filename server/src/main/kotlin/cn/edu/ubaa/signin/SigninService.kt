@@ -11,8 +11,8 @@ object SigninService {
   private const val DEFAULT_MAX_IDLE_MILLIS = 30 * 60 * 1000L
 
   private data class CachedClient(
-    val client: SigninClient,
-    @Volatile var lastAccessAt: Long,
+      val client: SigninClient,
+      @Volatile var lastAccessAt: Long,
   )
 
   private val clientCache = ConcurrentHashMap<String, CachedClient>()
@@ -21,9 +21,9 @@ object SigninService {
   private fun getClient(studentId: String): SigninClient {
     val now = System.currentTimeMillis()
     val cached =
-      clientCache.compute(studentId) { _, existing ->
-        existing?.also { it.lastAccessAt = now } ?: CachedClient(SigninClient(studentId), now)
-      }!!
+        clientCache.compute(studentId) { _, existing ->
+          existing?.also { it.lastAccessAt = now } ?: CachedClient(SigninClient(studentId), now)
+        }!!
     return cached.client
   }
 
@@ -38,9 +38,9 @@ object SigninService {
   suspend fun performSignin(studentId: String, courseId: String): SigninActionResponse {
     val (success, message) = getClient(studentId).signIn(courseId)
     return SigninActionResponse(
-      code = if (success) 200 else 400,
-      success = success,
-      message = message,
+        code = if (success) 200 else 400,
+        success = success,
+        message = message,
     )
   }
 

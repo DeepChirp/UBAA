@@ -27,8 +27,8 @@ import kotlinx.coroutines.withContext
  * @param initialSubject 关联的用户名或预登录标识（隔离标识）。
  */
 class RedisCookieStorage(
-        private val commands: RedisCommands<String, String>,
-        initialSubject: String,
+    private val commands: RedisCommands<String, String>,
+    initialSubject: String,
 ) : ManagedCookieStorage {
   private val mutex = Mutex()
   @Volatile private var key = storageKey(initialSubject)
@@ -49,17 +49,17 @@ class RedisCookieStorage(
     val createdAt = System.currentTimeMillis()
     val expired = isExpired(createdAt, expiresAt, maxAge, createdAt)
     val value =
-            serializeCookie(
-                    name = cookie.name,
-                    value = cookie.value,
-                    domain = domain,
-                    path = path,
-                    expiresAt = expiresAt,
-                    secure = cookie.secure,
-                    httpOnly = cookie.httpOnly,
-                    maxAge = maxAge,
-                    createdAt = createdAt,
-            )
+        serializeCookie(
+            name = cookie.name,
+            value = cookie.value,
+            domain = domain,
+            path = path,
+            expiresAt = expiresAt,
+            secure = cookie.secure,
+            httpOnly = cookie.httpOnly,
+            maxAge = maxAge,
+            createdAt = createdAt,
+        )
 
     mutex.withLock {
       ensureCacheLoaded()
@@ -90,11 +90,11 @@ class RedisCookieStorage(
 
       for ((field, encodedCookie) in cookieMap) {
         val record =
-                decodeCookie(encodedCookie)
-                        ?: run {
-                          expiredFields.add(field)
-                          continue
-                        }
+            decodeCookie(encodedCookie)
+                ?: run {
+                  expiredFields.add(field)
+                  continue
+                }
         if (isExpired(now, record.expiresAt, record.maxAge, record.createdAt)) {
           expiredFields.add(field)
           continue
@@ -104,17 +104,17 @@ class RedisCookieStorage(
         if (record.secure && !isHttps(requestUrl)) continue
 
         results.add(
-                Cookie(
-                        name = record.name,
-                        value = record.value,
-                        domain = record.domain,
-                        path = record.path,
-                        expires = record.expiresAt?.let { GMTDate(it) },
-                        secure = record.secure,
-                        httpOnly = record.httpOnly,
-                        maxAge = record.maxAge,
-                        encoding = CookieEncoding.RAW,
-                )
+            Cookie(
+                name = record.name,
+                value = record.value,
+                domain = record.domain,
+                path = record.path,
+                expires = record.expiresAt?.let { GMTDate(it) },
+                secure = record.secure,
+                httpOnly = record.httpOnly,
+                maxAge = record.maxAge,
+                encoding = CookieEncoding.RAW,
+            )
         )
       }
 
@@ -216,54 +216,54 @@ class RedisCookieStorage(
   private suspend fun <T> redis(block: () -> T): T = withContext(Dispatchers.IO) { block() }
 
   private fun serializeCookie(
-          name: String,
-          value: String,
-          domain: String,
-          path: String,
-          expiresAt: Long?,
-          secure: Boolean,
-          httpOnly: Boolean,
-          maxAge: Int,
-          createdAt: Long,
+      name: String,
+      value: String,
+      domain: String,
+      path: String,
+      expiresAt: Long?,
+      secure: Boolean,
+      httpOnly: Boolean,
+      maxAge: Int,
+      createdAt: Long,
   ): String {
     return listOf(
-                    escape(name),
-                    escape(value),
-                    escape(domain),
-                    escape(path),
-                    expiresAt?.toString().orEmpty(),
-                    secure.toString(),
-                    httpOnly.toString(),
-                    maxAge.toString(),
-                    createdAt.toString(),
-            )
-            .joinToString("\u001F")
+            escape(name),
+            escape(value),
+            escape(domain),
+            escape(path),
+            expiresAt?.toString().orEmpty(),
+            secure.toString(),
+            httpOnly.toString(),
+            maxAge.toString(),
+            createdAt.toString(),
+        )
+        .joinToString("\u001F")
   }
 
   private fun decodeCookie(encoded: String): StoredCookie? {
     val parts = encoded.split("\u001F")
     if (parts.size != 9) return null
     return StoredCookie(
-            name = unescape(parts[0]),
-            value = unescape(parts[1]),
-            domain = unescape(parts[2]),
-            path = unescape(parts[3]),
-            expiresAt = parts[4].ifBlank { null }?.toLongOrNull(),
-            secure = parts[5].toBooleanStrictOrNull() ?: false,
-            httpOnly = parts[6].toBooleanStrictOrNull() ?: false,
-            maxAge = parts[7].toIntOrNull() ?: -1,
-            createdAt = parts[8].toLongOrNull() ?: 0L,
+        name = unescape(parts[0]),
+        value = unescape(parts[1]),
+        domain = unescape(parts[2]),
+        path = unescape(parts[3]),
+        expiresAt = parts[4].ifBlank { null }?.toLongOrNull(),
+        secure = parts[5].toBooleanStrictOrNull() ?: false,
+        httpOnly = parts[6].toBooleanStrictOrNull() ?: false,
+        maxAge = parts[7].toIntOrNull() ?: -1,
+        createdAt = parts[8].toLongOrNull() ?: 0L,
     )
   }
 
   private fun computeKeyTtlSeconds(expiresAt: Long?, maxAge: Int, createdAt: Long): Long {
     val now = System.currentTimeMillis()
     val cookieExpiryMs =
-            listOfNotNull(
-                            expiresAt,
-                            maxAge.takeIf { it >= 0 }?.let { createdAt + it * 1000L },
-                    )
-                    .minOrNull()
+        listOfNotNull(
+                expiresAt,
+                maxAge.takeIf { it >= 0 }?.let { createdAt + it * 1000L },
+            )
+            .minOrNull()
     return if (cookieExpiryMs == null) {
       keyTtlSeconds
     } else {
@@ -278,11 +278,11 @@ class RedisCookieStorage(
       val record = decodeCookie(encoded) ?: continue
       if (isExpired(now, record.expiresAt, record.maxAge, record.createdAt)) continue
       val expiry =
-              listOfNotNull(
-                              record.expiresAt,
-                              record.maxAge.takeIf { it >= 0 }?.let { record.createdAt + it * 1000L },
-                      )
-                      .minOrNull()
+          listOfNotNull(
+                  record.expiresAt,
+                  record.maxAge.takeIf { it >= 0 }?.let { record.createdAt + it * 1000L },
+              )
+              .minOrNull()
       if (expiry == null) {
         hasSessionCookie = true
         continue
@@ -323,21 +323,21 @@ class RedisCookieStorage(
   private fun isHttps(url: Url): Boolean = url.protocol.name.equals("https", true)
 
   private data class StoredCookie(
-          val name: String,
-          val value: String,
-          val domain: String,
-          val path: String,
-          val expiresAt: Long?,
-          val secure: Boolean,
-          val httpOnly: Boolean,
-          val maxAge: Int,
-          val createdAt: Long,
+      val name: String,
+      val value: String,
+      val domain: String,
+      val path: String,
+      val expiresAt: Long?,
+      val secure: Boolean,
+      val httpOnly: Boolean,
+      val maxAge: Int,
+      val createdAt: Long,
   )
 
   companion object {
     internal fun storageKey(subject: String): String = "cookies:$subject"
 
     private fun cookieField(name: String, domain: String, path: String): String =
-            "$domain|$path|$name"
+        "$domain|$path|$name"
   }
 }

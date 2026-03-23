@@ -20,16 +20,16 @@ import kotlinx.serialization.json.Json
 
 interface SessionPersistence {
   data class SessionRecord(
-          val userData: UserData,
-          val authenticatedAt: Instant,
-          val lastActivity: Instant,
+      val userData: UserData,
+      val authenticatedAt: Instant,
+      val lastActivity: Instant,
   )
 
   suspend fun saveSession(
-          username: String,
-          userData: UserData,
-          authenticatedAt: Instant,
-          lastActivity: Instant,
+      username: String,
+      userData: UserData,
+      authenticatedAt: Instant,
+      lastActivity: Instant,
   )
 
   suspend fun updateLastActivity(username: String, lastActivity: Instant)
@@ -63,13 +63,13 @@ interface ManagedCookieStorageFactory {
 
 /** 会话管理器。 负责隔离不同用户的 HttpClient 实例、Cookie 存储，以及管理 JWT 与用户会话之间的映射关系。 支持会话持久化到 Redis，实现重启后的会话恢复。 */
 class SessionManager(
-        private val sessionTtl: Duration = Duration.ofMinutes(30),
-        private val redisUri: String = DEFAULT_REDIS_URI,
-        private val activityPersistInterval: Duration = Duration.ofSeconds(60),
-        private val sessionStore: SessionPersistence = RedisSessionStore(redisUri),
-        private val cookieStorageFactory: ManagedCookieStorageFactory =
-                RedisCookieStorageFactory(redisUri),
-        private val clientFactory: (CookiesStorage) -> HttpClient = ::buildManagedClient,
+    private val sessionTtl: Duration = Duration.ofMinutes(30),
+    private val redisUri: String = DEFAULT_REDIS_URI,
+    private val activityPersistInterval: Duration = Duration.ofSeconds(60),
+    private val sessionStore: SessionPersistence = RedisSessionStore(redisUri),
+    private val cookieStorageFactory: ManagedCookieStorageFactory =
+        RedisCookieStorageFactory(redisUri),
+    private val clientFactory: (CookiesStorage) -> HttpClient = ::buildManagedClient,
 ) {
 
   enum class SessionAccess {
@@ -79,19 +79,19 @@ class SessionManager(
 
   /** 登录过程中的临时会话载体。 */
   data class SessionCandidate(
-          val username: String,
-          val client: HttpClient,
-          val cookieStorage: ManagedCookieStorage,
+      val username: String,
+      val client: HttpClient,
+      val cookieStorage: ManagedCookieStorage,
   )
 
   /** 活跃的用户会话。 封装了用户的认证信息、专属客户端以及活动时间追踪。 */
   class UserSession(
-          val username: String,
-          val client: HttpClient,
-          val cookieStorage: ManagedCookieStorage,
-          val userData: UserData,
-          val authenticatedAt: Instant,
-          initialActivity: Instant = authenticatedAt,
+      val username: String,
+      val client: HttpClient,
+      val cookieStorage: ManagedCookieStorage,
+      val userData: UserData,
+      val authenticatedAt: Instant,
+      initialActivity: Instant = authenticatedAt,
   ) {
     @Volatile private var lastActivity: Instant = initialActivity
     @Volatile private var lastPersistedActivity: Instant = initialActivity
@@ -118,10 +118,10 @@ class SessionManager(
 
   /** 预登录会话：用于 preload 阶段，此时用户尚未输入凭据，通过 clientId 标识。 */
   data class PreLoginCandidate(
-          val clientId: String,
-          val client: HttpClient,
-          val cookieStorage: ManagedCookieStorage,
-          val createdAt: Instant = Instant.now(),
+      val clientId: String,
+      val client: HttpClient,
+      val cookieStorage: ManagedCookieStorage,
+      val createdAt: Instant = Instant.now(),
   ) {
     fun isExpired(ttl: Duration): Boolean = Instant.now().isAfter(createdAt.plus(ttl))
   }
@@ -170,21 +170,21 @@ class SessionManager(
   }
 
   suspend fun commitSessionWithToken(
-          candidate: SessionCandidate,
-          userData: UserData
+      candidate: SessionCandidate,
+      userData: UserData,
   ): SessionWithToken {
     // 登录期间 Cookie 只缓存在内存中，此处批量写回 Redis
     candidate.cookieStorage.flush()
     candidate.cookieStorage.setWriteThrough(true)
 
     val newSession =
-            UserSession(
-                    username = candidate.username,
-                    client = candidate.client,
-                    cookieStorage = candidate.cookieStorage,
-                    userData = userData,
-                    authenticatedAt = Instant.now(),
-            )
+        UserSession(
+            username = candidate.username,
+            client = candidate.client,
+            cookieStorage = candidate.cookieStorage,
+            userData = userData,
+            authenticatedAt = Instant.now(),
+        )
 
     val jwtToken = JwtUtil.generateToken(candidate.username, sessionTtl)
     sessions.compute(candidate.username) { _, previous ->
@@ -194,18 +194,18 @@ class SessionManager(
     }
 
     sessionStore.saveSession(
-            username = candidate.username,
-            userData = userData,
-            authenticatedAt = newSession.authenticatedAt,
-            lastActivity = newSession.lastActivity(),
+        username = candidate.username,
+        userData = userData,
+        authenticatedAt = newSession.authenticatedAt,
+        lastActivity = newSession.lastActivity(),
     )
 
     return SessionWithToken(newSession, jwtToken)
   }
 
   suspend fun getSession(
-          username: String,
-          access: SessionAccess = SessionAccess.TOUCH,
+      username: String,
+      access: SessionAccess = SessionAccess.TOUCH,
   ): UserSession? {
     val active = sessions[username] ?: restoreSession(username) ?: return null
     if (active.isExpired(sessionTtl)) {
@@ -220,8 +220,8 @@ class SessionManager(
   }
 
   suspend fun getSessionByToken(
-          jwtToken: String,
-          access: SessionAccess = SessionAccess.TOUCH,
+      jwtToken: String,
+      access: SessionAccess = SessionAccess.TOUCH,
   ): UserSession? {
     val username = JwtUtil.validateTokenAndGetUsername(jwtToken) ?: return null
     return getSession(username, access)
@@ -229,7 +229,7 @@ class SessionManager(
 
   suspend fun requireSession(username: String): UserSession {
     return getSession(username, SessionAccess.TOUCH)
-            ?: throw RuntimeException("Session expired or invalid for user: $username")
+        ?: throw RuntimeException("Session expired or invalid for user: $username")
   }
 
   suspend fun invalidateSession(username: String) {
@@ -299,8 +299,8 @@ class SessionManager(
   }
 
   internal suspend fun disposeSessionCandidate(
-          candidate: SessionCandidate,
-          clearCookies: Boolean = true,
+      candidate: SessionCandidate,
+      clearCookies: Boolean = true,
   ) {
     if (clearCookies) {
       clearCookieStorage(candidate.username, candidate.cookieStorage)
@@ -322,21 +322,23 @@ class SessionManager(
     val mutex = restoreMutexes.computeIfAbsent(username) { Mutex() }
     return try {
       mutex.withLock {
-        sessions[username]?.let { return@withLock it }
+        sessions[username]?.let {
+          return@withLock it
+        }
 
         val record = sessionStore.loadSession(username) ?: return@withLock null
         val cookieStorage = cookieStorageFactory.create(username)
         cookieStorage.setWriteThrough(true)
         val client = clientFactory(cookieStorage)
         val restored =
-                UserSession(
-                        username = username,
-                        client = client,
-                        cookieStorage = cookieStorage,
-                        userData = record.userData,
-                        authenticatedAt = record.authenticatedAt,
-                        initialActivity = record.lastActivity,
-                )
+            UserSession(
+                username = username,
+                client = client,
+                cookieStorage = cookieStorage,
+                userData = record.userData,
+                authenticatedAt = record.authenticatedAt,
+                initialActivity = record.lastActivity,
+            )
 
         val existing = sessions.putIfAbsent(username, restored)
         if (existing != null) {
@@ -355,8 +357,8 @@ class SessionManager(
   }
 
   private suspend fun disposePreLoginCandidate(
-          candidate: PreLoginCandidate,
-          clearCookies: Boolean
+      candidate: PreLoginCandidate,
+      clearCookies: Boolean,
   ) {
     if (clearCookies) {
       clearCookieStorage(preLoginSubject(candidate.clientId), candidate.cookieStorage)
@@ -401,30 +403,30 @@ private fun buildManagedClient(cookieStorage: CookiesStorage): HttpClient {
       if (System.getenv("TRUST_ALL_CERTS")?.lowercase() == "true") {
         https {
           trustManager =
-                  object : javax.net.ssl.X509TrustManager {
-                    override fun checkClientTrusted(
-                            c: Array<java.security.cert.X509Certificate>?,
-                            a: String?,
-                    ) {}
+              object : javax.net.ssl.X509TrustManager {
+                override fun checkClientTrusted(
+                    c: Array<java.security.cert.X509Certificate>?,
+                    a: String?,
+                ) {}
 
-                    override fun checkServerTrusted(
-                            c: Array<java.security.cert.X509Certificate>?,
-                            a: String?,
-                    ) {}
+                override fun checkServerTrusted(
+                    c: Array<java.security.cert.X509Certificate>?,
+                    a: String?,
+                ) {}
 
-                    override fun getAcceptedIssuers(): Array<java.security.cert.X509Certificate> =
-                            arrayOf()
-                  }
+                override fun getAcceptedIssuers(): Array<java.security.cert.X509Certificate> =
+                    arrayOf()
+              }
         }
       }
     }
     install(HttpCookies) { storage = cookieStorage }
     install(ContentNegotiation) {
       json(
-              Json {
-                ignoreUnknownKeys = true
-                coerceInputValues = true
-              }
+          Json {
+            ignoreUnknownKeys = true
+            coerceInputValues = true
+          }
       )
     }
     install(HttpTimeout) {

@@ -31,15 +31,15 @@ import org.slf4j.LoggerFactory
  * 5. 课程统计信息的汇总与分类处理。
  */
 class BykcService(
-  private val sessionManager: SessionManager = GlobalSessionManager.instance,
-  private val clientProvider: (String) -> BykcClient = ::BykcClient,
+    private val sessionManager: SessionManager = GlobalSessionManager.instance,
+    private val clientProvider: (String) -> BykcClient = ::BykcClient,
 ) {
   private val log = LoggerFactory.getLogger(BykcService::class.java)
   private val json = Json { ignoreUnknownKeys = true }
 
   private data class CachedClient(
-    val client: BykcClient,
-    @Volatile var lastAccessAt: Long,
+      val client: BykcClient,
+      @Volatile var lastAccessAt: Long,
   )
 
   private val clientCache = ConcurrentHashMap<String, CachedClient>()
@@ -48,15 +48,15 @@ class BykcService(
   private fun getClient(username: String): BykcClient {
     val now = System.currentTimeMillis()
     val cached =
-      clientCache.compute(username) { _, existing ->
-        existing?.also { it.lastAccessAt = now }
-          ?: CachedClient(
-            clientProvider(username).also {
-              log.debug("Created new BykcClient for user: {}", username)
-            },
-            now,
-          )
-      }!!
+        clientCache.compute(username) { _, existing ->
+          existing?.also { it.lastAccessAt = now }
+              ?: CachedClient(
+                  clientProvider(username).also {
+                    log.debug("Created new BykcClient for user: {}", username)
+                  },
+                  now,
+              )
+        }!!
     return cached.client
   }
 
@@ -80,42 +80,42 @@ class BykcService(
 
   /** 查询当前可选或已开始的博雅课程列表。 会自动计算每门课程的状态并进行分页。 */
   suspend fun getCourses(
-    username: String,
-    pageNumber: Int = 1,
-    pageSize: Int = 20,
+      username: String,
+      pageNumber: Int = 1,
+      pageSize: Int = 20,
   ): BykcCoursePage {
     ensureBykcLogin(username)
     val client = getClient(username)
     val result = client.queryStudentSemesterCourseByPage(pageNumber, pageSize)
 
     val courses =
-      result.content.mapNotNull { course ->
-        try {
-          val status = calculateCourseStatus(course)
-          if (status == BykcCourseStatusEnum.EXPIRED || status == BykcCourseStatusEnum.ENDED)
-            return@mapNotNull null
+        result.content.mapNotNull { course ->
+          try {
+            val status = calculateCourseStatus(course)
+            if (status == BykcCourseStatusEnum.EXPIRED || status == BykcCourseStatusEnum.ENDED)
+                return@mapNotNull null
 
-          BykcCourseDto(
-            id = course.id,
-            courseName = course.courseName,
-            coursePosition = course.coursePosition,
-            courseTeacher = course.courseTeacher,
-            courseStartDate = course.courseStartDate,
-            courseEndDate = course.courseEndDate,
-            courseSelectStartDate = course.courseSelectStartDate,
-            courseSelectEndDate = course.courseSelectEndDate,
-            courseMaxCount = course.courseMaxCount,
-            courseCurrentCount = course.courseCurrentCount ?: 0,
-            category = course.courseNewKind1?.kindName,
-            subCategory = course.courseNewKind2?.kindName,
-            status = status.displayName,
-            selected = course.selected ?: false,
-            courseDesc = course.courseDesc,
-          )
-        } catch (e: Exception) {
-          null
+            BykcCourseDto(
+                id = course.id,
+                courseName = course.courseName,
+                coursePosition = course.coursePosition,
+                courseTeacher = course.courseTeacher,
+                courseStartDate = course.courseStartDate,
+                courseEndDate = course.courseEndDate,
+                courseSelectStartDate = course.courseSelectStartDate,
+                courseSelectEndDate = course.courseSelectEndDate,
+                courseMaxCount = course.courseMaxCount,
+                courseCurrentCount = course.courseCurrentCount ?: 0,
+                category = course.courseNewKind1?.kindName,
+                subCategory = course.courseNewKind2?.kindName,
+                status = status.displayName,
+                selected = course.selected ?: false,
+                courseDesc = course.courseDesc,
+            )
+          } catch (e: Exception) {
+            null
+          }
         }
-      }
 
     return BykcCoursePage(courses, result.totalElements, result.totalPages, pageNumber, pageSize)
   }
@@ -127,26 +127,26 @@ class BykcService(
     val result = client.queryStudentSemesterCourseByPage(pageNumber, pageSize)
 
     val courses =
-      result.content.map { course ->
-        val status = calculateCourseStatus(course)
-        BykcCourseDto(
-          id = course.id,
-          courseName = course.courseName,
-          coursePosition = course.coursePosition,
-          courseTeacher = course.courseTeacher,
-          courseStartDate = course.courseStartDate,
-          courseEndDate = course.courseEndDate,
-          courseSelectStartDate = course.courseSelectStartDate,
-          courseSelectEndDate = course.courseSelectEndDate,
-          courseMaxCount = course.courseMaxCount,
-          courseCurrentCount = course.courseCurrentCount ?: 0,
-          category = course.courseNewKind1?.kindName,
-          subCategory = course.courseNewKind2?.kindName,
-          status = status.displayName,
-          selected = course.selected ?: false,
-          courseDesc = course.courseDesc,
-        )
-      }
+        result.content.map { course ->
+          val status = calculateCourseStatus(course)
+          BykcCourseDto(
+              id = course.id,
+              courseName = course.courseName,
+              coursePosition = course.coursePosition,
+              courseTeacher = course.courseTeacher,
+              courseStartDate = course.courseStartDate,
+              courseEndDate = course.courseEndDate,
+              courseSelectStartDate = course.courseSelectStartDate,
+              courseSelectEndDate = course.courseSelectEndDate,
+              courseMaxCount = course.courseMaxCount,
+              courseCurrentCount = course.courseCurrentCount ?: 0,
+              category = course.courseNewKind1?.kindName,
+              subCategory = course.courseNewKind2?.kindName,
+              status = status.displayName,
+              selected = course.selected ?: false,
+              courseDesc = course.courseDesc,
+          )
+        }
     return BykcCoursePage(courses, result.totalElements, result.totalPages, pageNumber, pageSize)
   }
 
@@ -180,32 +180,32 @@ class BykcService(
     val semester = config.semester.firstOrNull() ?: throw BykcException("无法获取当前学期信息")
 
     val chosenCourses =
-      client.queryChosenCourse(semester.semesterStartDate!!, semester.semesterEndDate!!)
+        client.queryChosenCourse(semester.semesterStartDate!!, semester.semesterEndDate!!)
     val now = LocalDateTime.now()
 
     return chosenCourses.map { chosen ->
       val course = chosen.courseInfo
       val signConfig = parseSignConfig(course?.courseSignConfig)
       BykcChosenCourseDto(
-        id = chosen.id,
-        courseId = course?.id ?: 0L,
-        courseName = course?.courseName ?: "未知课程",
-        coursePosition = course?.coursePosition,
-        courseTeacher = course?.courseTeacher,
-        courseStartDate = course?.courseStartDate,
-        courseEndDate = course?.courseEndDate,
-        selectDate = chosen.selectDate,
-        category = course?.courseNewKind1?.kindName,
-        subCategory = course?.courseNewKind2?.kindName,
-        checkin = chosen.checkin ?: 0,
-        score = chosen.score,
-        pass = chosen.pass,
-        canSign = canSign(signConfig, now),
-        canSignOut = canSignOut(signConfig, now),
-        signConfig = signConfig,
-        courseSignType = course?.courseSignType,
-        homework = chosen.homework,
-        signInfo = chosen.signInfo,
+          id = chosen.id,
+          courseId = course?.id ?: 0L,
+          courseName = course?.courseName ?: "未知课程",
+          coursePosition = course?.coursePosition,
+          courseTeacher = course?.courseTeacher,
+          courseStartDate = course?.courseStartDate,
+          courseEndDate = course?.courseEndDate,
+          selectDate = chosen.selectDate,
+          category = course?.courseNewKind1?.kindName,
+          subCategory = course?.courseNewKind2?.kindName,
+          checkin = chosen.checkin ?: 0,
+          score = chosen.score,
+          pass = chosen.pass,
+          canSign = canSign(signConfig, now),
+          canSignOut = canSignOut(signConfig, now),
+          signConfig = signConfig,
+          courseSignType = course?.courseSignType,
+          homework = chosen.homework,
+          signInfo = chosen.signInfo,
       )
     }
   }
@@ -227,9 +227,9 @@ class BykcService(
         val semester = config.semester.firstOrNull()
         if (semester?.semesterStartDate != null && semester.semesterEndDate != null) {
           val chosen =
-            client.queryChosenCourse(semester.semesterStartDate, semester.semesterEndDate).find {
-              it.courseInfo?.id == courseId
-            }
+              client.queryChosenCourse(semester.semesterStartDate, semester.semesterEndDate).find {
+                it.courseInfo?.id == courseId
+              }
           checkin = chosen?.checkin
           pass = chosen?.pass
         }
@@ -237,22 +237,22 @@ class BykcService(
     }
 
     return BykcCourseDetailDto(
-      id = course.id,
-      courseName = course.courseName,
-      coursePosition = course.coursePosition,
-      courseTeacher = course.courseTeacher,
-      courseStartDate = course.courseStartDate,
-      courseEndDate = course.courseEndDate,
-      courseMaxCount = course.courseMaxCount,
-      courseCurrentCount = course.courseCurrentCount ?: 0,
-      category = course.courseNewKind1?.kindName,
-      subCategory = course.courseNewKind2?.kindName,
-      status = status.displayName,
-      selected = course.selected ?: false,
-      courseDesc = course.courseDesc,
-      signConfig = signConfig,
-      checkin = checkin,
-      pass = pass,
+        id = course.id,
+        courseName = course.courseName,
+        coursePosition = course.coursePosition,
+        courseTeacher = course.courseTeacher,
+        courseStartDate = course.courseStartDate,
+        courseEndDate = course.courseEndDate,
+        courseMaxCount = course.courseMaxCount,
+        courseCurrentCount = course.courseCurrentCount ?: 0,
+        category = course.courseNewKind1?.kindName,
+        subCategory = course.courseNewKind2?.kindName,
+        status = status.displayName,
+        selected = course.selected ?: false,
+        courseDesc = course.courseDesc,
+        signConfig = signConfig,
+        checkin = checkin,
+        pass = pass,
     )
   }
 
@@ -263,7 +263,7 @@ class BykcService(
       val client = getClient(username)
       val signConfig = getSignConfig(client, courseId)
       if (!canSign(signConfig, LocalDateTime.now()))
-        return Result.failure(BykcException("当前不在签到时间窗口"))
+          return Result.failure(BykcException("当前不在签到时间窗口"))
 
       val (finalLat, finalLng) = randomSignLocation(signConfig, lat, lng)
       client.signCourse(courseId, finalLat, finalLng, 1)
@@ -275,17 +275,17 @@ class BykcService(
 
   /** 签退。 */
   suspend fun signOut(
-    username: String,
-    courseId: Long,
-    lat: Double?,
-    lng: Double?,
+      username: String,
+      courseId: Long,
+      lat: Double?,
+      lng: Double?,
   ): Result<String> {
     return try {
       ensureBykcLogin(username)
       val client = getClient(username)
       val signConfig = getSignConfig(client, courseId)
       if (!canSignOut(signConfig, LocalDateTime.now()))
-        return Result.failure(BykcException("当前不在签退时间窗口"))
+          return Result.failure(BykcException("当前不在签退时间窗口"))
 
       val (finalLat, finalLng) = randomSignLocation(signConfig, lat, lng)
       client.signCourse(courseId, finalLat, finalLng, 2)
@@ -315,9 +315,9 @@ class BykcService(
   }
 
   internal fun cacheClientForTesting(
-    username: String,
-    client: BykcClient,
-    lastAccessAt: Long = System.currentTimeMillis(),
+      username: String,
+      client: BykcClient,
+      lastAccessAt: Long = System.currentTimeMillis(),
   ) {
     clientCache[username] = CachedClient(client, lastAccessAt)
   }
@@ -337,11 +337,11 @@ class BykcService(
     return try {
       val config = json.decodeFromString<BykcSignConfig>(configJson)
       BykcSignConfigDto(
-        signStartDate = config.signStartDate,
-        signEndDate = config.signEndDate,
-        signOutStartDate = config.signOutStartDate,
-        signOutEndDate = config.signOutEndDate,
-        signPoints = config.signPointList.map { BykcSignPointDto(it.lat, it.lng, it.radius) },
+          signStartDate = config.signStartDate,
+          signEndDate = config.signEndDate,
+          signOutStartDate = config.signOutStartDate,
+          signOutEndDate = config.signOutEndDate,
+          signPoints = config.signPointList.map { BykcSignPointDto(it.lat, it.lng, it.radius) },
       )
     } catch (_: Exception) {
       null
@@ -374,9 +374,9 @@ class BykcService(
 
   /** 随机坐标生成：在合法的签到半径内随机化，提高安全性。 */
   private fun randomSignLocation(
-    signConfig: BykcSignConfigDto?,
-    fallbackLat: Double?,
-    fallbackLng: Double?,
+      signConfig: BykcSignConfigDto?,
+      fallbackLat: Double?,
+      fallbackLng: Double?,
   ): Pair<Double, Double> {
     val point = signConfig?.signPoints?.randomOrNull()
     if (point != null && point.radius > 0.0) {
@@ -389,10 +389,10 @@ class BykcService(
   }
 
   private fun destinationPoint(
-    lat: Double,
-    lng: Double,
-    dist: Double,
-    angle: Double,
+      lat: Double,
+      lng: Double,
+      dist: Double,
+      angle: Double,
   ): Pair<Double, Double> {
     val r = dist / 6_371_000.0
     val lr = Math.toRadians(lat)
@@ -416,7 +416,7 @@ class BykcService(
         ss != null && now.isBefore(ss) -> BykcCourseStatusEnum.PREVIEW
         se != null && now.isAfter(se) -> BykcCourseStatusEnum.ENDED
         course.courseCurrentCount != null && course.courseCurrentCount >= course.courseMaxCount ->
-          BykcCourseStatusEnum.FULL
+            BykcCourseStatusEnum.FULL
         else -> BykcCourseStatusEnum.AVAILABLE
       }
     } catch (_: Exception) {
@@ -433,13 +433,13 @@ class BykcService(
       val catName = catKey.substringAfter("|")
       subMap.forEach { (subKey, stats) ->
         cats.add(
-          BykcCategoryStatisticsDto(
-            catName,
-            subKey.substringAfter("|"),
-            stats.assessmentCount,
-            stats.completeAssessmentCount,
-            stats.completeAssessmentCount >= stats.assessmentCount,
-          )
+            BykcCategoryStatisticsDto(
+                catName,
+                subKey.substringAfter("|"),
+                stats.assessmentCount,
+                stats.completeAssessmentCount,
+                stats.completeAssessmentCount >= stats.assessmentCount,
+            )
         )
       }
     }

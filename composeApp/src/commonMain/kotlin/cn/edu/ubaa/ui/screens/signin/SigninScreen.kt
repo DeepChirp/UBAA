@@ -29,12 +29,12 @@ fun SigninScreen(viewModel: SigninViewModel) {
   }
 
   Scaffold(
-    snackbarHost = { SnackbarHost(snackbarHostState) },
-    floatingActionButton = {
-      FloatingActionButton(onClick = { viewModel.loadTodayClasses() }) {
-        Icon(Icons.Default.Refresh, "刷新")
-      }
-    },
+      snackbarHost = { SnackbarHost(snackbarHostState) },
+      floatingActionButton = {
+        FloatingActionButton(onClick = { viewModel.loadTodayClasses() }) {
+          Icon(Icons.Default.Refresh, "刷新")
+        }
+      },
   ) { padding ->
     Column(modifier = Modifier.fillMaxSize().padding(padding).padding(16.dp)) {
       // Text(
@@ -46,23 +46,23 @@ fun SigninScreen(viewModel: SigninViewModel) {
 
       when {
         uiState.isLoading ->
-          Box(Modifier.fillMaxSize(), Alignment.Center) { CircularProgressIndicator() }
+            Box(Modifier.fillMaxSize(), Alignment.Center) { CircularProgressIndicator() }
         uiState.error != null ->
-          Box(Modifier.fillMaxSize(), Alignment.Center) {
-            Text(text = uiState.error!!, color = MaterialTheme.colorScheme.error)
-          }
+            Box(Modifier.fillMaxSize(), Alignment.Center) {
+              Text(text = uiState.error!!, color = MaterialTheme.colorScheme.error)
+            }
         uiState.classes.isEmpty() ->
-          Box(Modifier.fillMaxSize(), Alignment.Center) { Text("今日无课程安排") }
+            Box(Modifier.fillMaxSize(), Alignment.Center) { Text("今日无课程安排") }
         else -> {
           LazyColumn(
-            verticalArrangement = Arrangement.spacedBy(16.dp),
-            modifier = Modifier.fillMaxSize(),
+              verticalArrangement = Arrangement.spacedBy(16.dp),
+              modifier = Modifier.fillMaxSize(),
           ) {
             items(uiState.classes) { clazz ->
               SigninClassCard(
-                clazz,
-                { viewModel.performSignin(clazz.courseId) },
-                uiState.signingInCourseId == clazz.courseId,
+                  clazz,
+                  { viewModel.performSignin(clazz.courseId) },
+                  uiState.signingInCourseId == clazz.courseId,
               )
             }
           }
@@ -77,59 +77,59 @@ fun SigninScreen(viewModel: SigninViewModel) {
 fun SigninClassCard(clazz: SigninClassDto, onSigninClick: () -> Unit, isSigningIn: Boolean) {
   val isSigned = clazz.signStatus == 1
   Card(
-    modifier = Modifier.fillMaxWidth(),
-    colors =
-      CardDefaults.cardColors(
-        containerColor =
-          if (isSigned) MaterialTheme.colorScheme.primaryContainer
-          else MaterialTheme.colorScheme.surfaceVariant
-      ),
-    elevation = CardDefaults.cardElevation(2.dp),
+      modifier = Modifier.fillMaxWidth(),
+      colors =
+          CardDefaults.cardColors(
+              containerColor =
+                  if (isSigned) MaterialTheme.colorScheme.primaryContainer
+                  else MaterialTheme.colorScheme.surfaceVariant
+          ),
+      elevation = CardDefaults.cardElevation(2.dp),
   ) {
     Row(
-      modifier = Modifier.padding(20.dp).fillMaxWidth(),
-      verticalAlignment = Alignment.CenterVertically,
-      horizontalArrangement = Arrangement.SpaceBetween,
+        modifier = Modifier.padding(20.dp).fillMaxWidth(),
+        verticalAlignment = Alignment.CenterVertically,
+        horizontalArrangement = Arrangement.SpaceBetween,
     ) {
       Column(modifier = Modifier.weight(1f)) {
         Text(
-          text = clazz.courseName,
-          style = MaterialTheme.typography.titleLarge,
-          fontWeight = FontWeight.Bold,
+            text = clazz.courseName,
+            style = MaterialTheme.typography.titleLarge,
+            fontWeight = FontWeight.Bold,
         )
         Spacer(modifier = Modifier.height(8.dp))
         Row(verticalAlignment = Alignment.CenterVertically) {
           Icon(
-            Icons.Default.AccessTime,
-            null,
-            Modifier.size(14.dp),
-            MaterialTheme.colorScheme.onSurfaceVariant,
+              Icons.Default.AccessTime,
+              null,
+              Modifier.size(14.dp),
+              MaterialTheme.colorScheme.onSurfaceVariant,
           )
           Spacer(modifier = Modifier.width(4.dp))
           Text(
-            text = "${clazz.classBeginTime} - ${clazz.classEndTime}",
-            style = MaterialTheme.typography.bodyMedium,
-            color = MaterialTheme.colorScheme.onSurfaceVariant,
+              text = "${clazz.classBeginTime} - ${clazz.classEndTime}",
+              style = MaterialTheme.typography.bodyMedium,
+              color = MaterialTheme.colorScheme.onSurfaceVariant,
           )
         }
       }
       if (isSigned)
-        Icon(
-          Icons.Default.CheckCircle,
-          "已签到",
-          Modifier.size(32.dp),
-          MaterialTheme.colorScheme.primary,
-        )
+          Icon(
+              Icons.Default.CheckCircle,
+              "已签到",
+              Modifier.size(32.dp),
+              MaterialTheme.colorScheme.primary,
+          )
       else
-        Button(onClick = onSigninClick, enabled = !isSigningIn) {
-          if (isSigningIn)
-            CircularProgressIndicator(
-              modifier = Modifier.size(16.dp),
-              strokeWidth = 2.dp,
-              color = MaterialTheme.colorScheme.onPrimary,
-            )
-          else Text("签到")
-        }
+          Button(onClick = onSigninClick, enabled = !isSigningIn) {
+            if (isSigningIn)
+                CircularProgressIndicator(
+                    modifier = Modifier.size(16.dp),
+                    strokeWidth = 2.dp,
+                    color = MaterialTheme.colorScheme.onPrimary,
+                )
+            else Text("签到")
+          }
     }
   }
 }

@@ -21,24 +21,25 @@ android {
   }
 
   val localProperties =
-    Properties().apply {
-      val localPropertiesFile = rootProject.file("local.properties")
-      if (localPropertiesFile.exists()) {
-        localPropertiesFile.inputStream().use { load(it) }
+      Properties().apply {
+        val localPropertiesFile = rootProject.file("local.properties")
+        if (localPropertiesFile.exists()) {
+          localPropertiesFile.inputStream().use { load(it) }
+        }
       }
-    }
 
   signingConfigs {
     create("release") {
       val keyPath = localProperties.getProperty("SIGNING_KEY") ?: System.getenv("SIGNING_KEY")
       storeFile = keyPath?.let { file(it) }
       storePassword =
-        localProperties.getProperty("SIGNING_STORE_PASSWORD")
-          ?: System.getenv("SIGNING_STORE_PASSWORD")
+          localProperties.getProperty("SIGNING_STORE_PASSWORD")
+              ?: System.getenv("SIGNING_STORE_PASSWORD")
       keyAlias =
-        localProperties.getProperty("SIGNING_KEY_ALIAS") ?: System.getenv("SIGNING_KEY_ALIAS")
+          localProperties.getProperty("SIGNING_KEY_ALIAS") ?: System.getenv("SIGNING_KEY_ALIAS")
       keyPassword =
-        localProperties.getProperty("SIGNING_KEY_PASSWORD") ?: System.getenv("SIGNING_KEY_PASSWORD")
+          localProperties.getProperty("SIGNING_KEY_PASSWORD")
+              ?: System.getenv("SIGNING_KEY_PASSWORD")
     }
   }
 

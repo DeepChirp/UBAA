@@ -15,8 +15,8 @@ import org.slf4j.LoggerFactory
 
 /** 用户信息服务。 负责从用户中心 (UC) 获取详细的个人档案数据。 */
 class UserService(
-  private val sessionManager: SessionManager = GlobalSessionManager.instance,
-  private val json: Json = Json { ignoreUnknownKeys = true },
+    private val sessionManager: SessionManager = GlobalSessionManager.instance,
+    private val json: Json = Json { ignoreUnknownKeys = true },
 ) {
   private val log = LoggerFactory.getLogger(UserService::class.java)
 
@@ -27,14 +27,14 @@ class UserService(
     val body = response.bodyAsText()
 
     if (response.status != HttpStatusCode.OK)
-      throw UserInfoException("Fetch failed: ${response.status}")
+        throw UserInfoException("Fetch failed: ${response.status}")
 
     val resp =
-      try {
-        json.decodeFromString<UserInfoResponse>(body)
-      } catch (_: Exception) {
-        throw UserInfoException("Parse failed")
-      }
+        try {
+          json.decodeFromString<UserInfoResponse>(body)
+        } catch (_: Exception) {
+          throw UserInfoException("Parse failed")
+        }
     val data = resp.data
     if (resp.code != 0 || data == null) throw UserInfoException("Error code: ${resp.code}")
 

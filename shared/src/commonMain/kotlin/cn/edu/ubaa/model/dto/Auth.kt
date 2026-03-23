@@ -13,11 +13,11 @@ import kotlinx.serialization.Serializable
  */
 @Serializable
 data class LoginRequest(
-  val username: String,
-  val password: String,
-  val captcha: String? = null,
-  val execution: String? = null,
-  val clientId: String? = null, // 客户端标识，用于关联 preload 时创建的会话
+    val username: String,
+    val password: String,
+    val captcha: String? = null,
+    val execution: String? = null,
+    val clientId: String? = null, // 客户端标识，用于关联 preload 时创建的会话
 )
 
 /**
@@ -46,10 +46,10 @@ data class LoginRequest(
  */
 @Serializable
 data class CaptchaInfo(
-  val id: String,
-  val type: String = "image",
-  val imageUrl: String,
-  val base64Image: String? = null,
+    val id: String,
+    val type: String = "image",
+    val imageUrl: String,
+    val base64Image: String? = null,
 )
 
 /**
@@ -61,9 +61,9 @@ data class CaptchaInfo(
  */
 @Serializable
 data class CaptchaRequiredResponse(
-  val captcha: CaptchaInfo,
-  val execution: String,
-  val message: String = "需要验证码验证",
+    val captcha: CaptchaInfo,
+    val execution: String,
+    val message: String = "需要验证码验证",
 )
 
 /**
@@ -73,7 +73,7 @@ data class CaptchaRequiredResponse(
  */
 @Serializable
 data class LoginPreloadRequest(
-  val clientId: String // 客户端标识（设备 ID 或 UUID）
+    val clientId: String // 客户端标识（设备 ID 或 UUID）
 )
 
 /**
@@ -88,10 +88,10 @@ data class LoginPreloadRequest(
  */
 @Serializable
 data class LoginPreloadResponse(
-  val captchaRequired: Boolean,
-  val captcha: CaptchaInfo? = null,
-  val execution: String? = null,
-  val clientId: String? = null, // 返回客户端标识，用于后续登录
-  val token: String? = null, // 如果已登录，直接返回 JWT
-  val userData: UserData? = null, // 如果已登录，直接返回用户信息
+    val captchaRequired: Boolean,
+    val captcha: CaptchaInfo? = null,
+    val execution: String? = null,
+    val clientId: String? = null, // 返回客户端标识，用于后续登录
+    val token: String? = null, // 如果已登录，直接返回 JWT
+    val userData: UserData? = null, // 如果已登录，直接返回用户信息
 )

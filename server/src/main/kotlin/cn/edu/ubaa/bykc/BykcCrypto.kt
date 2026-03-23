@@ -21,7 +21,7 @@ object BykcCrypto {
 
   /** BYKC系统的1024位RSA公钥 (Base64编码的DER格式) 从 app.js 中提取 */
   private const val RSA_PUBLIC_KEY_BASE64 =
-    "MIGfMA0GCSqGSIb3DQEBAQUAA4GNADCBiQKBgQDlHMQ3B5GsWnCe7Nlo1YiG/YmHdlOiKOST5aRm4iaqYSvhvWmwcigoyWTM+8bv2+sf6nQBRDWTY4KmNV7DBk1eDnTIQo6ENA31k5/tYCLEXgjPbEjCK9spiyB62fCT6cqOhbamJB0lcDJRO6Vo1m3dy+fD0jbxfDVBBNtyltIsDQIDAQAB"
+      "MIGfMA0GCSqGSIb3DQEBAQUAA4GNADCBiQKBgQDlHMQ3B5GsWnCe7Nlo1YiG/YmHdlOiKOST5aRm4iaqYSvhvWmwcigoyWTM+8bv2+sf6nQBRDWTY4KmNV7DBk1eDnTIQo6ENA31k5/tYCLEXgjPbEjCK9spiyB62fCT6cqOhbamJB0lcDJRO6Vo1m3dy+fD0jbxfDVBBNtyltIsDQIDAQAB"
 
   /** 用于生成随机AES密钥的字符集 */
   private const val KEY_CHARS = "ABCDEFGHJKMNPQRSTWXYZabcdefhijkmnprstwxyz2345678"
@@ -40,9 +40,9 @@ object BykcCrypto {
   /** 生成随机的16字节AES密钥 */
   fun generateAesKey(): ByteArray {
     return (1..AES_KEY_LENGTH)
-      .map { KEY_CHARS.random() }
-      .joinToString("")
-      .toByteArray(Charsets.UTF_8)
+        .map { KEY_CHARS.random() }
+        .joinToString("")
+        .toByteArray(Charsets.UTF_8)
   }
 
   /**
@@ -125,11 +125,11 @@ object BykcCrypto {
     val ts = System.currentTimeMillis().toString()
 
     return EncryptedRequest(
-      encryptedData = encryptedDataBase64,
-      ak = ak,
-      sk = sk,
-      ts = ts,
-      aesKey = aesKey,
+        encryptedData = encryptedDataBase64,
+        ak = ak,
+        sk = sk,
+        ts = ts,
+        aesKey = aesKey,
     )
   }
 
@@ -148,15 +148,15 @@ object BykcCrypto {
 
   /** 加密请求的封装类 */
   data class EncryptedRequest(
-    /** Base64编码的AES加密数据 */
-    val encryptedData: String,
-    /** RSA加密的AES密钥 (Base64) */
-    val ak: String,
-    /** RSA加密的数据签名 (Base64) */
-    val sk: String,
-    /** 时间戳 */
-    val ts: String,
-    /** 原始AES密钥 (用于解密响应) */
-    val aesKey: ByteArray,
+      /** Base64编码的AES加密数据 */
+      val encryptedData: String,
+      /** RSA加密的AES密钥 (Base64) */
+      val ak: String,
+      /** RSA加密的数据签名 (Base64) */
+      val sk: String,
+      /** 时间戳 */
+      val ts: String,
+      /** 原始AES密钥 (用于解密响应) */
+      val aesKey: ByteArray,
   )
 }

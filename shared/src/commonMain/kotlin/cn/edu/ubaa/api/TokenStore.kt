@@ -39,11 +39,11 @@ object ClientIdStore {
   @OptIn(ExperimentalUuidApi::class)
   fun getOrCreate(): String {
     return settings.getStringOrNull(KEY_CLIENT_ID)
-      ?: run {
-        val newId = Uuid.random().toString()
-        settings.putString(KEY_CLIENT_ID, newId)
-        newId
-      }
+        ?: run {
+          val newId = Uuid.random().toString()
+          settings.putString(KEY_CLIENT_ID, newId)
+          newId
+        }
   }
 
   /** 获取 clientId（可能为 null） */

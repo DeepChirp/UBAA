@@ -54,9 +54,9 @@ interface ApiService {
    * @return 包含分页课程数据的 [Result]。若失败则包含异常信息。
    */
   suspend fun getBykcCourses(
-    page: Int = 1,
-    pageSize: Int = 20,
-    all: Boolean = false,
+      page: Int = 1,
+      pageSize: Int = 20,
+      all: Boolean = false,
   ): Result<BykcCoursesResponse>
 
   /**
@@ -107,39 +107,39 @@ class ApiServiceImpl(private val apiClient: ApiClient) : ApiService {
   }
 
   override suspend fun getWeeklySchedule(termCode: String, week: Int): Result<WeeklySchedule> =
-    safeApiCall {
-      apiClient.getClient().get("api/v1/schedule/week") {
-        parameter("termCode", termCode)
-        parameter("week", week)
+      safeApiCall {
+        apiClient.getClient().get("api/v1/schedule/week") {
+          parameter("termCode", termCode)
+          parameter("week", week)
+        }
       }
-    }
 
   override suspend fun getTodaySchedule(): Result<List<TodayClass>> = safeApiCall {
     apiClient.getClient().get("api/v1/schedule/today")
   }
 
   override suspend fun getExamArrangement(termCode: String): Result<ExamArrangementData> =
-    safeApiCall {
-      apiClient.getClient().get("api/v1/exam/list") { parameter("termCode", termCode) }
-    }
+      safeApiCall {
+        apiClient.getClient().get("api/v1/exam/list") { parameter("termCode", termCode) }
+      }
 
   override suspend fun getBykcProfile(): Result<BykcUserProfileDto> = safeApiCall {
     apiClient.getClient().get("api/v1/bykc/profile")
   }
 
   override suspend fun getBykcCourses(
-    page: Int,
-    pageSize: Int,
-    all: Boolean,
+      page: Int,
+      pageSize: Int,
+      all: Boolean,
   ): Result<BykcCoursesResponse> = runCatching {
     apiClient
-      .getClient()
-      .get("api/v1/bykc/courses") {
-        parameter("page", page)
-        parameter("size", pageSize)
-        parameter("all", all)
-      }
-      .body<BykcCoursesResponse>()
+        .getClient()
+        .get("api/v1/bykc/courses") {
+          parameter("page", page)
+          parameter("size", pageSize)
+          parameter("all", all)
+        }
+        .body<BykcCoursesResponse>()
   }
 
   override suspend fun getBykcCourseDetail(id: Int): Result<BykcCourseDetailDto> = safeApiCall {

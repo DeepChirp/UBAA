@@ -16,14 +16,14 @@ import kotlinx.serialization.Serializable
  */
 @Serializable
 data class UserInfo(
-  val idCardType: String? = null,
-  val idCardTypeName: String? = null,
-  val phone: String? = null,
-  val schoolid: String? = null,
-  val name: String? = null,
-  val idCardNumber: String? = null,
-  val email: String? = null,
-  val username: String? = null,
+    val idCardType: String? = null,
+    val idCardTypeName: String? = null,
+    val phone: String? = null,
+    val schoolid: String? = null,
+    val name: String? = null,
+    val idCardNumber: String? = null,
+    val email: String? = null,
+    val username: String? = null,
 )
 
 /** 用户信息响应包装类。 */

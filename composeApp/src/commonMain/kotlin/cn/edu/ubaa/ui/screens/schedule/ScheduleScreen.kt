@@ -48,36 +48,38 @@ import cn.edu.ubaa.model.dto.*
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun ScheduleScreen(
-  terms: List<Term>,
-  weeks: List<Week>,
-  weeklySchedule: WeeklySchedule?,
-  selectedTerm: Term?,
-  selectedWeek: Week?,
-  isLoading: Boolean,
-  error: String?,
-  onTermSelected: (Term) -> Unit,
-  onWeekSelected: (Week) -> Unit,
-  onCourseClick: (CourseClass) -> Unit,
-  modifier: Modifier = Modifier,
+    terms: List<Term>,
+    weeks: List<Week>,
+    weeklySchedule: WeeklySchedule?,
+    selectedTerm: Term?,
+    selectedWeek: Week?,
+    isLoading: Boolean,
+    error: String?,
+    onTermSelected: (Term) -> Unit,
+    onWeekSelected: (Week) -> Unit,
+    onCourseClick: (CourseClass) -> Unit,
+    modifier: Modifier = Modifier,
 ) {
   var showWeekSelector by remember { mutableStateOf(false) }
   val currentWeekIndex = weeks.indexOf(selectedWeek)
 
   Scaffold(
-    topBar = {
-      ScheduleTopAppBar(
-        title = selectedWeek?.name ?: "选择周次",
-        onPreviousClick = { if (currentWeekIndex > 0) onWeekSelected(weeks[currentWeekIndex - 1]) },
-        isPreviousEnabled = currentWeekIndex > 0,
-        onNextClick = {
-          if (currentWeekIndex != -1 && currentWeekIndex < weeks.size - 1)
-            onWeekSelected(weeks[currentWeekIndex + 1])
-        },
-        isNextEnabled = currentWeekIndex != -1 && currentWeekIndex < weeks.size - 1,
-        onTitleClick = { showWeekSelector = true },
-      )
-    },
-    modifier = modifier,
+      topBar = {
+        ScheduleTopAppBar(
+            title = selectedWeek?.name ?: "选择周次",
+            onPreviousClick = {
+              if (currentWeekIndex > 0) onWeekSelected(weeks[currentWeekIndex - 1])
+            },
+            isPreviousEnabled = currentWeekIndex > 0,
+            onNextClick = {
+              if (currentWeekIndex != -1 && currentWeekIndex < weeks.size - 1)
+                  onWeekSelected(weeks[currentWeekIndex + 1])
+            },
+            isNextEnabled = currentWeekIndex != -1 && currentWeekIndex < weeks.size - 1,
+            onTitleClick = { showWeekSelector = true },
+        )
+      },
+      modifier = modifier,
   ) { paddingValues ->
     Box(modifier = Modifier.fillMaxSize().padding(paddingValues)) {
       when {
@@ -92,13 +94,13 @@ fun ScheduleScreen(
         }
         error != null -> {
           Box(
-            modifier = Modifier.fillMaxSize().padding(16.dp),
-            contentAlignment = Alignment.Center,
+              modifier = Modifier.fillMaxSize().padding(16.dp),
+              contentAlignment = Alignment.Center,
           ) {
             Text(
-              text = "加载失败: $error",
-              color = MaterialTheme.colorScheme.error,
-              textAlign = TextAlign.Center,
+                text = "加载失败: $error",
+                color = MaterialTheme.colorScheme.error,
+                textAlign = TextAlign.Center,
             )
           }
         }
@@ -108,9 +110,9 @@ fun ScheduleScreen(
         else -> {
           Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
             Text(
-              text = "请选择学期和周次",
-              style = MaterialTheme.typography.bodyLarge,
-              color = MaterialTheme.colorScheme.onSurfaceVariant,
+                text = "请选择学期和周次",
+                style = MaterialTheme.typography.bodyLarge,
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
             )
           }
         }
@@ -120,13 +122,13 @@ fun ScheduleScreen(
 
   if (showWeekSelector) {
     WeekSelectionSheet(
-      weeks = weeks,
-      selectedWeek = selectedWeek,
-      onWeekSelected = {
-        onWeekSelected(it)
-        showWeekSelector = false
-      },
-      onDismiss = { showWeekSelector = false },
+        weeks = weeks,
+        selectedWeek = selectedWeek,
+        onWeekSelected = {
+          onWeekSelected(it)
+          showWeekSelector = false
+        },
+        onDismiss = { showWeekSelector = false },
     )
   }
 }
@@ -135,35 +137,35 @@ fun ScheduleScreen(
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 private fun ScheduleTopAppBar(
-  title: String,
-  onPreviousClick: () -> Unit,
-  isPreviousEnabled: Boolean,
-  onNextClick: () -> Unit,
-  isNextEnabled: Boolean,
-  onTitleClick: () -> Unit,
+    title: String,
+    onPreviousClick: () -> Unit,
+    isPreviousEnabled: Boolean,
+    onNextClick: () -> Unit,
+    isNextEnabled: Boolean,
+    onTitleClick: () -> Unit,
 ) {
   CenterAlignedTopAppBar(
-    title = {
-      Row(
-        modifier = Modifier.clickable(onClick = onTitleClick),
-        verticalAlignment = Alignment.CenterVertically,
-      ) {
-        Text(
-          text = title,
-          fontWeight = FontWeight.Bold,
-          maxLines = 1,
-          overflow = TextOverflow.Ellipsis,
-        )
-      }
-    },
-    actions = {
-      IconButton(onClick = onPreviousClick, enabled = isPreviousEnabled) {
-        Icon(Icons.AutoMirrored.Filled.ArrowBack, "上一周")
-      }
-      IconButton(onClick = onNextClick, enabled = isNextEnabled) {
-        Icon(Icons.AutoMirrored.Filled.ArrowForward, "下一周")
-      }
-    },
+      title = {
+        Row(
+            modifier = Modifier.clickable(onClick = onTitleClick),
+            verticalAlignment = Alignment.CenterVertically,
+        ) {
+          Text(
+              text = title,
+              fontWeight = FontWeight.Bold,
+              maxLines = 1,
+              overflow = TextOverflow.Ellipsis,
+          )
+        }
+      },
+      actions = {
+        IconButton(onClick = onPreviousClick, enabled = isPreviousEnabled) {
+          Icon(Icons.AutoMirrored.Filled.ArrowBack, "上一周")
+        }
+        IconButton(onClick = onNextClick, enabled = isNextEnabled) {
+          Icon(Icons.AutoMirrored.Filled.ArrowForward, "下一周")
+        }
+      },
   )
 }
 
@@ -171,41 +173,41 @@ private fun ScheduleTopAppBar(
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 private fun WeekSelectionSheet(
-  weeks: List<Week>,
-  selectedWeek: Week?,
-  onWeekSelected: (Week) -> Unit,
-  onDismiss: () -> Unit,
+    weeks: List<Week>,
+    selectedWeek: Week?,
+    onWeekSelected: (Week) -> Unit,
+    onDismiss: () -> Unit,
 ) {
   ModalBottomSheet(onDismissRequest = onDismiss) {
     LazyColumn(contentPadding = PaddingValues(bottom = 32.dp)) {
       item {
         Text(
-          text = "选择周次",
-          style = MaterialTheme.typography.titleLarge,
-          modifier = Modifier.padding(16.dp),
+            text = "选择周次",
+            style = MaterialTheme.typography.titleLarge,
+            modifier = Modifier.padding(16.dp),
         )
       }
       items(weeks) { week ->
         ListItem(
-          headlineContent = { Text(week.name) },
-          modifier = Modifier.clickable { onWeekSelected(week) },
-          leadingContent = {
-            if (week.curWeek)
-              Surface(
-                color = MaterialTheme.colorScheme.secondaryContainer,
-                shape = RoundedCornerShape(4.dp),
-              ) {
-                Text(
-                  text = "本周",
-                  style = MaterialTheme.typography.labelSmall,
-                  modifier = Modifier.padding(horizontal = 6.dp, vertical = 2.dp),
-                )
-              }
-          },
-          trailingContent = {
-            if (week == selectedWeek)
-              Icon(Icons.Default.Check, "已选择", tint = MaterialTheme.colorScheme.primary)
-          },
+            headlineContent = { Text(week.name) },
+            modifier = Modifier.clickable { onWeekSelected(week) },
+            leadingContent = {
+              if (week.curWeek)
+                  Surface(
+                      color = MaterialTheme.colorScheme.secondaryContainer,
+                      shape = RoundedCornerShape(4.dp),
+                  ) {
+                    Text(
+                        text = "本周",
+                        style = MaterialTheme.typography.labelSmall,
+                        modifier = Modifier.padding(horizontal = 6.dp, vertical = 2.dp),
+                    )
+                  }
+            },
+            trailingContent = {
+              if (week == selectedWeek)
+                  Icon(Icons.Default.Check, "已选择", tint = MaterialTheme.colorScheme.primary)
+            },
         )
       }
     }
@@ -215,9 +217,9 @@ private fun WeekSelectionSheet(
 /** 核心周课表视图组件。包含星期标题行、时间轴列和课程网格。 */
 @Composable
 private fun WeeklyScheduleView(
-  schedule: WeeklySchedule,
-  onCourseClick: (CourseClass) -> Unit,
-  modifier: Modifier = Modifier,
+    schedule: WeeklySchedule,
+    onCourseClick: (CourseClass) -> Unit,
+    modifier: Modifier = Modifier,
 ) {
   val totalPeriods = maxOf(12, schedule.arrangedList.maxOfOrNull { it.endSection ?: 0 } ?: 0)
   val timeLabels = (1..totalPeriods).map { it.toString() }
@@ -229,10 +231,13 @@ private fun WeeklyScheduleView(
     HeaderRow(dayLabels)
     Spacer(modifier = Modifier.height(4.dp))
     Row(
-      modifier =
-        Modifier.fillMaxWidth()
-          .verticalScroll(scrollState)
-          .background(MaterialTheme.colorScheme.surfaceVariant.copy(0.3f), RoundedCornerShape(8.dp))
+        modifier =
+            Modifier.fillMaxWidth()
+                .verticalScroll(scrollState)
+                .background(
+                    MaterialTheme.colorScheme.surfaceVariant.copy(0.3f),
+                    RoundedCornerShape(8.dp),
+                )
     ) {
       TimeColumn(timeLabels, rowHeight, Modifier.width(36.dp))
       WeeklyScheduleGrid(schedule, onCourseClick, timeLabels.size, rowHeight, Modifier.weight(1f))
@@ -259,8 +264,8 @@ private fun TimeColumn(timeLabels: List<String>, rowHeight: Dp, modifier: Modifi
   Column(modifier = modifier) {
     timeLabels.forEach {
       Box(
-        modifier = Modifier.height(rowHeight).fillMaxWidth(),
-        contentAlignment = Alignment.Center,
+          modifier = Modifier.height(rowHeight).fillMaxWidth(),
+          contentAlignment = Alignment.Center,
       ) {
         Text(text = it, fontSize = 12.sp, color = MaterialTheme.colorScheme.onSurfaceVariant)
       }
@@ -271,11 +276,11 @@ private fun TimeColumn(timeLabels: List<String>, rowHeight: Dp, modifier: Modifi
 /** 课程表网格。负责绘制背景辅助线和摆放课程单元格。 */
 @Composable
 private fun WeeklyScheduleGrid(
-  schedule: WeeklySchedule,
-  onCourseClick: (CourseClass) -> Unit,
-  totalPeriods: Int,
-  rowHeight: Dp,
-  modifier: Modifier = Modifier,
+    schedule: WeeklySchedule,
+    onCourseClick: (CourseClass) -> Unit,
+    totalPeriods: Int,
+    rowHeight: Dp,
+    modifier: Modifier = Modifier,
 ) {
   val totalDays = 7
   val gridColor = MaterialTheme.colorScheme.onSurface.copy(0.1f)
@@ -302,11 +307,11 @@ private fun WeeklyScheduleGrid(
       val span = (course.endSection ?: course.beginSection ?: 1) - (course.beginSection ?: 1) + 1
       if (dayIndex in 0 until totalDays && startIdx in 0 until totalPeriods) {
         CourseCell(
-          course,
-          { onCourseClick(course) },
-          Modifier.offset(cellWidth * dayIndex, rowHeight * startIdx)
-            .size(cellWidth, rowHeight * span)
-            .padding(1.dp),
+            course,
+            { onCourseClick(course) },
+            Modifier.offset(cellWidth * dayIndex, rowHeight * startIdx)
+                .size(cellWidth, rowHeight * span)
+                .padding(1.dp),
         )
       }
     }
@@ -319,40 +324,41 @@ private fun CourseCell(course: CourseClass, onClick: () -> Unit, modifier: Modif
   val isDark = isSystemInDarkTheme()
   val parsedColor = remember(course.color) { parseColor(course.color) }
   val containerColor =
-    remember(parsedColor, isDark) {
-      val base = parsedColor ?: Color(0xFF6200EE)
-      if (isDark && parsedColor != null) base.copy(alpha = 0.7f) else base
-    }
+      remember(parsedColor, isDark) {
+        val base = parsedColor ?: Color(0xFF6200EE)
+        if (isDark && parsedColor != null) base.copy(alpha = 0.7f) else base
+      }
   val contentColor = if (containerColor.luminance() > 0.5f) Color.Black else Color.White
 
   Card(
-    modifier = modifier.fillMaxSize().clickable { onClick() },
-    shape = RoundedCornerShape(6.dp),
-    colors = CardDefaults.cardColors(containerColor = containerColor, contentColor = contentColor),
+      modifier = modifier.fillMaxSize().clickable { onClick() },
+      shape = RoundedCornerShape(6.dp),
+      colors =
+          CardDefaults.cardColors(containerColor = containerColor, contentColor = contentColor),
   ) {
     Column(
-      modifier = Modifier.fillMaxSize().padding(4.dp),
-      verticalArrangement = Arrangement.Center,
-      horizontalAlignment = Alignment.CenterHorizontally,
+        modifier = Modifier.fillMaxSize().padding(4.dp),
+        verticalArrangement = Arrangement.Center,
+        horizontalAlignment = Alignment.CenterHorizontally,
     ) {
       Text(
-        text = course.courseName,
-        fontSize = 12.sp,
-        fontWeight = FontWeight.Bold,
-        textAlign = TextAlign.Center,
-        lineHeight = 14.sp,
-        maxLines = 4,
-        overflow = TextOverflow.Ellipsis,
+          text = course.courseName,
+          fontSize = 12.sp,
+          fontWeight = FontWeight.Bold,
+          textAlign = TextAlign.Center,
+          lineHeight = 14.sp,
+          maxLines = 4,
+          overflow = TextOverflow.Ellipsis,
       )
       course.placeName?.let {
         Text(
-          text = "@$it",
-          fontSize = 11.sp,
-          textAlign = TextAlign.Center,
-          lineHeight = 13.sp,
-          color = contentColor.copy(0.8f),
-          maxLines = 2,
-          overflow = TextOverflow.Ellipsis,
+            text = "@$it",
+            fontSize = 11.sp,
+            textAlign = TextAlign.Center,
+            lineHeight = 13.sp,
+            color = contentColor.copy(0.8f),
+            maxLines = 2,
+            overflow = TextOverflow.Ellipsis,
         )
       }
     }

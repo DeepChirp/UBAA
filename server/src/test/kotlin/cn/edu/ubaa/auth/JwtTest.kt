@@ -45,14 +45,14 @@ class JwtUtilTest {
 
 class SessionManagerJwtTest {
   private fun createSessionManager(
-    sessionTtl: Duration = Duration.ofMinutes(30),
-    activityPersistInterval: Duration = Duration.ofSeconds(60),
+      sessionTtl: Duration = Duration.ofMinutes(30),
+      activityPersistInterval: Duration = Duration.ofSeconds(60),
   ): SessionManager {
     return SessionManager(
-      sessionTtl = sessionTtl,
-      activityPersistInterval = activityPersistInterval,
-      sessionStore = InMemorySessionStore(),
-      cookieStorageFactory = InMemoryCookieStorageFactory(),
+        sessionTtl = sessionTtl,
+        activityPersistInterval = activityPersistInterval,
+        sessionStore = InMemorySessionStore(),
+        cookieStorageFactory = InMemoryCookieStorageFactory(),
     )
   }
 
@@ -93,7 +93,8 @@ class SessionManagerJwtTest {
 
     Thread.sleep(10)
 
-    val readOnlySession = sessionManager.getSession(username, SessionManager.SessionAccess.READ_ONLY)
+    val readOnlySession =
+        sessionManager.getSession(username, SessionManager.SessionAccess.READ_ONLY)
     assertNotNull(readOnlySession)
     assertEquals(before, readOnlySession.lastActivity())
   }
@@ -102,10 +103,10 @@ class SessionManagerJwtTest {
   fun testInvalidateSessionClearsCookieStorageBeforeClosingIt() = runBlocking {
     val trackingCookieStorageFactory = TrackingCookieStorageFactory()
     val sessionManager =
-      SessionManager(
-        sessionStore = InMemorySessionStore(),
-        cookieStorageFactory = trackingCookieStorageFactory,
-      )
+        SessionManager(
+            sessionStore = InMemorySessionStore(),
+            cookieStorageFactory = trackingCookieStorageFactory,
+        )
     val username = "logout-user"
     val userData = UserData("Logout User", "10003")
 
@@ -120,5 +121,4 @@ class SessionManagerJwtTest {
     assertTrue(invalidateEvents.contains("close"))
     assertTrue(invalidateEvents.indexOf("clear") < invalidateEvents.indexOf("close"))
   }
-
 }

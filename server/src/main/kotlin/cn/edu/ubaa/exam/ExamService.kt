@@ -13,8 +13,8 @@ import org.slf4j.LoggerFactory
 
 /** 考试安排业务服务。 负责从教务系统 (BYXT) 抓取并解析考试数据。 */
 class ExamService(
-  private val sessionManager: SessionManager = GlobalSessionManager.instance,
-  private val json: Json = Json { ignoreUnknownKeys = true },
+    private val sessionManager: SessionManager = GlobalSessionManager.instance,
+    private val json: Json = Json { ignoreUnknownKeys = true },
 ) {
   private val log = LoggerFactory.getLogger(ExamService::class.java)
 
@@ -23,8 +23,8 @@ class ExamService(
     header(HttpHeaders.Accept, "*/*")
     header("X-Requested-With", "XMLHttpRequest")
     header(
-      HttpHeaders.Referrer,
-      VpnCipher.toVpnUrl("https://byxt.buaa.edu.cn/jwapp/sys/homeapp/home/index.html"),
+        HttpHeaders.Referrer,
+        VpnCipher.toVpnUrl("https://byxt.buaa.edu.cn/jwapp/sys/homeapp/home/index.html"),
     )
   }
 
@@ -41,14 +41,14 @@ class ExamService(
     val body = response.bodyAsText()
 
     if (response.status != HttpStatusCode.OK)
-      throw ExamException("Fetch failed: ${response.status}")
+        throw ExamException("Fetch failed: ${response.status}")
 
     val examResponse =
-      try {
-        json.decodeFromString<ExamResponse>(body)
-      } catch (e: Exception) {
-        throw ExamException("Parse failed")
-      }
+        try {
+          json.decodeFromString<ExamResponse>(body)
+        } catch (e: Exception) {
+          throw ExamException("Parse failed")
+        }
 
     if (examResponse.code != "0") throw ExamException("Business error: ${examResponse.msg}")
 
@@ -58,9 +58,9 @@ class ExamService(
   /** 执行具体的 HTTP 请求抓取考试数据。 */
   private suspend fun SessionManager.UserSession.getExams(termCode: String): HttpResponse {
     val url =
-      VpnCipher.toVpnUrl(
-        "https://byxt.buaa.edu.cn/jwapp/sys/homeapp/api/home/student/exams.do?termCode=$termCode"
-      )
+        VpnCipher.toVpnUrl(
+            "https://byxt.buaa.edu.cn/jwapp/sys/homeapp/api/home/student/exams.do?termCode=$termCode"
+        )
     return client.get(url) { applyExamHeaders() }
   }
 }

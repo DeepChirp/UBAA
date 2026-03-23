@@ -32,8 +32,8 @@ fun Route.classroomRouting() {
         call.respond(HttpStatusCode.OK, result)
       } catch (e: Exception) {
         call.respond(
-          HttpStatusCode.InternalServerError,
-          ErrorResponse(ErrorDetails("classroom_query_failed", e.message ?: "Error")),
+            HttpStatusCode.InternalServerError,
+            ErrorResponse(ErrorDetails("classroom_query_failed", e.message ?: "Error")),
         )
       }
     }

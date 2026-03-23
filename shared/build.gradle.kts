@@ -12,12 +12,12 @@ plugins {
 
 // 读取根目录下的 .env 文件以配置编译时常量
 val env =
-  Properties().apply {
-    val envFile = rootProject.file(".env")
-    if (envFile.exists()) {
-      envFile.inputStream().use { load(it) }
+    Properties().apply {
+      val envFile = rootProject.file(".env")
+      if (envFile.exists()) {
+        envFile.inputStream().use { load(it) }
+      }
     }
-  }
 
 // BuildKonfig 配置：生成包含服务器地址和端口的 BuildKonfig 类
 buildkonfig {
@@ -26,15 +26,17 @@ buildkonfig {
 
   defaultConfigs {
     buildConfigField(
-      FieldSpec.Type.STRING,
-      "VERSION",
-      project.property("project.version").toString(),
+        FieldSpec.Type.STRING,
+        "VERSION",
+        project.property("project.version").toString(),
     )
     // 优先从环境变量获取 API 完整地址
     buildConfigField(
-      FieldSpec.Type.STRING,
-      "API_ENDPOINT",
-      env.getProperty("API_ENDPOINT") ?: System.getenv("API_ENDPOINT") ?: "https://ubaa.mofrp.top",
+        FieldSpec.Type.STRING,
+        "API_ENDPOINT",
+        env.getProperty("API_ENDPOINT")
+            ?: System.getenv("API_ENDPOINT")
+            ?: "https://ubaa.mofrp.top",
     )
   }
 }

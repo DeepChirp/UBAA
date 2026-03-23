@@ -51,7 +51,7 @@ fun main() {
   log.info("Starting UBAA Server on $serverHost:$serverPort...")
 
   embeddedServer(Netty, port = serverPort, host = serverHost, module = Application::module)
-    .start(wait = true)
+      .start(wait = true)
 }
 
 val log = LoggerFactory.getLogger("Application")
@@ -95,19 +95,19 @@ fun Application.module() {
       val expiredBykcClients = bykcService.cleanupExpiredClients()
       val expiredSpocClients = spocService.cleanupExpiredClients()
       if (
-        expiredSessions +
-          expiredPreLogin +
-          expiredSigninClients +
-          expiredBykcClients +
-          expiredSpocClients > 0
+          expiredSessions +
+              expiredPreLogin +
+              expiredSigninClients +
+              expiredBykcClients +
+              expiredSpocClients > 0
       ) {
         log.info(
-          "Cleanup removed sessions={}, prelogin={}, signinClients={}, bykcClients={}, spocClients={}",
-          expiredSessions,
-          expiredPreLogin,
-          expiredSigninClients,
-          expiredBykcClients,
-          expiredSpocClients,
+            "Cleanup removed sessions={}, prelogin={}, signinClients={}, bykcClients={}, spocClients={}",
+            expiredSessions,
+            expiredPreLogin,
+            expiredSigninClients,
+            expiredBykcClients,
+            expiredSpocClients,
         )
       }
     }
@@ -144,18 +144,18 @@ fun Application.module() {
 }
 
 private fun registerPerformanceGauges(
-  sessionManager: cn.edu.ubaa.auth.SessionManager,
-  bykcService: cn.edu.ubaa.bykc.BykcService,
-  spocService: cn.edu.ubaa.spoc.SpocService,
+    sessionManager: cn.edu.ubaa.auth.SessionManager,
+    bykcService: cn.edu.ubaa.bykc.BykcService,
+    spocService: cn.edu.ubaa.spoc.SpocService,
 ) {
   Gauge.builder("ubaa.sessions.active") { sessionManager.activeSessionCount().toDouble() }
-    .register(appMicrometerRegistry)
+      .register(appMicrometerRegistry)
   Gauge.builder("ubaa.sessions.prelogin") { sessionManager.preLoginSessionCount().toDouble() }
-    .register(appMicrometerRegistry)
+      .register(appMicrometerRegistry)
   Gauge.builder("ubaa.signin.cache") { SigninService.cacheSize().toDouble() }
-    .register(appMicrometerRegistry)
+      .register(appMicrometerRegistry)
   Gauge.builder("ubaa.bykc.cache") { bykcService.cacheSize().toDouble() }
-    .register(appMicrometerRegistry)
+      .register(appMicrometerRegistry)
   Gauge.builder("ubaa.spoc.cache") { spocService.cacheSize().toDouble() }
-    .register(appMicrometerRegistry)
+      .register(appMicrometerRegistry)
 }

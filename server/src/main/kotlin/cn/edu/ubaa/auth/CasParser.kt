@@ -26,7 +26,7 @@ object CasParser {
   fun detectCaptcha(html: String, captchaUrlBase: String): CaptchaInfo? {
     try {
       val captchaPattern =
-        Regex("""config\.captcha\s*=\s*\{\s*type:\s*['"]([^'"]+)['"],\s*id:\s*['"]([^'"]+)['"]""")
+          Regex("""config\.captcha\s*=\s*\{\s*type:\s*['"]([^'"]+)['"],\s*id:\s*['"]([^'"]+)['"]""")
       val match = captchaPattern.find(html)
 
       if (match != null) {
@@ -53,19 +53,19 @@ object CasParser {
     return try {
       val doc = Jsoup.parse(html)
       val candidates =
-        listOf(
-          "div.alert.alert-danger#errorDiv p",
-          "div.alert.alert-danger#errorDiv",
-          "div.errors",
-          "p.errors",
-          "span.errors",
-          ".tip-text",
-        )
+          listOf(
+              "div.alert.alert-danger#errorDiv p",
+              "div.alert.alert-danger#errorDiv",
+              "div.errors",
+              "p.errors",
+              "span.errors",
+              ".tip-text",
+          )
 
       candidates
-        .asSequence()
-        .map { sel -> doc.select(sel).text().trim() }
-        .firstOrNull { it.isNotBlank() }
+          .asSequence()
+          .map { sel -> doc.select(sel).text().trim() }
+          .firstOrNull { it.isNotBlank() }
     } catch (e: Exception) {
       null
     }
@@ -81,9 +81,9 @@ object CasParser {
   fun buildCasLoginParameters(html: String, request: LoginRequest): Parameters {
     val doc = Jsoup.parse(html)
     val form =
-      doc.selectFirst("form#fm1")
-        ?: doc.selectFirst("form[action]")
-        ?: return buildDefaultParameters(request, extractExecution(html))
+        doc.selectFirst("form#fm1")
+            ?: doc.selectFirst("form[action]")
+            ?: return buildDefaultParameters(request, extractExecution(html))
 
     val inputs = form.select("input[name]")
     val presentNames = mutableSetOf<String>()
@@ -124,12 +124,12 @@ object CasParser {
       append("submit", "登录")
 
       request.captcha
-        ?.takeIf { it.isNotBlank() }
-        ?.let { captchaValue ->
-          if (inputs.any { it.attr("name") == "captcha" }) append("captcha", captchaValue)
-          if (inputs.any { it.attr("name") == "captchaResponse" })
-            append("captchaResponse", captchaValue)
-        }
+          ?.takeIf { it.isNotBlank() }
+          ?.let { captchaValue ->
+            if (inputs.any { it.attr("name") == "captcha" }) append("captcha", captchaValue)
+            if (inputs.any { it.attr("name") == "captchaResponse" })
+                append("captchaResponse", captchaValue)
+          }
 
       if (!presentNames.contains("_eventId")) append("_eventId", "submit")
     }

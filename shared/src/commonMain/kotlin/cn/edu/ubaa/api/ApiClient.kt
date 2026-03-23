@@ -28,17 +28,17 @@ class ApiClient(private val engine: HttpClientEngine? = null) {
    * @return 配置好的 HttpClient 实例。
    */
   private fun createClient(
-    engine: HttpClientEngine? = this.engine,
-    token: String? = cachedToken,
+      engine: HttpClientEngine? = this.engine,
+      token: String? = cachedToken,
   ): HttpClient {
     return HttpClient(engine ?: getDefaultEngine()) {
       // 配置 JSON 序列化
       install(ContentNegotiation) {
         json(
-          Json {
-            ignoreUnknownKeys = true // 忽略未定义的键
-            isLenient = true // 宽松解析
-          }
+            Json {
+              ignoreUnknownKeys = true // 忽略未定义的键
+              isLenient = true // 宽松解析
+            }
         )
       }
 

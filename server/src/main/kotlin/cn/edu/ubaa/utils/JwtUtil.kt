@@ -15,7 +15,7 @@ object JwtUtil {
 
   // 优先从环境变量获取密钥
   private val jwtSecret: String =
-    dotenv["JWT_SECRET"] ?: System.getenv("JWT_SECRET") ?: "ubaa-dev-secret-unsafe"
+      dotenv["JWT_SECRET"] ?: System.getenv("JWT_SECRET") ?: "ubaa-dev-secret-unsafe"
 
   val algorithm: Algorithm = Algorithm.HMAC256(jwtSecret)
   const val ISSUER = "ubaa-server"
@@ -31,13 +31,13 @@ object JwtUtil {
   fun generateToken(username: String, sessionTtl: Duration): String {
     val now = Instant.now()
     return JWT.create()
-      .withIssuer(ISSUER)
-      .withAudience(AUDIENCE)
-      .withSubject(username)
-      .withIssuedAt(Date.from(now))
-      .withExpiresAt(Date.from(now.plus(sessionTtl)))
-      .withClaim("username", username)
-      .sign(algorithm)
+        .withIssuer(ISSUER)
+        .withAudience(AUDIENCE)
+        .withSubject(username)
+        .withIssuedAt(Date.from(now))
+        .withExpiresAt(Date.from(now.plus(sessionTtl)))
+        .withClaim("username", username)
+        .sign(algorithm)
   }
 
   /**

@@ -25,16 +25,19 @@ object JwtAuth {
     install(Authentication) {
       jwt(JWT_AUTH) {
         verifier(
-          JWT.require(JwtUtil.algorithm)
-            .withIssuer(JwtUtil.ISSUER)
-            .withAudience(JwtUtil.AUDIENCE)
-            .build()
+            JWT.require(JwtUtil.algorithm)
+                .withIssuer(JwtUtil.ISSUER)
+                .withAudience(JwtUtil.AUDIENCE)
+                .build()
         )
         validate { credential ->
           val username = credential.payload.subject
           if (
-            username != null &&
-              GlobalSessionManager.instance.getSession(username, SessionManager.SessionAccess.READ_ONLY) != null
+              username != null &&
+                  GlobalSessionManager.instance.getSession(
+                      username,
+                      SessionManager.SessionAccess.READ_ONLY,
+                  ) != null
           ) {
             JWTPrincipal(credential.payload)
           } else {
@@ -43,8 +46,8 @@ object JwtAuth {
         }
         challenge { _, _ ->
           call.respond(
-            HttpStatusCode.Unauthorized,
-            JwtErrorResponse(JwtErrorDetails("invalid_token", "Invalid or expired JWT token")),
+              HttpStatusCode.Unauthorized,
+              JwtErrorResponse(JwtErrorDetails("invalid_token", "Invalid or expired JWT token")),
           )
         }
       }
@@ -56,18 +59,24 @@ object JwtAuth {
     get() = principal<JWTPrincipal>()?.payload?.subject
 
   suspend fun ApplicationCall.currentUserSession(): SessionManager.UserSession? {
-    attributes.getOrNull(sessionAttributeKey)?.let { return it }
+    attributes.getOrNull(sessionAttributeKey)?.let {
+      return it
+    }
 
     val session =
-      when (val username = jwtUsername) {
-        null -> {
-          val authHeader = request.headers[HttpHeaders.Authorization]
-          if (authHeader?.startsWith("Bearer ") != true) return null
-          val token = authHeader.removePrefix("Bearer ")
-          GlobalSessionManager.instance.getSessionByToken(token, SessionManager.SessionAccess.TOUCH)
-        }
-        else -> GlobalSessionManager.instance.getSession(username, SessionManager.SessionAccess.TOUCH)
-      } ?: return null
+        when (val username = jwtUsername) {
+          null -> {
+            val authHeader = request.headers[HttpHeaders.Authorization]
+            if (authHeader?.startsWith("Bearer ") != true) return null
+            val token = authHeader.removePrefix("Bearer ")
+            GlobalSessionManager.instance.getSessionByToken(
+                token,
+                SessionManager.SessionAccess.TOUCH,
+            )
+          }
+          else ->
+              GlobalSessionManager.instance.getSession(username, SessionManager.SessionAccess.TOUCH)
+        } ?: return null
 
     attributes.put(sessionAttributeKey, session)
     return session

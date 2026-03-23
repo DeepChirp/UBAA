@@ -47,93 +47,93 @@ import cn.edu.ubaa.model.dto.SpocAssignmentSummaryDto
 @OptIn(ExperimentalMaterialApi::class)
 @Composable
 fun SpocAssignmentsScreen(
-        viewModel: SpocViewModel,
-        onAssignmentClick: (SpocAssignmentSummaryDto) -> Unit,
+    viewModel: SpocViewModel,
+    onAssignmentClick: (SpocAssignmentSummaryDto) -> Unit,
 ) {
   val uiState by viewModel.uiState.collectAsState()
   val groupedAssignments = uiState.visibleAssignments.groupBy { it.courseName }
   val pullRefreshState =
-          rememberPullRefreshState(
-                  refreshing = uiState.isRefreshing,
-                  onRefresh = { viewModel.loadAssignments(refresh = true) },
-          )
+      rememberPullRefreshState(
+          refreshing = uiState.isRefreshing,
+          onRefresh = { viewModel.loadAssignments(refresh = true) },
+      )
   var showSearchDialog by remember { mutableStateOf(false) }
 
   if (showSearchDialog) {
     SearchAssignmentsDialog(
-            initialQuery = uiState.searchQuery,
-            onDismiss = { showSearchDialog = false },
-            onApply = { query ->
-              viewModel.setSearchQuery(query)
-              showSearchDialog = false
-            },
-            onClear = {
-              viewModel.setSearchQuery("")
-              showSearchDialog = false
-            },
+        initialQuery = uiState.searchQuery,
+        onDismiss = { showSearchDialog = false },
+        onApply = { query ->
+          viewModel.setSearchQuery(query)
+          showSearchDialog = false
+        },
+        onClear = {
+          viewModel.setSearchQuery("")
+          showSearchDialog = false
+        },
     )
   }
 
   Scaffold(
-          floatingActionButton = {
-            FloatingActionButton(onClick = { showSearchDialog = true }) {
-              Icon(Icons.Default.Search, contentDescription = "搜索")
-            }
-          }
+      floatingActionButton = {
+        FloatingActionButton(onClick = { showSearchDialog = true }) {
+          Icon(Icons.Default.Search, contentDescription = "搜索")
+        }
+      }
   ) { padding ->
     Box(modifier = Modifier.fillMaxSize().padding(padding).pullRefresh(pullRefreshState)) {
       when {
         uiState.isLoading && uiState.assignmentsResponse == null ->
-                Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
-                  CircularProgressIndicator()
-                }
+            Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
+              CircularProgressIndicator()
+            }
         uiState.error != null && uiState.assignmentsResponse == null ->
-                Box(
-                        modifier = Modifier.fillMaxSize().padding(16.dp),
-                        contentAlignment = Alignment.Center
-                ) {
-                  Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                    Text(text = uiState.error!!, color = MaterialTheme.colorScheme.error)
-                    Spacer(modifier = Modifier.height(12.dp))
-                    Button(onClick = { viewModel.loadAssignments() }) { Text("重试") }
-                  }
-                }
+            Box(
+                modifier = Modifier.fillMaxSize().padding(16.dp),
+                contentAlignment = Alignment.Center,
+            ) {
+              Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                Text(text = uiState.error!!, color = MaterialTheme.colorScheme.error)
+                Spacer(modifier = Modifier.height(12.dp))
+                Button(onClick = { viewModel.loadAssignments() }) { Text("重试") }
+              }
+            }
         groupedAssignments.isEmpty() ->
-                Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
-                  Text("暂无符合条件的 SPOC 作业")
-                }
+            Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
+              Text("暂无符合条件的 SPOC 作业")
+            }
         else ->
-                LazyColumn(
-                        modifier = Modifier.fillMaxSize(),
-                        contentPadding = PaddingValues(16.dp),
-                        verticalArrangement = Arrangement.spacedBy(12.dp),
-                ) {
-                  groupedAssignments.forEach { (courseName, assignments) ->
-                    item {
-                      Text(
-                              text = courseName,
-                              style = MaterialTheme.typography.titleMedium,
-                              fontWeight = FontWeight.SemiBold,
-                      )
-                    }
-
-                    items(assignments) { assignment ->
-                      SpocAssignmentCard(
-                              assignment = assignment,
-                              onClick = { onAssignmentClick(assignment) }
-                      )
-                    }
-                  }
+            LazyColumn(
+                modifier = Modifier.fillMaxSize(),
+                contentPadding = PaddingValues(16.dp),
+                verticalArrangement = Arrangement.spacedBy(12.dp),
+            ) {
+              groupedAssignments.forEach { (courseName, assignments) ->
+                item {
+                  Text(
+                      text = courseName,
+                      style = MaterialTheme.typography.titleMedium,
+                      fontWeight = FontWeight.SemiBold,
+                  )
                 }
+
+                items(assignments) { assignment ->
+                  SpocAssignmentCard(
+                      assignment = assignment,
+                      onClick = { onAssignmentClick(assignment) },
+                  )
+                }
+              }
+            }
       }
 
       PullRefreshIndicator(
-              refreshing = uiState.isRefreshing,
-              state = pullRefreshState,
-              modifier = Modifier.align(Alignment.TopCenter),
-              backgroundColor = MaterialTheme.colorScheme.surface,
-              contentColor = MaterialTheme.colorScheme.primary,
-              scale = true,
+          refreshing = uiState.isRefreshing,
+          state = pullRefreshState,
+          modifier = Modifier.align(Alignment.TopCenter),
+          backgroundColor = MaterialTheme.colorScheme.surface,
+          contentColor = MaterialTheme.colorScheme.primary,
+          scale = true,
       )
     }
   }
@@ -141,68 +141,67 @@ fun SpocAssignmentsScreen(
 
 @Composable
 private fun SearchAssignmentsDialog(
-        initialQuery: String,
-        onDismiss: () -> Unit,
-        onApply: (String) -> Unit,
-        onClear: () -> Unit,
+    initialQuery: String,
+    onDismiss: () -> Unit,
+    onApply: (String) -> Unit,
+    onClear: () -> Unit,
 ) {
   var query by remember(initialQuery) { mutableStateOf(initialQuery) }
 
   AlertDialog(
-          onDismissRequest = onDismiss,
-          title = { Text("搜索作业") },
-          text = {
-            OutlinedTextField(
-                    value = query,
-                    onValueChange = { query = it },
-                    label = { Text("课程名称或作业标题") },
-                    singleLine = true,
-                    modifier = Modifier.fillMaxWidth(),
-            )
-          },
-          confirmButton = { TextButton(onClick = { onApply(query) }) { Text("搜索") } },
-          dismissButton = {
-            TextButton(
-                    onClick = {
-                      if (initialQuery.isNotBlank()) {
-                        onClear()
-                      } else {
-                        onDismiss()
-                      }
-                    }
-            ) { Text(if (initialQuery.isNotBlank()) "清空" else "取消") }
-          },
+      onDismissRequest = onDismiss,
+      title = { Text("搜索作业") },
+      text = {
+        OutlinedTextField(
+            value = query,
+            onValueChange = { query = it },
+            label = { Text("课程名称或作业标题") },
+            singleLine = true,
+            modifier = Modifier.fillMaxWidth(),
+        )
+      },
+      confirmButton = { TextButton(onClick = { onApply(query) }) { Text("搜索") } },
+      dismissButton = {
+        TextButton(
+            onClick = {
+              if (initialQuery.isNotBlank()) {
+                onClear()
+              } else {
+                onDismiss()
+              }
+            }
+        ) {
+          Text(if (initialQuery.isNotBlank()) "清空" else "取消")
+        }
+      },
   )
 }
 
 @Composable
 private fun SpocAssignmentCard(
-        assignment: SpocAssignmentSummaryDto,
-        onClick: () -> Unit,
+    assignment: SpocAssignmentSummaryDto,
+    onClick: () -> Unit,
 ) {
   Card(
-          onClick = onClick,
-          modifier = Modifier.fillMaxWidth(),
-          colors =
-                  CardDefaults.cardColors(
-                          containerColor = MaterialTheme.colorScheme.surfaceVariant
-                  ),
+      onClick = onClick,
+      modifier = Modifier.fillMaxWidth(),
+      colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceVariant),
   ) {
     Column(modifier = Modifier.fillMaxWidth().padding(16.dp)) {
       Row(
-              modifier = Modifier.fillMaxWidth(),
-              horizontalArrangement = Arrangement.SpaceBetween,
-              verticalAlignment = Alignment.CenterVertically,
+          modifier = Modifier.fillMaxWidth(),
+          horizontalArrangement = Arrangement.SpaceBetween,
+          verticalAlignment = Alignment.CenterVertically,
       ) {
         Text(
-                text = assignment.title,
-                style = MaterialTheme.typography.titleLarge,
-                fontWeight = FontWeight.Bold,
-                modifier = Modifier.weight(1f),
+            text = assignment.title,
+            style = MaterialTheme.typography.titleLarge,
+            fontWeight = FontWeight.Bold,
+            modifier = Modifier.weight(1f),
         )
         ElevatedAssistChip(
-                onClick = onClick,
-                label = { Text(assignment.submissionStatusText) },
+            onClick = onClick,
+            label = { Text(assignment.submissionStatusText) },
         )
       }
 
@@ -210,30 +209,32 @@ private fun SpocAssignmentCard(
 
       if (!assignment.teacherName.isNullOrBlank()) {
         Text(
-                text = "教师：${assignment.teacherName}",
-                style = MaterialTheme.typography.bodySmall,
-                color = MaterialTheme.colorScheme.onSurfaceVariant,
+            text = "教师：${assignment.teacherName}",
+            style = MaterialTheme.typography.bodySmall,
+            color = MaterialTheme.colorScheme.onSurfaceVariant,
         )
       }
 
       Text(
-              text = "开始：${assignment.startTime ?: "未知"}",
-              style = MaterialTheme.typography.bodySmall,
-              color = MaterialTheme.colorScheme.onSurfaceVariant,
+          text = "开始：${assignment.startTime ?: "未知"}",
+          style = MaterialTheme.typography.bodySmall,
+          color = MaterialTheme.colorScheme.onSurfaceVariant,
       )
       Text(
-              text = "截止：${assignment.dueTime ?: "未知"}",
-              style = MaterialTheme.typography.bodySmall,
-              color = MaterialTheme.colorScheme.onSurfaceVariant,
+          text = "截止：${assignment.dueTime ?: "未知"}",
+          style = MaterialTheme.typography.bodySmall,
+          color = MaterialTheme.colorScheme.onSurfaceVariant,
       )
 
-      assignment.score?.takeIf { it.isNotBlank() }?.let {
-        Text(
+      assignment.score
+          ?.takeIf { it.isNotBlank() }
+          ?.let {
+            Text(
                 text = "分值：$it",
                 style = MaterialTheme.typography.bodySmall,
                 color = MaterialTheme.colorScheme.onSurfaceVariant,
-        )
-      }
+            )
+          }
     }
   }
 }

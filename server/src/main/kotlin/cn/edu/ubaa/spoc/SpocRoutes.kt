@@ -25,14 +25,17 @@ fun Route.spocRouting() {
     get("/assignments/{assignmentId}") {
       val session = call.requireUserSession()
       val assignmentId =
-        call.parameters["assignmentId"]?.takeIf { it.isNotBlank() }
-          ?: return@get call.respond(
-            HttpStatusCode.BadRequest,
-            ErrorResponse(ErrorDetails("invalid_request", "assignmentId is required")),
-          )
+          call.parameters["assignmentId"]?.takeIf { it.isNotBlank() }
+              ?: return@get call.respond(
+                  HttpStatusCode.BadRequest,
+                  ErrorResponse(ErrorDetails("invalid_request", "assignmentId is required")),
+              )
 
       call.runSpocCall {
-        call.respond(HttpStatusCode.OK, spocService.getAssignmentDetail(session.username, assignmentId))
+        call.respond(
+            HttpStatusCode.OK,
+            spocService.getAssignmentDetail(session.username, assignmentId),
+        )
       }
     }
   }
@@ -43,18 +46,20 @@ private suspend fun ApplicationCall.runSpocCall(block: suspend () -> Unit) {
     block()
   } catch (e: SpocAuthenticationException) {
     respond(
-      HttpStatusCode.BadGateway,
-      ErrorResponse(ErrorDetails("spoc_auth_failed", e.message ?: "SPOC authentication failed")),
+        HttpStatusCode.BadGateway,
+        ErrorResponse(ErrorDetails("spoc_auth_failed", e.message ?: "SPOC authentication failed")),
     )
   } catch (e: SpocException) {
     respond(
-      HttpStatusCode.BadGateway,
-      ErrorResponse(ErrorDetails("spoc_error", e.message ?: "SPOC request failed")),
+        HttpStatusCode.BadGateway,
+        ErrorResponse(ErrorDetails("spoc_error", e.message ?: "SPOC request failed")),
     )
   } catch (e: Exception) {
     respond(
-      HttpStatusCode.InternalServerError,
-      ErrorResponse(ErrorDetails("internal_server_error", "An unexpected server error occurred.")),
+        HttpStatusCode.InternalServerError,
+        ErrorResponse(
+            ErrorDetails("internal_server_error", "An unexpected server error occurred.")
+        ),
     )
   }
 }

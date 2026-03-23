@@ -29,92 +29,95 @@ import androidx.compose.ui.unit.dp
 /** SPOC 作业详情页。 */
 @Composable
 fun SpocAssignmentDetailScreen(
-  viewModel: SpocViewModel,
-  onRetry: () -> Unit,
+    viewModel: SpocViewModel,
+    onRetry: () -> Unit,
 ) {
   val uiState by viewModel.uiState.collectAsState()
   val detail = uiState.assignmentDetail
 
   Scaffold(
-    floatingActionButton = {
-      FloatingActionButton(onClick = onRetry) {
-        Icon(Icons.Default.Refresh, contentDescription = "刷新")
+      floatingActionButton = {
+        FloatingActionButton(onClick = onRetry) {
+          Icon(Icons.Default.Refresh, contentDescription = "刷新")
+        }
       }
-    }
   ) { padding ->
     when {
       uiState.isDetailLoading ->
-        Box(
-          modifier = Modifier.fillMaxSize().padding(padding),
-          contentAlignment = Alignment.Center,
-        ) {
-          CircularProgressIndicator()
-        }
-      uiState.detailError != null ->
-        Box(
-          modifier = Modifier.fillMaxSize().padding(padding).padding(16.dp),
-          contentAlignment = Alignment.Center,
-        ) {
-          Text(text = uiState.detailError!!, color = MaterialTheme.colorScheme.error)
-        }
-      detail == null ->
-        Box(
-          modifier = Modifier.fillMaxSize().padding(padding),
-          contentAlignment = Alignment.Center,
-        ) {
-          Text("暂无作业详情")
-        }
-      else ->
-        Column(
-          modifier =
-            Modifier.fillMaxSize()
-              .padding(padding)
-              .verticalScroll(rememberScrollState())
-              .padding(16.dp),
-          verticalArrangement = Arrangement.spacedBy(12.dp),
-        ) {
-          Card(
-            modifier = Modifier.fillMaxWidth(),
-            colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceVariant),
+          Box(
+              modifier = Modifier.fillMaxSize().padding(padding),
+              contentAlignment = Alignment.Center,
           ) {
-            Column(modifier = Modifier.fillMaxWidth().padding(16.dp)) {
-              Text(
-                text = detail.title,
-                style = MaterialTheme.typography.headlineSmall,
-                fontWeight = FontWeight.Bold,
-              )
-              Text(
-                text = detail.courseName,
-                style = MaterialTheme.typography.titleMedium,
-                color = MaterialTheme.colorScheme.primary,
-              )
-              if (!detail.teacherName.isNullOrBlank()) {
+            CircularProgressIndicator()
+          }
+      uiState.detailError != null ->
+          Box(
+              modifier = Modifier.fillMaxSize().padding(padding).padding(16.dp),
+              contentAlignment = Alignment.Center,
+          ) {
+            Text(text = uiState.detailError!!, color = MaterialTheme.colorScheme.error)
+          }
+      detail == null ->
+          Box(
+              modifier = Modifier.fillMaxSize().padding(padding),
+              contentAlignment = Alignment.Center,
+          ) {
+            Text("暂无作业详情")
+          }
+      else ->
+          Column(
+              modifier =
+                  Modifier.fillMaxSize()
+                      .padding(padding)
+                      .verticalScroll(rememberScrollState())
+                      .padding(16.dp),
+              verticalArrangement = Arrangement.spacedBy(12.dp),
+          ) {
+            Card(
+                modifier = Modifier.fillMaxWidth(),
+                colors =
+                    CardDefaults.cardColors(
+                        containerColor = MaterialTheme.colorScheme.surfaceVariant
+                    ),
+            ) {
+              Column(modifier = Modifier.fillMaxWidth().padding(16.dp)) {
                 Text(
-                  text = "教师：${detail.teacherName}",
-                  style = MaterialTheme.typography.bodyMedium,
-                  color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    text = detail.title,
+                    style = MaterialTheme.typography.headlineSmall,
+                    fontWeight = FontWeight.Bold,
                 )
+                Text(
+                    text = detail.courseName,
+                    style = MaterialTheme.typography.titleMedium,
+                    color = MaterialTheme.colorScheme.primary,
+                )
+                if (!detail.teacherName.isNullOrBlank()) {
+                  Text(
+                      text = "教师：${detail.teacherName}",
+                      style = MaterialTheme.typography.bodyMedium,
+                      color = MaterialTheme.colorScheme.onSurfaceVariant,
+                  )
+                }
               }
             }
+
+            DetailInfoCard(
+                title = "提交信息",
+                lines =
+                    buildList {
+                      add("状态：${detail.submissionStatusText}")
+                      add("开始时间：${detail.startTime ?: "未知"}")
+                      add("截止时间：${detail.dueTime ?: "未知"}")
+                      detail.score?.takeIf { it.isNotBlank() }?.let { add("分值：$it") }
+                      detail.submittedAt?.takeIf { it.isNotBlank() }?.let { add("提交时间：$it") }
+                    },
+            )
+
+            DetailInfoCard(
+                title = "作业内容",
+                lines = listOf(detail.contentPlainText ?: "暂无作业说明"),
+            )
           }
-
-          DetailInfoCard(
-            title = "提交信息",
-            lines =
-              buildList {
-                add("状态：${detail.submissionStatusText}")
-                add("开始时间：${detail.startTime ?: "未知"}")
-                add("截止时间：${detail.dueTime ?: "未知"}")
-                detail.score?.takeIf { it.isNotBlank() }?.let { add("分值：$it") }
-                detail.submittedAt?.takeIf { it.isNotBlank() }?.let { add("提交时间：$it") }
-              },
-          )
-
-          DetailInfoCard(
-            title = "作业内容",
-            lines = listOf(detail.contentPlainText ?: "暂无作业说明"),
-          )
-        }
     }
   }
 }
@@ -122,20 +125,23 @@ fun SpocAssignmentDetailScreen(
 @Composable
 private fun DetailInfoCard(title: String, lines: List<String>) {
   Card(
-    modifier = Modifier.fillMaxWidth(),
-    colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
+      modifier = Modifier.fillMaxWidth(),
+      colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
   ) {
-    Column(modifier = Modifier.fillMaxWidth().padding(16.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
+    Column(
+        modifier = Modifier.fillMaxWidth().padding(16.dp),
+        verticalArrangement = Arrangement.spacedBy(8.dp),
+    ) {
       Text(
-        text = title,
-        style = MaterialTheme.typography.titleMedium,
-        fontWeight = FontWeight.SemiBold,
+          text = title,
+          style = MaterialTheme.typography.titleMedium,
+          fontWeight = FontWeight.SemiBold,
       )
       lines.forEach {
         Text(
-          text = it,
-          style = MaterialTheme.typography.bodyMedium,
-          color = MaterialTheme.colorScheme.onSurfaceVariant,
+            text = it,
+            style = MaterialTheme.typography.bodyMedium,
+            color = MaterialTheme.colorScheme.onSurfaceVariant,
         )
       }
     }

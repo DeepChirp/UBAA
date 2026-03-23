@@ -17,9 +17,7 @@ open class SpocApi(private val apiClient: ApiClient = ApiClientProvider.shared) 
   }
 
   /** 获取指定作业的详细信息。 */
-  open suspend fun getAssignmentDetail(
-    assignmentId: String
-  ): Result<SpocAssignmentDetailDto> {
+  open suspend fun getAssignmentDetail(assignmentId: String): Result<SpocAssignmentDetailDto> {
     return safeApiCall { apiClient.getClient().get("api/v1/spoc/assignments/$assignmentId") }
   }
 }

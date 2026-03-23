@@ -11,13 +11,13 @@ import kotlinx.coroutines.launch
 
 /** 课堂签到模块 UI 状态。 */
 data class SigninUiState(
-  val isLoading: Boolean = false,
-  val classes: List<SigninClassDto> = emptyList(),
-  val error: String? = null,
-  /** 签到操作的结果提示（如“签到成功”）。 */
-  val signinResult: String? = null,
-  /** 当前正在执行签到的课程 ID（用于显示局部加载状态）。 */
-  val signingInCourseId: String? = null,
+    val isLoading: Boolean = false,
+    val classes: List<SigninClassDto> = emptyList(),
+    val error: String? = null,
+    /** 签到操作的结果提示（如“签到成功”）。 */
+    val signinResult: String? = null,
+    /** 当前正在执行签到的课程 ID（用于显示局部加载状态）。 */
+    val signingInCourseId: String? = null,
 )
 
 /** 管理课堂签到功能的 ViewModel。 */
@@ -37,11 +37,11 @@ class SigninViewModel : ViewModel() {
     viewModelScope.launch {
       _uiState.value = _uiState.value.copy(isLoading = true, error = null)
       signinApi
-        .getTodayClasses()
-        .onSuccess { _uiState.value = _uiState.value.copy(isLoading = false, classes = it.data) }
-        .onFailure {
-          _uiState.value = _uiState.value.copy(isLoading = false, error = it.message ?: "加载课程失败")
-        }
+          .getTodayClasses()
+          .onSuccess { _uiState.value = _uiState.value.copy(isLoading = false, classes = it.data) }
+          .onFailure {
+            _uiState.value = _uiState.value.copy(isLoading = false, error = it.message ?: "加载课程失败")
+          }
     }
   }
 
@@ -50,19 +50,19 @@ class SigninViewModel : ViewModel() {
     viewModelScope.launch {
       _uiState.value = _uiState.value.copy(signingInCourseId = courseId, signinResult = null)
       signinApi
-        .performSignin(courseId)
-        .onSuccess { response ->
-          _uiState.value =
-            _uiState.value.copy(
-              signingInCourseId = null,
-              signinResult = if (response.success) "签到成功" else "签到失败: ${response.message}",
-            )
-          if (response.success) loadTodayClasses()
-        }
-        .onFailure {
-          _uiState.value =
-            _uiState.value.copy(signingInCourseId = null, signinResult = "签到异常: ${it.message}")
-        }
+          .performSignin(courseId)
+          .onSuccess { response ->
+            _uiState.value =
+                _uiState.value.copy(
+                    signingInCourseId = null,
+                    signinResult = if (response.success) "签到成功" else "签到失败: ${response.message}",
+                )
+            if (response.success) loadTodayClasses()
+          }
+          .onFailure {
+            _uiState.value =
+                _uiState.value.copy(signingInCourseId = null, signinResult = "签到异常: ${it.message}")
+          }
     }
   }
 

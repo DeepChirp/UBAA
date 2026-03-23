@@ -28,8 +28,8 @@ fun Route.evaluationRouting() {
       } catch (e: Exception) {
         log.error("Failed to fetch evaluation list for $username", e)
         call.respond(
-          HttpStatusCode.InternalServerError,
-          ErrorResponse(ErrorDetails("error", e.message ?: "Unknown Error")),
+            HttpStatusCode.InternalServerError,
+            ErrorResponse(ErrorDetails("error", e.message ?: "Unknown Error")),
         )
       }
     }
@@ -41,8 +41,8 @@ fun Route.evaluationRouting() {
         val coursesToEvaluate = call.receive<List<EvaluationCourse>>()
         if (coursesToEvaluate.isEmpty()) {
           return@post call.respond(
-            HttpStatusCode.BadRequest,
-            ErrorResponse(ErrorDetails("error", "No courses selected")),
+              HttpStatusCode.BadRequest,
+              ErrorResponse(ErrorDetails("error", "No courses selected")),
           )
         }
 
@@ -51,8 +51,8 @@ fun Route.evaluationRouting() {
       } catch (e: Exception) {
         log.error("Failed to submit evaluations for $username", e)
         call.respond(
-          HttpStatusCode.InternalServerError,
-          ErrorResponse(ErrorDetails("error", e.message ?: "Unknown Error")),
+            HttpStatusCode.InternalServerError,
+            ErrorResponse(ErrorDetails("error", e.message ?: "Unknown Error")),
         )
       }
     }

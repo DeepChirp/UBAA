@@ -14,9 +14,9 @@ import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.test.StandardTestDispatcher
 import kotlinx.coroutines.test.TestCoroutineScheduler
 import kotlinx.coroutines.test.advanceUntilIdle
+import kotlinx.coroutines.test.resetMain
 import kotlinx.coroutines.test.runTest
 import kotlinx.coroutines.test.setMain
-import kotlinx.coroutines.test.resetMain
 
 @OptIn(ExperimentalCoroutinesApi::class)
 class ClassroomViewModelTest {
@@ -113,65 +113,68 @@ class ClassroomViewModelTest {
 
   private fun fakeApi(): ClassroomApi {
     return object : ClassroomApi() {
-      override suspend fun queryClassrooms(xqid: Int, date: String): Result<ClassroomQueryResponse> {
+      override suspend fun queryClassrooms(
+          xqid: Int,
+          date: String,
+      ): Result<ClassroomQueryResponse> {
         val response =
-          when (xqid) {
-            2 ->
-              classroomResponse(
-                mapOf(
-                  "沙河楼C" to
-                    listOf(
-                      ClassroomInfo(
-                        id = "3",
-                        floorid = "c1",
-                        name = "C-201",
-                        kxsds = "1,2,3",
+            when (xqid) {
+              2 ->
+                  classroomResponse(
+                      mapOf(
+                          "沙河楼C" to
+                              listOf(
+                                  ClassroomInfo(
+                                      id = "3",
+                                      floorid = "c1",
+                                      name = "C-201",
+                                      kxsds = "1,2,3",
+                                  )
+                              )
                       )
-                    )
-                )
-              )
-            else ->
-              classroomResponse(
-                mapOf(
-                  "教学楼A" to
-                    listOf(
-                      ClassroomInfo(
-                        id = "1",
-                        floorid = "a1",
-                        name = "A-101",
-                        kxsds = "1,2,3",
-                      ),
-                      ClassroomInfo(
-                        id = "2",
-                        floorid = "a1",
-                        name = "A-102",
-                        kxsds = "4,5,6",
-                      ),
-                    ),
-                  "教学楼B" to
-                    listOf(
-                      ClassroomInfo(
-                        id = "4",
-                        floorid = "b1",
-                        name = "B-201",
-                        kxsds = "1,2,3",
+                  )
+              else ->
+                  classroomResponse(
+                      mapOf(
+                          "教学楼A" to
+                              listOf(
+                                  ClassroomInfo(
+                                      id = "1",
+                                      floorid = "a1",
+                                      name = "A-101",
+                                      kxsds = "1,2,3",
+                                  ),
+                                  ClassroomInfo(
+                                      id = "2",
+                                      floorid = "a1",
+                                      name = "A-102",
+                                      kxsds = "4,5,6",
+                                  ),
+                              ),
+                          "教学楼B" to
+                              listOf(
+                                  ClassroomInfo(
+                                      id = "4",
+                                      floorid = "b1",
+                                      name = "B-201",
+                                      kxsds = "1,2,3",
+                                  )
+                              ),
                       )
-                    ),
-                )
-              )
-          }
+                  )
+            }
         return Result.success(response)
       }
     }
   }
 
   private fun classroomResponse(
-    buildings: Map<String, List<ClassroomInfo>>
+      buildings: Map<String, List<ClassroomInfo>>
   ): ClassroomQueryResponse {
     return ClassroomQueryResponse(
-      e = 0,
-      m = "ok",
-      d = ClassroomData(list = buildings),
+        e = 0,
+        m = "ok",
+        d = ClassroomData(list = buildings),
     )
   }
 }

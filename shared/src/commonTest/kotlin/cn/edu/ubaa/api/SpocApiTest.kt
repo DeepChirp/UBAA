@@ -33,32 +33,32 @@ class SpocApiTest {
     val mockEngine = MockEngine { request ->
       assertEquals("/api/v1/spoc/assignments", request.url.encodedPath)
       respond(
-        content =
-          ByteReadChannel(
-            json.encodeToString(
-              SpocAssignmentsResponse(
-                termCode = "2025-20262",
-                termName = "2026年春季学期",
-                assignments =
-                  listOf(
-                    SpocAssignmentSummaryDto(
-                      assignmentId = "a1",
-                      courseId = "c1",
-                      courseName = "操作系统",
-                      teacherName = "牛虹婷",
-                      title = "作业 1",
-                      startTime = "2026-03-10 00:00:00",
-                      dueTime = "2026-03-16 18:00:00",
-                      score = "100",
-                      submissionStatus = SpocSubmissionStatus.SUBMITTED,
-                      submissionStatusText = "已提交",
-                    )
-                  ),
-              )
-            )
-          ),
-        status = HttpStatusCode.OK,
-        headers = headersOf(HttpHeaders.ContentType, "application/json"),
+          content =
+              ByteReadChannel(
+                  json.encodeToString(
+                      SpocAssignmentsResponse(
+                          termCode = "2025-20262",
+                          termName = "2026年春季学期",
+                          assignments =
+                              listOf(
+                                  SpocAssignmentSummaryDto(
+                                      assignmentId = "a1",
+                                      courseId = "c1",
+                                      courseName = "操作系统",
+                                      teacherName = "牛虹婷",
+                                      title = "作业 1",
+                                      startTime = "2026-03-10 00:00:00",
+                                      dueTime = "2026-03-16 18:00:00",
+                                      score = "100",
+                                      submissionStatus = SpocSubmissionStatus.SUBMITTED,
+                                      submissionStatusText = "已提交",
+                                  )
+                              ),
+                      )
+                  )
+              ),
+          status = HttpStatusCode.OK,
+          headers = headersOf(HttpHeaders.ContentType, "application/json"),
       )
     }
 
@@ -78,28 +78,28 @@ class SpocApiTest {
     val mockEngine = MockEngine { request ->
       assertEquals("/api/v1/spoc/assignments/a1", request.url.encodedPath)
       respond(
-        content =
-          ByteReadChannel(
-            json.encodeToString(
-              SpocAssignmentDetailDto(
-                assignmentId = "a1",
-                courseId = "c1",
-                courseName = "操作系统",
-                teacherName = "牛虹婷",
-                title = "作业 1",
-                startTime = "2026-03-10 00:00:00",
-                dueTime = "2026-03-16 18:00:00",
-                score = "100",
-                submissionStatus = SpocSubmissionStatus.UNSUBMITTED,
-                submissionStatusText = "未提交",
-                contentPlainText = "请提交 PDF",
-                contentHtml = "<p>请提交 PDF</p>",
-                submittedAt = null,
-              )
-            )
-          ),
-        status = HttpStatusCode.OK,
-        headers = headersOf(HttpHeaders.ContentType, "application/json"),
+          content =
+              ByteReadChannel(
+                  json.encodeToString(
+                      SpocAssignmentDetailDto(
+                          assignmentId = "a1",
+                          courseId = "c1",
+                          courseName = "操作系统",
+                          teacherName = "牛虹婷",
+                          title = "作业 1",
+                          startTime = "2026-03-10 00:00:00",
+                          dueTime = "2026-03-16 18:00:00",
+                          score = "100",
+                          submissionStatus = SpocSubmissionStatus.UNSUBMITTED,
+                          submissionStatusText = "未提交",
+                          contentPlainText = "请提交 PDF",
+                          contentHtml = "<p>请提交 PDF</p>",
+                          submittedAt = null,
+                      )
+                  )
+              ),
+          status = HttpStatusCode.OK,
+          headers = headersOf(HttpHeaders.ContentType, "application/json"),
       )
     }
 

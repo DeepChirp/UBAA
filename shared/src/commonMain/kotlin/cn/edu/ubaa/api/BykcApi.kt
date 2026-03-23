@@ -30,9 +30,9 @@ class BykcApi(private val apiClient: ApiClient = ApiClientProvider.shared) {
    * @return 课程分页结果响应。
    */
   suspend fun getCourses(
-    page: Int = 1,
-    size: Int = 20,
-    all: Boolean = false,
+      page: Int = 1,
+      size: Int = 20,
+      all: Boolean = false,
   ): Result<BykcCoursesResponse> {
     return safeApiCall {
       apiClient.getClient().get("api/v1/bykc/courses") {
@@ -119,10 +119,10 @@ class BykcApi(private val apiClient: ApiClient = ApiClientProvider.shared) {
    * @return 操作成功响应。
    */
   suspend fun signCourse(
-    courseId: Long,
-    lat: Double? = null,
-    lng: Double? = null,
-    signType: Int,
+      courseId: Long,
+      lat: Double? = null,
+      lng: Double? = null,
+      signType: Int,
   ): Result<BykcSuccessResponse> {
     return safeApiCall {
       apiClient.getClient().post("api/v1/bykc/courses/$courseId/sign") {

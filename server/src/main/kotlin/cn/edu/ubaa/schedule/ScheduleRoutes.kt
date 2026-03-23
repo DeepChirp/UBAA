@@ -21,7 +21,7 @@ fun Route.scheduleRouting() {
         call.respond(HttpStatusCode.OK, terms)
       } catch (e: Exception) {
         val status =
-          if (e is LoginException) HttpStatusCode.Unauthorized else HttpStatusCode.BadGateway
+            if (e is LoginException) HttpStatusCode.Unauthorized else HttpStatusCode.BadGateway
         call.respond(status, ErrorResponse(ErrorDetails("error", e.message ?: "Error")))
       }
     }
@@ -30,15 +30,15 @@ fun Route.scheduleRouting() {
     get("/weeks") {
       val username = call.jwtUsername!!
       val termCode =
-        call.request.queryParameters["termCode"]
-          ?: return@get call.respond(HttpStatusCode.BadRequest)
+          call.request.queryParameters["termCode"]
+              ?: return@get call.respond(HttpStatusCode.BadRequest)
       try {
         val weeks = scheduleService.fetchWeeks(username, termCode)
         call.respond(HttpStatusCode.OK, weeks)
       } catch (e: Exception) {
         call.respond(
-          HttpStatusCode.BadGateway,
-          ErrorResponse(ErrorDetails("error", e.message ?: "Error")),
+            HttpStatusCode.BadGateway,
+            ErrorResponse(ErrorDetails("error", e.message ?: "Error")),
         )
       }
     }
@@ -47,18 +47,18 @@ fun Route.scheduleRouting() {
     get("/week") {
       val username = call.jwtUsername!!
       val termCode =
-        call.request.queryParameters["termCode"]
-          ?: return@get call.respond(HttpStatusCode.BadRequest)
+          call.request.queryParameters["termCode"]
+              ?: return@get call.respond(HttpStatusCode.BadRequest)
       val week =
-        call.request.queryParameters["week"]?.toIntOrNull()
-          ?: return@get call.respond(HttpStatusCode.BadRequest)
+          call.request.queryParameters["week"]?.toIntOrNull()
+              ?: return@get call.respond(HttpStatusCode.BadRequest)
       try {
         val schedule = scheduleService.fetchWeeklySchedule(username, termCode, week)
         call.respond(HttpStatusCode.OK, schedule)
       } catch (e: Exception) {
         call.respond(
-          HttpStatusCode.BadGateway,
-          ErrorResponse(ErrorDetails("error", e.message ?: "Error")),
+            HttpStatusCode.BadGateway,
+            ErrorResponse(ErrorDetails("error", e.message ?: "Error")),
         )
       }
     }
@@ -71,8 +71,8 @@ fun Route.scheduleRouting() {
         call.respond(HttpStatusCode.OK, todaySchedule)
       } catch (e: Exception) {
         call.respond(
-          HttpStatusCode.BadGateway,
-          ErrorResponse(ErrorDetails("error", e.message ?: "Error")),
+            HttpStatusCode.BadGateway,
+            ErrorResponse(ErrorDetails("error", e.message ?: "Error")),
         )
       }
     }

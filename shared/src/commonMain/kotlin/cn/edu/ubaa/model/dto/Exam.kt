@@ -5,9 +5,9 @@ import kotlinx.serialization.Serializable
 /** 考试查询原始响应体。 */
 @Serializable
 data class ExamResponse(
-  val code: String,
-  val msg: String? = null,
-  val datas: List<Exam> = emptyList(),
+    val code: String,
+    val msg: String? = null,
+    val datas: List<Exam> = emptyList(),
 )
 
 /**
@@ -19,19 +19,19 @@ data class ExamResponse(
  */
 @Serializable
 data class ExamArrangementData(
-  val stuInfo: ExamStudentInfo? = null,
-  val arranged: List<Exam> = emptyList(),
-  val notArranged: List<Exam> = emptyList(),
+    val stuInfo: ExamStudentInfo? = null,
+    val arranged: List<Exam> = emptyList(),
+    val notArranged: List<Exam> = emptyList(),
 )
 
 /** 学生考籍与学籍基本信息。 */
 @Serializable
 data class ExamStudentInfo(
-  val name: String? = null,
-  val studentId: String? = null,
-  val department: String? = null,
-  val major: String? = null,
-  val grade: String? = null,
+    val name: String? = null,
+    val studentId: String? = null,
+    val department: String? = null,
+    val major: String? = null,
+    val grade: String? = null,
 )
 
 /**
@@ -52,16 +52,16 @@ data class ExamStudentInfo(
  */
 @Serializable
 data class Exam(
-  val courseName: String,
-  val courseNo: String? = null,
-  val examTimeDescription: String? = null,
-  val examDate: String? = null,
-  val startTime: String? = null,
-  val endTime: String? = null,
-  val examPlace: String? = null,
-  val examSeatNo: String? = null,
-  val week: Int? = null,
-  val examStatus: Int? = null,
-  val examType: String? = null,
-  val taskId: String? = null,
+    val courseName: String,
+    val courseNo: String? = null,
+    val examTimeDescription: String? = null,
+    val examDate: String? = null,
+    val startTime: String? = null,
+    val endTime: String? = null,
+    val examPlace: String? = null,
+    val examSeatNo: String? = null,
+    val week: Int? = null,
+    val examStatus: Int? = null,
+    val examType: String? = null,
+    val taskId: String? = null,
 )

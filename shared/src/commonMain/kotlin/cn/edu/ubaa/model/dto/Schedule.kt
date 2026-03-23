@@ -12,10 +12,10 @@ import kotlinx.serialization.Serializable
  */
 @Serializable
 data class Term(
-  val itemCode: String,
-  val itemName: String,
-  val selected: Boolean,
-  val itemIndex: Int,
+    val itemCode: String,
+    val itemName: String,
+    val selected: Boolean,
+    val itemIndex: Int,
 )
 
 /**
@@ -30,12 +30,12 @@ data class Term(
  */
 @Serializable
 data class Week(
-  val startDate: String,
-  val endDate: String,
-  val term: String,
-  val curWeek: Boolean,
-  val serialNumber: Int,
-  val name: String,
+    val startDate: String,
+    val endDate: String,
+    val term: String,
+    val curWeek: Boolean,
+    val serialNumber: Int,
+    val name: String,
 )
 
 /**
@@ -57,19 +57,19 @@ data class Week(
  */
 @Serializable
 data class CourseClass(
-  val courseCode: String,
-  val courseName: String,
-  val courseSerialNo: String?,
-  val credit: String?,
-  val beginTime: String?,
-  val endTime: String?,
-  val beginSection: Int?,
-  val endSection: Int?,
-  val placeName: String?,
-  val weeksAndTeachers: String?,
-  val teachingTarget: String?,
-  val color: String?,
-  val dayOfWeek: Int?,
+    val courseCode: String,
+    val courseName: String,
+    val courseSerialNo: String?,
+    val credit: String?,
+    val beginTime: String?,
+    val endTime: String?,
+    val beginSection: Int?,
+    val endSection: Int?,
+    val placeName: String?,
+    val weeksAndTeachers: String?,
+    val teachingTarget: String?,
+    val color: String?,
+    val dayOfWeek: Int?,
 )
 
 /**
@@ -92,10 +92,10 @@ data class WeeklySchedule(val arrangedList: List<CourseClass>, val code: String,
  */
 @Serializable
 data class TodayClass(
-  val bizName: String,
-  val place: String?,
-  val time: String?,
-  val shortName: String?,
+    val bizName: String,
+    val place: String?,
+    val time: String?,
+    val shortName: String?,
 )
 
 /** 上游 API 学期列表响应包装类。 */

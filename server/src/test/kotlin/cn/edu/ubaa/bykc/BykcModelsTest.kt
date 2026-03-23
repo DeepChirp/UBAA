@@ -13,24 +13,24 @@ class BykcModelsTest {
   @Test
   fun `BykcApiResponse can parse success response`() {
     val jsonStr =
-      """
-      {
-          "status": "0",
-          "errmsg": "请求成功",
-          "token": null,
-          "data": {
-              "id": 12345,
-              "employeeId": "20201234",
-              "realName": "张三",
-              "studentNo": "20201234",
-              "studentType": "BENKE",
-              "classCode": "202011",
-              "noticeSwitch": true,
-              "delFlag": 0
-          }
-      }
-      """
-        .trimIndent()
+        """
+        {
+            "status": "0",
+            "errmsg": "请求成功",
+            "token": null,
+            "data": {
+                "id": 12345,
+                "employeeId": "20201234",
+                "realName": "张三",
+                "studentNo": "20201234",
+                "studentType": "BENKE",
+                "classCode": "202011",
+                "noticeSwitch": true,
+                "delFlag": 0
+            }
+        }
+        """
+            .trimIndent()
 
     val response = json.decodeFromString<BykcApiResponse<BykcUserProfile>>(jsonStr)
 
@@ -46,15 +46,15 @@ class BykcModelsTest {
   @Test
   fun `BykcApiResponse can parse error response`() {
     val jsonStr =
-      """
-      {
-          "status": "1",
-          "errmsg": "已报名过该课程，请不要重复报名",
-          "token": null,
-          "data": null
-      }
-      """
-        .trimIndent()
+        """
+        {
+            "status": "1",
+            "errmsg": "已报名过该课程，请不要重复报名",
+            "token": null,
+            "data": null
+        }
+        """
+            .trimIndent()
 
     val response = json.decodeFromString<BykcApiResponse<String>>(jsonStr)
 
@@ -67,41 +67,41 @@ class BykcModelsTest {
   @Test
   fun `BykcCourse can parse full course data`() {
     val jsonStr =
-      """
-      {
-          "id": 8748,
-          "courseName": "AI时代,建构英语学习新思维",
-          "coursePosition": "学院路校区主楼219教室",
-          "courseContact": "李安琪",
-          "courseContactMobile": "18321571726",
-          "courseTeacher": "陈琦",
-          "courseCreateDate": "2025-11-25 10:17:48",
-          "courseStartDate": "2025-11-26 19:00:00",
-          "courseEndDate": "2025-11-26 21:00:00",
-          "courseSelectStartDate": "2025-11-25 19:00:00",
-          "courseSelectEndDate": "2025-11-26 18:00:00",
-          "courseCancelEndDate": "2025-11-26 18:00:00",
-          "courseNewKind1": {
-              "id": 60,
-              "kindName": "博雅课程",
-              "parentId": 0,
-              "delFlag": 0
-          },
-          "courseNewKind2": {
-              "id": 55,
-              "kindName": "德育",
-              "parentId": 60,
-              "delFlag": 0
-          },
-          "courseMaxCount": 220,
-          "courseCurrentCount": 150,
-          "courseCampus": "ALL",
-          "courseSignType": 2,
-          "selected": false,
-          "delFlag": 0
-      }
-      """
-        .trimIndent()
+        """
+        {
+            "id": 8748,
+            "courseName": "AI时代,建构英语学习新思维",
+            "coursePosition": "学院路校区主楼219教室",
+            "courseContact": "李安琪",
+            "courseContactMobile": "18321571726",
+            "courseTeacher": "陈琦",
+            "courseCreateDate": "2025-11-25 10:17:48",
+            "courseStartDate": "2025-11-26 19:00:00",
+            "courseEndDate": "2025-11-26 21:00:00",
+            "courseSelectStartDate": "2025-11-25 19:00:00",
+            "courseSelectEndDate": "2025-11-26 18:00:00",
+            "courseCancelEndDate": "2025-11-26 18:00:00",
+            "courseNewKind1": {
+                "id": 60,
+                "kindName": "博雅课程",
+                "parentId": 0,
+                "delFlag": 0
+            },
+            "courseNewKind2": {
+                "id": 55,
+                "kindName": "德育",
+                "parentId": 60,
+                "delFlag": 0
+            },
+            "courseMaxCount": 220,
+            "courseCurrentCount": 150,
+            "courseCampus": "ALL",
+            "courseSignType": 2,
+            "selected": false,
+            "delFlag": 0
+        }
+        """
+            .trimIndent()
 
     val course = json.decodeFromString<BykcCourse>(jsonStr)
 
@@ -119,34 +119,34 @@ class BykcModelsTest {
   @Test
   fun `BykcCoursePageResult can parse paginated response`() {
     val jsonStr =
-      """
-      {
-          "content": [
-              {
-                  "id": 1001,
-                  "courseName": "课程A",
-                  "courseMaxCount": 100,
-                  "courseCurrentCount": 50,
-                  "selected": false,
-                  "delFlag": 0
-              },
-              {
-                  "id": 1002,
-                  "courseName": "课程B",
-                  "courseMaxCount": 200,
-                  "courseCurrentCount": 200,
-                  "selected": true,
-                  "delFlag": 0
-              }
-          ],
-          "totalElements": 50,
-          "totalPages": 5,
-          "size": 10,
-          "number": 0,
-          "numberOfElements": 2
-      }
-      """
-        .trimIndent()
+        """
+        {
+            "content": [
+                {
+                    "id": 1001,
+                    "courseName": "课程A",
+                    "courseMaxCount": 100,
+                    "courseCurrentCount": 50,
+                    "selected": false,
+                    "delFlag": 0
+                },
+                {
+                    "id": 1002,
+                    "courseName": "课程B",
+                    "courseMaxCount": 200,
+                    "courseCurrentCount": 200,
+                    "selected": true,
+                    "delFlag": 0
+                }
+            ],
+            "totalElements": 50,
+            "totalPages": 5,
+            "size": 10,
+            "number": 0,
+            "numberOfElements": 2
+        }
+        """
+            .trimIndent()
 
     val result = json.decodeFromString<BykcCoursePageResult>(jsonStr)
 
@@ -167,19 +167,19 @@ class BykcModelsTest {
   @Test
   fun `BykcSignConfig can parse sign configuration`() {
     val jsonStr =
-      """
-      {
-          "signStartDate": "2025-11-26 18:50:00",
-          "signEndDate": "2025-11-26 19:10:00",
-          "signOutStartDate": "2025-11-26 21:00:00",
-          "signOutEndDate": "2025-11-26 21:20:00",
-          "signPointList": [
-              {"lat": 39.98970511198574, "lng": 116.35744239383477, "radius": 161.70647565670006},
-              {"lat": 39.98971836466707, "lng": 116.35744239383483, "radius": 153.6079635389795}
-          ]
-      }
-      """
-        .trimIndent()
+        """
+        {
+            "signStartDate": "2025-11-26 18:50:00",
+            "signEndDate": "2025-11-26 19:10:00",
+            "signOutStartDate": "2025-11-26 21:00:00",
+            "signOutEndDate": "2025-11-26 21:20:00",
+            "signPointList": [
+                {"lat": 39.98970511198574, "lng": 116.35744239383477, "radius": 161.70647565670006},
+                {"lat": 39.98971836466707, "lng": 116.35744239383483, "radius": 153.6079635389795}
+            ]
+        }
+        """
+            .trimIndent()
 
     val config = json.decodeFromString<BykcSignConfig>(jsonStr)
 
@@ -198,23 +198,23 @@ class BykcModelsTest {
   @Test
   fun `BykcCourseDto serialization works correctly`() {
     val dto =
-      BykcCourseDto(
-        id = 1234L,
-        courseName = "测试课程",
-        coursePosition = "测试地点",
-        courseTeacher = "测试教师",
-        courseStartDate = "2025-11-26 19:00:00",
-        courseEndDate = "2025-11-26 21:00:00",
-        courseSelectStartDate = "2025-11-25 19:00:00",
-        courseSelectEndDate = "2025-11-26 18:00:00",
-        courseMaxCount = 100,
-        courseCurrentCount = 50,
-        category = "博雅课程",
-        subCategory = "德育",
-        status = BykcCourseStatus.AVAILABLE,
-        selected = false,
-        courseDesc = "课程描述",
-      )
+        BykcCourseDto(
+            id = 1234L,
+            courseName = "测试课程",
+            coursePosition = "测试地点",
+            courseTeacher = "测试教师",
+            courseStartDate = "2025-11-26 19:00:00",
+            courseEndDate = "2025-11-26 21:00:00",
+            courseSelectStartDate = "2025-11-25 19:00:00",
+            courseSelectEndDate = "2025-11-26 18:00:00",
+            courseMaxCount = 100,
+            courseCurrentCount = 50,
+            category = "博雅课程",
+            subCategory = "德育",
+            status = BykcCourseStatus.AVAILABLE,
+            selected = false,
+            courseDesc = "课程描述",
+        )
 
     val serialized = json.encodeToString(BykcCourseDto.serializer(), dto)
     val deserialized = json.decodeFromString<BykcCourseDto>(serialized)

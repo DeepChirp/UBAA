@@ -28,19 +28,19 @@ class AuthServiceTest {
     val mockEngine = MockEngine { request ->
       assertEquals("/api/v1/auth/preload", request.url.encodedPath)
       respond(
-        content =
-          ByteReadChannel(
-            json.encodeToString(
-              LoginPreloadResponse(
-                captchaRequired = true,
-                captcha = CaptchaInfo(id = "test-id", imageUrl = "test-url"),
-                execution = "test-execution",
-                clientId = "test-client-id",
-              )
-            )
-          ),
-        status = HttpStatusCode.OK,
-        headers = headersOf(HttpHeaders.ContentType, "application/json"),
+          content =
+              ByteReadChannel(
+                  json.encodeToString(
+                      LoginPreloadResponse(
+                          captchaRequired = true,
+                          captcha = CaptchaInfo(id = "test-id", imageUrl = "test-url"),
+                          execution = "test-execution",
+                          clientId = "test-client-id",
+                      )
+                  )
+              ),
+          status = HttpStatusCode.OK,
+          headers = headersOf(HttpHeaders.ContentType, "application/json"),
       )
     }
 
@@ -61,17 +61,17 @@ class AuthServiceTest {
     val mockEngine = MockEngine { request ->
       assertEquals("/api/v1/auth/login", request.url.encodedPath)
       respond(
-        content =
-          ByteReadChannel(
-            json.encodeToString(
-              LoginResponse(
-                user = UserData(name = "Test User", schoolid = "12345678"),
-                token = "test-token",
-              )
-            )
-          ),
-        status = HttpStatusCode.OK,
-        headers = headersOf(HttpHeaders.ContentType, "application/json"),
+          content =
+              ByteReadChannel(
+                  json.encodeToString(
+                      LoginResponse(
+                          user = UserData(name = "Test User", schoolid = "12345678"),
+                          token = "test-token",
+                      )
+                  )
+              ),
+          status = HttpStatusCode.OK,
+          headers = headersOf(HttpHeaders.ContentType, "application/json"),
       )
     }
 
@@ -90,16 +90,16 @@ class AuthServiceTest {
   fun shouldReturnFailureWhenLoginUnauthorized() = runTest {
     val mockEngine = MockEngine { _ ->
       respond(
-        content =
-          ByteReadChannel(
-            json.encodeToString(
-              ApiErrorResponse(
-                ApiErrorDetails(code = "unauthorized", message = "Invalid credentials")
-              )
-            )
-          ),
-        status = HttpStatusCode.Unauthorized,
-        headers = headersOf(HttpHeaders.ContentType, "application/json"),
+          content =
+              ByteReadChannel(
+                  json.encodeToString(
+                      ApiErrorResponse(
+                          ApiErrorDetails(code = "unauthorized", message = "Invalid credentials")
+                      )
+                  )
+              ),
+          status = HttpStatusCode.Unauthorized,
+          headers = headersOf(HttpHeaders.ContentType, "application/json"),
       )
     }
 

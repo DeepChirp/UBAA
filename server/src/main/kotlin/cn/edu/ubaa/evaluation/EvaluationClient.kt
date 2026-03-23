@@ -28,12 +28,12 @@ import org.slf4j.LoggerFactory
 /** SPOC 系统 API 响应的通用包装结构。 */
 @Serializable
 data class SpocResult<T>(
-  val code: JsonElement? = null,
-  val result: T? = null,
-  val content: T? = null,
-  val message: String? = null,
-  // 部分接口使用 msg 字段返回错误信息
-  @kotlinx.serialization.SerialName("msg") val msg: String? = null,
+    val code: JsonElement? = null,
+    val result: T? = null,
+    val content: T? = null,
+    val message: String? = null,
+    // 部分接口使用 msg 字段返回错误信息
+    @kotlinx.serialization.SerialName("msg") val msg: String? = null,
 )
 
 /** SPOC 系统分页数据包装结构。 */
@@ -45,35 +45,35 @@ data class SpocResult<T>(
 /** 问卷数据结构。 */
 @Serializable
 data class SpocQuestionnaire(
-  val wjid: String,
-  val wjmc: String,
-  val rwmc: String? = null,
-  val msid: String? = null,
+    val wjid: String,
+    val wjmc: String,
+    val rwmc: String? = null,
+    val msid: String? = null,
 )
 
 /** 待评教课程数据结构。 */
 @Serializable
 data class SpocCourse(
-  val rwid: String,
-  val wjid: String,
-  val kcdm: String,
-  val kcmc: String,
-  val bpmc: String? = null,
-  val bpdm: String? = null,
-  val pjrdm: String? = null,
-  val pjrmc: String? = null,
-  val zdmc: String? = null,
-  val ypjcs: Int? = null,
-  val xypjcs: Int? = null,
-  val sxz: String? = null,
-  val rwh: String? = null,
-  val xnxq: String? = null,
-  val pjlxid: String? = null,
-  val sfksqbpj: String? = null,
-  val xn: String? = null,
-  val xq: String? = null,
-  val yxsfktjst: String? = null,
-  val msid: String? = null,
+    val rwid: String,
+    val wjid: String,
+    val kcdm: String,
+    val kcmc: String,
+    val bpmc: String? = null,
+    val bpdm: String? = null,
+    val pjrdm: String? = null,
+    val pjrmc: String? = null,
+    val zdmc: String? = null,
+    val ypjcs: Int? = null,
+    val xypjcs: Int? = null,
+    val sxz: String? = null,
+    val rwh: String? = null,
+    val xnxq: String? = null,
+    val pjlxid: String? = null,
+    val sfksqbpj: String? = null,
+    val xn: String? = null,
+    val xq: String? = null,
+    val yxsfktjst: String? = null,
+    val msid: String? = null,
 )
 
 /**
@@ -83,8 +83,8 @@ data class SpocCourse(
  * @param sessionManager 会话管理器，默认为全局单例。
  */
 class EvaluationClient(
-  private val username: String,
-  private val sessionManager: SessionManager = GlobalSessionManager.instance,
+    private val username: String,
+    private val sessionManager: SessionManager = GlobalSessionManager.instance,
 ) {
   private val log = LoggerFactory.getLogger(EvaluationClient::class.java)
   private val baseUrl = "https://spoc.buaa.edu.cn/pjxt"
@@ -131,7 +131,7 @@ class EvaluationClient(
   suspend fun fetchCurrentXnxq(): String? {
     return try {
       val resp: SpocResult<List<JsonObject>> =
-        getClient().post("$baseUrl/component/queryXnxq").body()
+          getClient().post("$baseUrl/component/queryXnxq").body()
       val first = resp.content?.firstOrNull() ?: return null
       val xn = first["xn"]?.toString()?.replace("\"", "") ?: ""
       val xq = first["xq"]?.toString()?.replace("\"", "") ?: ""
@@ -150,15 +150,15 @@ class EvaluationClient(
   suspend fun fetchTasks(): List<SpocTask> {
     return try {
       val resp: SpocResult<SpocPage<SpocTask>> =
-        getClient()
-          .get("$baseUrl/personnelEvaluation/listObtainPersonnelEvaluationTasks") {
-            parameter("yhdm", username)
-            parameter("rwmc", "")
-            parameter("sfyp", "0")
-            parameter("pageNum", "1")
-            parameter("pageSize", "10")
-          }
-          .body()
+          getClient()
+              .get("$baseUrl/personnelEvaluation/listObtainPersonnelEvaluationTasks") {
+                parameter("yhdm", username)
+                parameter("rwmc", "")
+                parameter("sfyp", "0")
+                parameter("pageNum", "1")
+                parameter("pageSize", "10")
+              }
+              .body()
       resp.result?.list ?: emptyList()
     } catch (e: Exception) {
       log.error("Failed to fetch tasks", e)
@@ -175,14 +175,14 @@ class EvaluationClient(
   suspend fun fetchQuestionnaires(rwid: String): List<SpocQuestionnaire> {
     return try {
       val resp: SpocResult<List<SpocQuestionnaire>> =
-        getClient()
-          .get("$baseUrl/evaluationMethodSix/getQuestionnaireListToTask") {
-            parameter("rwid", rwid)
-            parameter("sfyp", "0")
-            parameter("pageNum", "1")
-            parameter("pageSize", "999")
-          }
-          .body()
+          getClient()
+              .get("$baseUrl/evaluationMethodSix/getQuestionnaireListToTask") {
+                parameter("rwid", rwid)
+                parameter("sfyp", "0")
+                parameter("pageNum", "1")
+                parameter("pageSize", "999")
+              }
+              .body()
       resp.result ?: emptyList()
     } catch (e: Exception) {
       log.error("Failed to fetch questionnaires", e)
@@ -206,26 +206,26 @@ class EvaluationClient(
    * @return 课程列表（根据 sfyp 参数过滤）。
    */
   suspend fun fetchCourses(
-    rwid: String,
-    wjid: String,
-    xnxq: String,
-    msid: String = "1",
-    sfyp: String = "0",
+      rwid: String,
+      wjid: String,
+      xnxq: String,
+      msid: String = "1",
+      sfyp: String = "0",
   ): List<SpocCourse> {
     return try {
       // 切换模式 (Revise Questionnaire Pattern)
       reviseQuestionnairePattern(rwid, wjid, msid)
 
       val resp: SpocResult<List<SpocCourse>> =
-        getClient()
-          .get("$baseUrl/evaluationMethodSix/getRequiredReviewsData") {
-            parameter("sfyp", sfyp)
-            parameter("wjid", wjid)
-            parameter("xnxq", xnxq)
-            parameter("pageNum", "1")
-            parameter("pageSize", "999")
-          }
-          .body()
+          getClient()
+              .get("$baseUrl/evaluationMethodSix/getRequiredReviewsData") {
+                parameter("sfyp", sfyp)
+                parameter("wjid", wjid)
+                parameter("xnxq", xnxq)
+                parameter("pageNum", "1")
+                parameter("pageSize", "999")
+              }
+              .body()
       resp.result?.map { it.copy(msid = msid) } ?: emptyList()
     } catch (e: Exception) {
       log.error("Failed to fetch courses (sfyp=$sfyp)", e)
@@ -245,11 +245,11 @@ class EvaluationClient(
       getClient().post("$baseUrl/evaluationMethodSix/reviseQuestionnairePattern") {
         contentType(ContentType.Application.Json)
         setBody(
-          buildJsonObject {
-            put("rwid", rwid)
-            put("wjid", wjid)
-            put("msid", msid)
-          }
+            buildJsonObject {
+              put("rwid", rwid)
+              put("wjid", wjid)
+              put("msid", msid)
+            }
         )
       }
     } catch (e: Exception) {
@@ -266,29 +266,29 @@ class EvaluationClient(
   suspend fun fetchQuestionnaireTopic(course: SpocCourse): JsonObject? {
     return try {
       val resp: HttpResponse =
-        getClient().get("$baseUrl/evaluationMethodSix/getQuestionnaireTopic") {
-          parameter("id", "")
-          parameter("rwid", course.rwid)
-          parameter("wjid", course.wjid)
-          parameter("zdmc", course.zdmc ?: "STID")
-          parameter("ypjcs", course.ypjcs ?: 0)
-          parameter("xypjcs", course.xypjcs ?: 1)
-          parameter("sxz", course.sxz ?: "")
-          parameter("pjrdm", course.pjrdm ?: "")
-          parameter("pjrmc", course.pjrmc ?: "")
-          parameter("bpdm", course.bpdm ?: "")
-          parameter("bpmc", course.bpmc ?: "")
-          parameter("kcdm", course.kcdm ?: "")
-          parameter("kcmc", course.kcmc ?: "")
-          parameter("rwh", course.rwh ?: "")
-          parameter("xn", course.xn ?: "")
-          parameter("xq", course.xq ?: "")
-          parameter("xnxq", course.xnxq ?: "")
-          parameter("pjlxid", course.pjlxid ?: "2")
-          parameter("sfksqbpj", course.sfksqbpj ?: "1")
-          parameter("yxsfktjst", course.yxsfktjst ?: "")
-          parameter("yxdm", "")
-        }
+          getClient().get("$baseUrl/evaluationMethodSix/getQuestionnaireTopic") {
+            parameter("id", "")
+            parameter("rwid", course.rwid)
+            parameter("wjid", course.wjid)
+            parameter("zdmc", course.zdmc ?: "STID")
+            parameter("ypjcs", course.ypjcs ?: 0)
+            parameter("xypjcs", course.xypjcs ?: 1)
+            parameter("sxz", course.sxz ?: "")
+            parameter("pjrdm", course.pjrdm ?: "")
+            parameter("pjrmc", course.pjrmc ?: "")
+            parameter("bpdm", course.bpdm ?: "")
+            parameter("bpmc", course.bpmc ?: "")
+            parameter("kcdm", course.kcdm ?: "")
+            parameter("kcmc", course.kcmc ?: "")
+            parameter("rwh", course.rwh ?: "")
+            parameter("xn", course.xn ?: "")
+            parameter("xq", course.xq ?: "")
+            parameter("xnxq", course.xnxq ?: "")
+            parameter("pjlxid", course.pjlxid ?: "2")
+            parameter("sfksqbpj", course.sfksqbpj ?: "1")
+            parameter("yxsfktjst", course.yxsfktjst ?: "")
+            parameter("yxdm", "")
+          }
       val data: SpocResult<List<JsonObject>> = resp.body()
       data.result?.firstOrNull()
     } catch (e: Exception) {
@@ -311,10 +311,10 @@ class EvaluationClient(
         put("pjzt", "1")
       }
       val httpResponse =
-        getClient().post("$baseUrl/evaluationMethodSix/submitSaveEvaluation") {
-          contentType(ContentType.Application.Json)
-          setBody(payload)
-        }
+          getClient().post("$baseUrl/evaluationMethodSix/submitSaveEvaluation") {
+            contentType(ContentType.Application.Json)
+            setBody(payload)
+          }
 
       // 先读取原始字符串，便于诊断后端返回的真实字段
       val rawBody = httpResponse.bodyAsText()
@@ -323,12 +323,12 @@ class EvaluationClient(
 
       if (!resp.isSuccess()) {
         log.warn(
-          "Submit evaluation failed: code={}, message={}, result={}, content={}, raw={}",
-          resp.codeString(),
-          resp.message ?: resp.msg,
-          resp.result,
-          resp.content,
-          rawBody,
+            "Submit evaluation failed: code={}, message={}, result={}, content={}, raw={}",
+            resp.codeString(),
+            resp.message ?: resp.msg,
+            resp.result,
+            resp.content,
+            rawBody,
         )
         log.warn("Submit payload: {}", payload)
       }

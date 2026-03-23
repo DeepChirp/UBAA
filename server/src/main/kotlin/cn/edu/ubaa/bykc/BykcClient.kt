@@ -55,15 +55,15 @@ open class BykcClient(private val username: String) {
     val finalUrl = resp.request.url.toString()
 
     val token =
-      if (finalUrl.contains("?token=")) {
+        if (finalUrl.contains("?token=")) {
 
-        finalUrl.substringAfter("?token=")
-      } else {
+          finalUrl.substringAfter("?token=")
+        } else {
 
-        resp.headers["Location"]?.let {
-          if (it.contains("?token=")) it.substringAfter("?token=") else null
+          resp.headers["Location"]?.let {
+            if (it.contains("?token=")) it.substringAfter("?token=") else null
+          }
         }
-      }
 
     if (token != null) {
 
@@ -123,39 +123,39 @@ open class BykcClient(private val username: String) {
     val enc = BykcCrypto.encryptRequest(requestJson)
 
     val httpResponse: HttpResponse =
-      client.post(VpnCipher.toVpnUrl("https://bykc.buaa.edu.cn/sscv/$apiName")) {
-        contentType(ContentType.Application.Json.withCharset(Charsets.UTF_8))
+        client.post(VpnCipher.toVpnUrl("https://bykc.buaa.edu.cn/sscv/$apiName")) {
+          contentType(ContentType.Application.Json.withCharset(Charsets.UTF_8))
 
-        accept(ContentType.Application.Json)
+          accept(ContentType.Application.Json)
 
-        header(
-          HttpHeaders.Referrer,
-          VpnCipher.toVpnUrl("https://bykc.buaa.edu.cn/system/course-select"),
-        )
+          header(
+              HttpHeaders.Referrer,
+              VpnCipher.toVpnUrl("https://bykc.buaa.edu.cn/system/course-select"),
+          )
 
-        header(HttpHeaders.Origin, VpnCipher.toVpnUrl("https://bykc.buaa.edu.cn"))
+          header(HttpHeaders.Origin, VpnCipher.toVpnUrl("https://bykc.buaa.edu.cn"))
 
-        // 携带认证令牌
+          // 携带认证令牌
 
-        bykcToken?.let {
-          header("auth_token", it)
+          bykcToken?.let {
+            header("auth_token", it)
 
-          header("authtoken", it)
+            header("authtoken", it)
+          }
+
+          header("ak", enc.ak)
+          header("sk", enc.sk)
+          header("ts", enc.ts)
+
+          setBody(enc.encryptedData)
         }
 
-        header("ak", enc.ak)
-        header("sk", enc.sk)
-        header("ts", enc.ts)
-
-        setBody(enc.encryptedData)
-      }
-
     val respBodyText =
-      try {
-        httpResponse.bodyAsText()
-      } catch (_: Exception) {
-        ""
-      }
+        try {
+          httpResponse.bodyAsText()
+        } catch (_: Exception) {
+          ""
+        }
 
     if (httpResponse.status != HttpStatusCode.OK) {
 
@@ -165,21 +165,21 @@ open class BykcClient(private val username: String) {
     // 2. 响应解密
 
     val respBase64 =
-      try {
-        json.decodeFromString<String>(respBodyText)
-      } catch (_: Exception) {
-        respBodyText
-      }
+        try {
+          json.decodeFromString<String>(respBodyText)
+        } catch (_: Exception) {
+          respBodyText
+        }
 
     val decoded =
-      try {
+        try {
 
-        val b = Base64.getDecoder().decode(respBase64)
+          val b = Base64.getDecoder().decode(respBase64)
 
-        String(BykcCrypto.aesDecrypt(b, enc.aesKey), Charsets.UTF_8)
-      } catch (e: Exception) {
-        respBase64
-      }
+          String(BykcCrypto.aesDecrypt(b, enc.aesKey), Charsets.UTF_8)
+        } catch (e: Exception) {
+          respBase64
+        }
 
     if (decoded.contains("会话已失效") || decoded.contains("未登录")) throw BykcSessionExpiredException()
 
@@ -198,7 +198,7 @@ open class BykcClient(private val username: String) {
     val apiResp = json.decodeFromString<BykcApiResponse<BykcUserProfile>>(raw)
 
     if (!apiResp.isSuccess || apiResp.data == null)
-      throw RuntimeException("BYKC getUserProfile failed: ${apiResp.errmsg}")
+        throw RuntimeException("BYKC getUserProfile failed: ${apiResp.errmsg}")
 
     return apiResp.data
   }
@@ -209,8 +209,8 @@ open class BykcClient(private val username: String) {
    * @throws RuntimeException 当 API 调用失败时抛出。
    */
   suspend fun queryStudentSemesterCourseByPage(
-    pageNumber: Int,
-    pageSize: Int,
+      pageNumber: Int,
+      pageSize: Int,
   ): BykcCoursePageResult {
 
     val req = "{\"pageNumber\":$pageNumber,\"pageSize\":$pageSize}"
@@ -220,7 +220,7 @@ open class BykcClient(private val username: String) {
     val apiResp = json.decodeFromString<BykcApiResponse<BykcCoursePageResult>>(raw)
 
     if (!apiResp.isSuccess || apiResp.data == null)
-      throw RuntimeException("BYKC query courses failed: ${apiResp.errmsg}")
+        throw RuntimeException("BYKC query courses failed: ${apiResp.errmsg}")
 
     return apiResp.data
   }
@@ -277,7 +277,7 @@ open class BykcClient(private val username: String) {
     val apiResp = json.decodeFromString<BykcApiResponse<BykcAllConfig>>(raw)
 
     if (!apiResp.isSuccess || apiResp.data == null)
-      throw RuntimeException("BYKC getAllConfig failed: ${apiResp.errmsg}")
+        throw RuntimeException("BYKC getAllConfig failed: ${apiResp.errmsg}")
 
     return apiResp.data
   }
@@ -296,7 +296,7 @@ open class BykcClient(private val username: String) {
     val apiResp = json.decodeFromString<BykcApiResponse<BykcChosenCoursePayload>>(raw)
 
     if (!apiResp.isSuccess || apiResp.data == null)
-      throw RuntimeException("BYKC queryChosenCourse failed: ${apiResp.errmsg}")
+        throw RuntimeException("BYKC queryChosenCourse failed: ${apiResp.errmsg}")
 
     return apiResp.data.courseList
   }
@@ -315,7 +315,7 @@ open class BykcClient(private val username: String) {
     val apiResp = json.decodeFromString<BykcApiResponse<BykcCourse>>(raw)
 
     if (!apiResp.isSuccess || apiResp.data == null)
-      throw RuntimeException("BYKC queryCourseById failed: ${apiResp.errmsg}")
+        throw RuntimeException("BYKC queryCourseById failed: ${apiResp.errmsg}")
 
     return apiResp.data
   }
@@ -326,10 +326,10 @@ open class BykcClient(private val username: String) {
    * @throws BykcException 当签到/签退失败（如不在范围内、不在时间内）时抛出。
    */
   suspend fun signCourse(
-    courseId: Long,
-    lat: Double,
-    lng: Double,
-    signType: Int,
+      courseId: Long,
+      lat: Double,
+      lng: Double,
+      signType: Int,
   ): BykcApiResponse<BykcSignResult> {
 
     val req = "{\"courseId\":$courseId,\"signLat\":$lat,\"signLng\":$lng,\"signType\":$signType}"
@@ -355,7 +355,7 @@ open class BykcClient(private val username: String) {
     val apiResp = json.decodeFromString<BykcApiResponse<BykcStatisticsData>>(raw)
 
     if (!apiResp.isSuccess || apiResp.data == null)
-      throw RuntimeException("BYKC queryStatisticByUserId failed: ${apiResp.errmsg}")
+        throw RuntimeException("BYKC queryStatisticByUserId failed: ${apiResp.errmsg}")
 
     return apiResp.data
   }

@@ -9,10 +9,10 @@ class InMemorySessionStore : SessionPersistence {
   private val sessions = ConcurrentHashMap<String, SessionPersistence.SessionRecord>()
 
   override suspend fun saveSession(
-    username: String,
-    userData: cn.edu.ubaa.model.dto.UserData,
-    authenticatedAt: java.time.Instant,
-    lastActivity: java.time.Instant,
+      username: String,
+      userData: cn.edu.ubaa.model.dto.UserData,
+      authenticatedAt: java.time.Instant,
+      lastActivity: java.time.Instant,
   ) {
     sessions[username] = SessionPersistence.SessionRecord(userData, authenticatedAt, lastActivity)
   }
@@ -22,7 +22,8 @@ class InMemorySessionStore : SessionPersistence {
     sessions[username] = current.copy(lastActivity = lastActivity)
   }
 
-  override suspend fun loadSession(username: String): SessionPersistence.SessionRecord? = sessions[username]
+  override suspend fun loadSession(username: String): SessionPersistence.SessionRecord? =
+      sessions[username]
 
   override suspend fun deleteSession(username: String) {
     sessions.remove(username)
@@ -57,7 +58,8 @@ open class InMemoryCookieStorageFactory : ManagedCookieStorageFactory {
       val domain = (cookie.domain ?: requestUrl.host).lowercase()
       val path = cookie.path ?: requestUrl.encodedPath.ifBlank { "/" }
       val key = "$domain|$path|${cookie.name}"
-      cookies[key] = StoredCookie(cookie.copy(domain = domain, path = path), System.currentTimeMillis())
+      cookies[key] =
+          StoredCookie(cookie.copy(domain = domain, path = path), System.currentTimeMillis())
     }
 
     override suspend fun get(requestUrl: Url): List<Cookie> {
@@ -67,13 +69,14 @@ open class InMemoryCookieStorageFactory : ManagedCookieStorageFactory {
         val expiresAt = cookie.expires?.timestamp
         val maxAge = cookie.maxAge ?: -1
         val expired =
-          (expiresAt != null && expiresAt <= now) ||
-            (maxAge >= 0 && now >= (stored.createdAt + maxAge * 1000L))
+            (expiresAt != null && expiresAt <= now) ||
+                (maxAge >= 0 && now >= (stored.createdAt + maxAge * 1000L))
         if (expired) {
           cookies.remove(key(cookie))
           return@mapNotNull null
         }
-        if (!domainMatches(requestUrl.host, cookie.domain ?: requestUrl.host)) return@mapNotNull null
+        if (!domainMatches(requestUrl.host, cookie.domain ?: requestUrl.host))
+            return@mapNotNull null
         if (!pathMatches(requestUrl.encodedPath, cookie.path ?: "/")) return@mapNotNull null
         if (cookie.secure && !requestUrl.protocol.name.equals("https", true)) return@mapNotNull null
         cookie.copy(expires = expiresAt?.let { GMTDate(it) })

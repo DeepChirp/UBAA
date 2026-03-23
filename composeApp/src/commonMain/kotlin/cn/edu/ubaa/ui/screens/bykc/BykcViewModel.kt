@@ -11,41 +11,41 @@ import kotlinx.coroutines.launch
 
 /** 博雅课程列表 UI 状态。 */
 data class BykcCoursesUiState(
-  val isLoading: Boolean = false,
-  val isLoadingMore: Boolean = false,
-  val courses: List<BykcCourseDto> = emptyList(),
-  val total: Int = 0,
-  val totalPages: Int = 0,
-  val currentPage: Int = 0,
-  val pageSize: Int = 20,
-  val hasMorePages: Boolean = true,
-  val error: String? = null,
-  val profile: BykcUserProfileDto? = null,
+    val isLoading: Boolean = false,
+    val isLoadingMore: Boolean = false,
+    val courses: List<BykcCourseDto> = emptyList(),
+    val total: Int = 0,
+    val totalPages: Int = 0,
+    val currentPage: Int = 0,
+    val pageSize: Int = 20,
+    val hasMorePages: Boolean = true,
+    val error: String? = null,
+    val profile: BykcUserProfileDto? = null,
 )
 
 /** 博雅课程详情 UI 状态。 */
 data class BykcCourseDetailUiState(
-  val isLoading: Boolean = false,
-  val course: BykcCourseDetailDto? = null,
-  val error: String? = null,
-  /** 是否正在执行操作（如选课或签到）。 */
-  val operationInProgress: Boolean = false,
-  /** 操作执行结果的消息提示。 */
-  val operationMessage: String? = null,
+    val isLoading: Boolean = false,
+    val course: BykcCourseDetailDto? = null,
+    val error: String? = null,
+    /** 是否正在执行操作（如选课或签到）。 */
+    val operationInProgress: Boolean = false,
+    /** 操作执行结果的消息提示。 */
+    val operationMessage: String? = null,
 )
 
 /** 已选博雅课程列表 UI 状态。 */
 data class BykcChosenCoursesUiState(
-  val isLoading: Boolean = false,
-  val courses: List<BykcChosenCourseDto> = emptyList(),
-  val error: String? = null,
+    val isLoading: Boolean = false,
+    val courses: List<BykcChosenCourseDto> = emptyList(),
+    val error: String? = null,
 )
 
 /** 博雅修读统计 UI 状态。 */
 data class BykcStatisticsUiState(
-  val isLoading: Boolean = false,
-  val statistics: BykcStatisticsDto? = null,
-  val error: String? = null,
+    val isLoading: Boolean = false,
+    val statistics: BykcStatisticsDto? = null,
+    val error: String? = null,
 )
 
 /** 管理博雅课程功能模块状态的 ViewModel。 负责课程浏览、选课退选、签到以及统计数据的拉取。 */
@@ -80,14 +80,14 @@ class BykcViewModel : ViewModel() {
     viewModelScope.launch {
       _statisticsState.value = _statisticsState.value.copy(isLoading = true, error = null)
       bykcApi
-        .getStatistics()
-        .onSuccess {
-          _statisticsState.value = _statisticsState.value.copy(isLoading = false, statistics = it)
-        }
-        .onFailure {
-          _statisticsState.value =
-            _statisticsState.value.copy(isLoading = false, error = it.message ?: "加载统计信息失败")
-        }
+          .getStatistics()
+          .onSuccess {
+            _statisticsState.value = _statisticsState.value.copy(isLoading = false, statistics = it)
+          }
+          .onFailure {
+            _statisticsState.value =
+                _statisticsState.value.copy(isLoading = false, error = it.message ?: "加载统计信息失败")
+          }
     }
   }
 
@@ -111,22 +111,22 @@ class BykcViewModel : ViewModel() {
     viewModelScope.launch {
       _coursesState.value = _coursesState.value.copy(isLoading = true, error = null)
       bykcApi
-        .getCourses(page, size, includeExpired)
-        .onSuccess { resp ->
-          _coursesState.value =
-            _coursesState.value.copy(
-              isLoading = false,
-              courses = resp.courses,
-              total = resp.total,
-              totalPages = resp.totalPages,
-              currentPage = resp.currentPage,
-              hasMorePages = resp.currentPage < resp.totalPages,
-            )
-        }
-        .onFailure {
-          _coursesState.value =
-            _coursesState.value.copy(isLoading = false, error = it.message ?: "加载课程列表失败")
-        }
+          .getCourses(page, size, includeExpired)
+          .onSuccess { resp ->
+            _coursesState.value =
+                _coursesState.value.copy(
+                    isLoading = false,
+                    courses = resp.courses,
+                    total = resp.total,
+                    totalPages = resp.totalPages,
+                    currentPage = resp.currentPage,
+                    hasMorePages = resp.currentPage < resp.totalPages,
+                )
+          }
+          .onFailure {
+            _coursesState.value =
+                _coursesState.value.copy(isLoading = false, error = it.message ?: "加载课程列表失败")
+          }
     }
   }
 
@@ -137,19 +137,20 @@ class BykcViewModel : ViewModel() {
     viewModelScope.launch {
       _coursesState.value = current.copy(isLoadingMore = true)
       bykcApi
-        .getCourses(current.currentPage + 1, current.pageSize, includeExpired)
-        .onSuccess { resp ->
-          _coursesState.value =
-            current.copy(
-              isLoadingMore = false,
-              courses = current.courses + resp.courses,
-              currentPage = resp.currentPage,
-              hasMorePages = resp.currentPage < resp.totalPages,
-            )
-        }
-        .onFailure {
-          _coursesState.value = current.copy(isLoadingMore = false, error = it.message ?: "加载更多失败")
-        }
+          .getCourses(current.currentPage + 1, current.pageSize, includeExpired)
+          .onSuccess { resp ->
+            _coursesState.value =
+                current.copy(
+                    isLoadingMore = false,
+                    courses = current.courses + resp.courses,
+                    currentPage = resp.currentPage,
+                    hasMorePages = resp.currentPage < resp.totalPages,
+                )
+          }
+          .onFailure {
+            _coursesState.value =
+                current.copy(isLoadingMore = false, error = it.message ?: "加载更多失败")
+          }
     }
   }
 
@@ -158,14 +159,14 @@ class BykcViewModel : ViewModel() {
     viewModelScope.launch {
       _courseDetailState.value = BykcCourseDetailUiState(isLoading = true)
       bykcApi
-        .getCourseDetail(courseId)
-        .onSuccess {
-          _courseDetailState.value = BykcCourseDetailUiState(isLoading = false, course = it)
-        }
-        .onFailure {
-          _courseDetailState.value =
-            BykcCourseDetailUiState(isLoading = false, error = it.message ?: "详情加载失败")
-        }
+          .getCourseDetail(courseId)
+          .onSuccess {
+            _courseDetailState.value = BykcCourseDetailUiState(isLoading = false, course = it)
+          }
+          .onFailure {
+            _courseDetailState.value =
+                BykcCourseDetailUiState(isLoading = false, error = it.message ?: "详情加载失败")
+          }
     }
   }
 
@@ -174,15 +175,15 @@ class BykcViewModel : ViewModel() {
     viewModelScope.launch {
       _chosenCoursesState.value = _chosenCoursesState.value.copy(isLoading = true, error = null)
       bykcApi
-        .getChosenCourses()
-        .onSuccess {
-          _chosenCoursesState.value =
-            _chosenCoursesState.value.copy(isLoading = false, courses = it)
-        }
-        .onFailure {
-          _chosenCoursesState.value =
-            _chosenCoursesState.value.copy(isLoading = false, error = it.message ?: "加载已选失败")
-        }
+          .getChosenCourses()
+          .onSuccess {
+            _chosenCoursesState.value =
+                _chosenCoursesState.value.copy(isLoading = false, courses = it)
+          }
+          .onFailure {
+            _chosenCoursesState.value =
+                _chosenCoursesState.value.copy(isLoading = false, error = it.message ?: "加载已选失败")
+          }
     }
   }
 
@@ -191,26 +192,26 @@ class BykcViewModel : ViewModel() {
     viewModelScope.launch {
       _courseDetailState.value = _courseDetailState.value.copy(operationInProgress = true)
       bykcApi
-        .selectCourse(courseId)
-        .onSuccess {
-          _courseDetailState.value =
-            _courseDetailState.value.copy(
-              operationInProgress = false,
-              operationMessage = it.message,
-            )
-          onComplete(true, it.message)
-          loadCourseDetail(courseId)
-          loadChosenCourses()
-          loadCourses()
-        }
-        .onFailure {
-          _courseDetailState.value =
-            _courseDetailState.value.copy(
-              operationInProgress = false,
-              operationMessage = it.message,
-            )
-          onComplete(false, it.message ?: "选课失败")
-        }
+          .selectCourse(courseId)
+          .onSuccess {
+            _courseDetailState.value =
+                _courseDetailState.value.copy(
+                    operationInProgress = false,
+                    operationMessage = it.message,
+                )
+            onComplete(true, it.message)
+            loadCourseDetail(courseId)
+            loadChosenCourses()
+            loadCourses()
+          }
+          .onFailure {
+            _courseDetailState.value =
+                _courseDetailState.value.copy(
+                    operationInProgress = false,
+                    operationMessage = it.message,
+                )
+            onComplete(false, it.message ?: "选课失败")
+          }
     }
   }
 
@@ -219,59 +220,59 @@ class BykcViewModel : ViewModel() {
     viewModelScope.launch {
       _courseDetailState.value = _courseDetailState.value.copy(operationInProgress = true)
       bykcApi
-        .deselectCourse(courseId)
-        .onSuccess {
-          _courseDetailState.value =
-            _courseDetailState.value.copy(
-              operationInProgress = false,
-              operationMessage = it.message,
-            )
-          onComplete(true, it.message)
-          loadCourseDetail(courseId)
-          loadChosenCourses()
-          loadCourses()
-        }
-        .onFailure {
-          _courseDetailState.value =
-            _courseDetailState.value.copy(
-              operationInProgress = false,
-              operationMessage = it.message,
-            )
-          onComplete(false, it.message ?: "退选失败")
-        }
+          .deselectCourse(courseId)
+          .onSuccess {
+            _courseDetailState.value =
+                _courseDetailState.value.copy(
+                    operationInProgress = false,
+                    operationMessage = it.message,
+                )
+            onComplete(true, it.message)
+            loadCourseDetail(courseId)
+            loadChosenCourses()
+            loadCourses()
+          }
+          .onFailure {
+            _courseDetailState.value =
+                _courseDetailState.value.copy(
+                    operationInProgress = false,
+                    operationMessage = it.message,
+                )
+            onComplete(false, it.message ?: "退选失败")
+          }
     }
   }
 
   /** 签到/签退操作。 */
   fun signCourse(
-    courseId: Long,
-    lat: Double?,
-    lng: Double?,
-    signType: Int,
-    onComplete: (Boolean, String) -> Unit,
+      courseId: Long,
+      lat: Double?,
+      lng: Double?,
+      signType: Int,
+      onComplete: (Boolean, String) -> Unit,
   ) {
     viewModelScope.launch {
       _courseDetailState.value = _courseDetailState.value.copy(operationInProgress = true)
       bykcApi
-        .signCourse(courseId, lat, lng, signType)
-        .onSuccess {
-          _courseDetailState.value =
-            _courseDetailState.value.copy(
-              operationInProgress = false,
-              operationMessage = it.message,
-            )
-          onComplete(true, it.message)
-          loadCourseDetail(courseId)
-          loadChosenCourses()
-        }
-        .onFailure {
-          _courseDetailState.value =
-            _courseDetailState.value.copy(
-              operationInProgress = false,
-              operationMessage = it.message,
-            )
-          onComplete(false, it.message ?: "签到失败")
-        }
+          .signCourse(courseId, lat, lng, signType)
+          .onSuccess {
+            _courseDetailState.value =
+                _courseDetailState.value.copy(
+                    operationInProgress = false,
+                    operationMessage = it.message,
+                )
+            onComplete(true, it.message)
+            loadCourseDetail(courseId)
+            loadChosenCourses()
+          }
+          .onFailure {
+            _courseDetailState.value =
+                _courseDetailState.value.copy(
+                    operationInProgress = false,
+                    operationMessage = it.message,
+                )
+            onComplete(false, it.message ?: "签到失败")
+          }
     }
   }
 

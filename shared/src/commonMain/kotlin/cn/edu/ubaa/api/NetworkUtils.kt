@@ -30,9 +30,9 @@ import kotlinx.serialization.Serializable
  * @property message 提示消息。
  */
 class CaptchaRequiredClientException(
-  val captcha: CaptchaInfo,
-  val execution: String,
-  message: String,
+    val captcha: CaptchaInfo,
+    val execution: String,
+    message: String,
 ) : Exception(message)
 
 /**
@@ -57,7 +57,7 @@ suspend inline fun <reified T> safeApiCall(call: () -> HttpResponse): Result<T> 
         val error = runCatching { response.body<CaptchaRequiredResponse>() }.getOrNull()
         if (error != null) {
           Result.failure(
-            CaptchaRequiredClientException(error.captcha, error.execution, error.message)
+              CaptchaRequiredClientException(error.captcha, error.execution, error.message)
           )
         } else {
           Result.failure(Exception("CAPTCHA required but failed to parse response"))

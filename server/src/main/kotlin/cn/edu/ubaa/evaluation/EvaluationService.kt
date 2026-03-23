@@ -31,8 +31,8 @@ class EvaluationService {
     if (!client.initSession()) {
       log.warn("Failed to init SPOC session for user: $username")
       return EvaluationCoursesResponse(
-        courses = emptyList(),
-        progress = EvaluationProgress(0, 0, 0),
+          courses = emptyList(),
+          progress = EvaluationProgress(0, 0, 0),
       )
     }
 
@@ -40,8 +40,8 @@ class EvaluationService {
     if (xnxq == null) {
       log.warn("Failed to fetch xnxq for user: $username")
       return EvaluationCoursesResponse(
-        courses = emptyList(),
-        progress = EvaluationProgress(0, 0, 0),
+          courses = emptyList(),
+          progress = EvaluationProgress(0, 0, 0),
       )
     }
 
@@ -72,13 +72,13 @@ class EvaluationService {
     val sortedCourses = allCourses.sortedBy { it.isEvaluated }
 
     return EvaluationCoursesResponse(
-      courses = sortedCourses,
-      progress =
-        EvaluationProgress(
-          totalCourses = allCourses.size,
-          evaluatedCourses = evaluatedCount,
-          pendingCourses = pendingCount,
-        ),
+        courses = sortedCourses,
+        progress =
+            EvaluationProgress(
+                totalCourses = allCourses.size,
+                evaluatedCourses = evaluatedCount,
+                pendingCourses = pendingCount,
+            ),
     )
   }
 
@@ -120,8 +120,8 @@ class EvaluationService {
    * @return 每个课程的评教结果（成功或失败消息）。
    */
   suspend fun autoEvaluate(
-    username: String,
-    courses: List<EvaluationCourse>,
+      username: String,
+      courses: List<EvaluationCourse>,
   ): List<EvaluationResult> {
     val client = EvaluationClient(username)
     client.initSession()
@@ -135,28 +135,28 @@ class EvaluationService {
 
         // 1. 获取题目
         val spocCourse =
-          SpocCourse(
-            rwid = course.rwid,
-            wjid = course.wjid,
-            kcdm = course.kcdm,
-            kcmc = course.kcmc,
-            bpdm = course.bpdm,
-            bpmc = course.bpmc,
-            pjrdm = course.pjrdm,
-            pjrmc = course.pjrmc,
-            xnxq = course.xnxq,
-            zdmc = course.zdmc,
-            ypjcs = course.ypjcs,
-            xypjcs = course.xypjcs,
-            sxz = course.sxz,
-            rwh = course.rwh,
-            xn = course.xn,
-            xq = course.xq,
-            pjlxid = course.pjlxid,
-            sfksqbpj = course.sfksqbpj,
-            yxsfktjst = course.yxsfktjst,
-            msid = course.msid,
-          )
+            SpocCourse(
+                rwid = course.rwid,
+                wjid = course.wjid,
+                kcdm = course.kcdm,
+                kcmc = course.kcmc,
+                bpdm = course.bpdm,
+                bpmc = course.bpmc,
+                pjrdm = course.pjrdm,
+                pjrmc = course.pjrmc,
+                xnxq = course.xnxq,
+                zdmc = course.zdmc,
+                ypjcs = course.ypjcs,
+                xypjcs = course.xypjcs,
+                sxz = course.sxz,
+                rwh = course.rwh,
+                xn = course.xn,
+                xq = course.xq,
+                pjlxid = course.pjlxid,
+                sfksqbpj = course.sfksqbpj,
+                yxsfktjst = course.yxsfktjst,
+                msid = course.msid,
+            )
 
         val topicData = client.fetchQuestionnaireTopic(spocCourse)
         if (topicData == null) {
@@ -196,70 +196,70 @@ class EvaluationService {
 
             val firstOptionId = tmxxlist[0].jsonObject["tmxxid"]
             val selectedOptionId =
-              if (i == randomIndex && tmxxlist.size > 1) {
-                tmxxlist[1].jsonObject["tmxxid"]
-              } else {
-                firstOptionId
-              }
+                if (i == randomIndex && tmxxlist.size > 1) {
+                  tmxxlist[1].jsonObject["tmxxid"]
+                } else {
+                  firstOptionId
+                }
 
             pjxxlist.add(
-              buildJsonObject {
-                put("sjly", "1")
-                put("stlx", tmlx)
-                put("wjid", course.wjid)
-                put("wjssrwid", pjjg["wjssrwid"] ?: JsonNull)
+                buildJsonObject {
+                  put("sjly", "1")
+                  put("stlx", tmlx)
+                  put("wjid", course.wjid)
+                  put("wjssrwid", pjjg["wjssrwid"] ?: JsonNull)
 
-                // 填空题 (tmlx=6) 特殊处理：使用第一个选项 ID
-                // 其他题型使用空字符串
-                if (tmlx == "6") {
-                  if (firstOptionId != null) {
-                    put("wjstctid", firstOptionId)
+                  // 填空题 (tmlx=6) 特殊处理：使用第一个选项 ID
+                  // 其他题型使用空字符串
+                  if (tmlx == "6") {
+                    if (firstOptionId != null) {
+                      put("wjstctid", firstOptionId)
+                    } else {
+                      put("wjstctid", "")
+                    }
                   } else {
                     put("wjstctid", "")
                   }
-                } else {
-                  put("wjstctid", "")
+
+                  put("wjstid", q["tmid"] ?: JsonNull)
+
+                  putJsonArray("xxdalist") { selectedOptionId?.let { add(it) } }
                 }
-
-                put("wjstid", q["tmid"] ?: JsonNull)
-
-                putJsonArray("xxdalist") { selectedOptionId?.let { add(it) } }
-              }
             )
           }
 
           pjjglist.add(
-            buildJsonObject {
-              put("bprdm", pjjg["bprdm"] ?: JsonNull)
-              put("bprmc", pjjg["bprmc"] ?: JsonNull)
-              put("kcdm", pjjg["kcdm"] ?: JsonNull)
-              put("kcmc", pjjg["kcmc"] ?: JsonNull)
-              put("pjdf", 93)
-              put("pjfs", pjjg["pjfs"] ?: JsonPrimitive("1"))
-              put("pjid", pjjg["pjid"] ?: JsonNull)
-              put("pjlx", pjjg["pjlx"] ?: JsonNull)
-              put("pjmap", pjmap ?: JsonNull)
-              put("pjrdm", pjjg["pjrdm"] ?: JsonNull)
-              put("pjrjsdm", pjjg["pjrjsdm"] ?: JsonNull)
-              put("pjrxm", pjjg["pjrxm"] ?: JsonNull)
-              put("pjsx", 1)
-              putJsonArray("pjxxlist") { pjxxlist.forEach { add(it) } }
-              put("rwh", pjjg["rwh"] ?: JsonNull)
-              put("stzjid", "xx")
-              put("wjid", course.wjid)
-              put("wjssrwid", pjjg["wjssrwid"] ?: JsonNull)
-              put("wtjjy", "")
+              buildJsonObject {
+                put("bprdm", pjjg["bprdm"] ?: JsonNull)
+                put("bprmc", pjjg["bprmc"] ?: JsonNull)
+                put("kcdm", pjjg["kcdm"] ?: JsonNull)
+                put("kcmc", pjjg["kcmc"] ?: JsonNull)
+                put("pjdf", 93)
+                put("pjfs", pjjg["pjfs"] ?: JsonPrimitive("1"))
+                put("pjid", pjjg["pjid"] ?: JsonNull)
+                put("pjlx", pjjg["pjlx"] ?: JsonNull)
+                put("pjmap", pjmap ?: JsonNull)
+                put("pjrdm", pjjg["pjrdm"] ?: JsonNull)
+                put("pjrjsdm", pjjg["pjrjsdm"] ?: JsonNull)
+                put("pjrxm", pjjg["pjrxm"] ?: JsonNull)
+                put("pjsx", 1)
+                putJsonArray("pjxxlist") { pjxxlist.forEach { add(it) } }
+                put("rwh", pjjg["rwh"] ?: JsonNull)
+                put("stzjid", "xx")
+                put("wjid", course.wjid)
+                put("wjssrwid", pjjg["wjssrwid"] ?: JsonNull)
+                put("wtjjy", "")
 
-              // 显式写入 null 值以匹配 Python 脚本的 None 行为
-              put("xhgs", JsonNull)
-              put("xnxq", pjjg["xnxq"] ?: JsonNull)
-              put("sfxxpj", pjjg["sfxxpj"] ?: JsonPrimitive("1"))
-              put("sqzt", JsonNull)
-              put("yxfz", JsonNull)
+                // 显式写入 null 值以匹配 Python 脚本的 None 行为
+                put("xhgs", JsonNull)
+                put("xnxq", pjjg["xnxq"] ?: JsonNull)
+                put("sfxxpj", pjjg["sfxxpj"] ?: JsonPrimitive("1"))
+                put("sqzt", JsonNull)
+                put("yxfz", JsonNull)
 
-              put("zsxz", pjjg["pjrjsdm"] ?: JsonPrimitive(""))
-              put("sfnm", "1")
-            }
+                put("zsxz", pjjg["pjrjsdm"] ?: JsonPrimitive(""))
+                put("sfnm", "1")
+              }
           )
         }
 
@@ -284,43 +284,43 @@ class EvaluationService {
   private val emptyJsonArray = JsonArray(emptyList())
 
   private fun mergeCourses(
-    courseMap: MutableMap<String, EvaluationCourse>,
-    courses: List<SpocCourse>,
-    rwid: String,
-    wjid: String,
-    xnxq: String,
-    msid: String,
-    isEvaluated: Boolean,
+      courseMap: MutableMap<String, EvaluationCourse>,
+      courses: List<SpocCourse>,
+      rwid: String,
+      wjid: String,
+      xnxq: String,
+      msid: String,
+      isEvaluated: Boolean,
   ) {
     courses.forEach { spocCourse ->
       val key = "${rwid}_${wjid}_${spocCourse.kcdm}_${spocCourse.bpdm}"
       val existing = courseMap[key]
 
       val merged =
-        EvaluationCourse(
-          id = key,
-          kcmc = spocCourse.kcmc,
-          bpmc = spocCourse.bpmc ?: existing?.bpmc ?: "未知教师",
-          isEvaluated = isEvaluated || existing?.isEvaluated == true,
-          rwid = rwid,
-          wjid = wjid,
-          kcdm = spocCourse.kcdm,
-          bpdm = spocCourse.bpdm,
-          pjrdm = spocCourse.pjrdm ?: existing?.pjrdm,
-          pjrmc = spocCourse.pjrmc ?: existing?.pjrmc,
-          xnxq = xnxq,
-          msid = msid,
-          zdmc = spocCourse.zdmc ?: existing?.zdmc ?: "STID",
-          ypjcs = spocCourse.ypjcs ?: existing?.ypjcs ?: 0,
-          xypjcs = spocCourse.xypjcs ?: existing?.xypjcs ?: 1,
-          sxz = spocCourse.sxz ?: existing?.sxz,
-          rwh = spocCourse.rwh ?: existing?.rwh,
-          xn = spocCourse.xn ?: existing?.xn,
-          xq = spocCourse.xq ?: existing?.xq,
-          pjlxid = spocCourse.pjlxid ?: existing?.pjlxid ?: "2",
-          sfksqbpj = spocCourse.sfksqbpj ?: existing?.sfksqbpj ?: "1",
-          yxsfktjst = spocCourse.yxsfktjst ?: existing?.yxsfktjst,
-        )
+          EvaluationCourse(
+              id = key,
+              kcmc = spocCourse.kcmc,
+              bpmc = spocCourse.bpmc ?: existing?.bpmc ?: "未知教师",
+              isEvaluated = isEvaluated || existing?.isEvaluated == true,
+              rwid = rwid,
+              wjid = wjid,
+              kcdm = spocCourse.kcdm,
+              bpdm = spocCourse.bpdm,
+              pjrdm = spocCourse.pjrdm ?: existing?.pjrdm,
+              pjrmc = spocCourse.pjrmc ?: existing?.pjrmc,
+              xnxq = xnxq,
+              msid = msid,
+              zdmc = spocCourse.zdmc ?: existing?.zdmc ?: "STID",
+              ypjcs = spocCourse.ypjcs ?: existing?.ypjcs ?: 0,
+              xypjcs = spocCourse.xypjcs ?: existing?.xypjcs ?: 1,
+              sxz = spocCourse.sxz ?: existing?.sxz,
+              rwh = spocCourse.rwh ?: existing?.rwh,
+              xn = spocCourse.xn ?: existing?.xn,
+              xq = spocCourse.xq ?: existing?.xq,
+              pjlxid = spocCourse.pjlxid ?: existing?.pjlxid ?: "2",
+              sfksqbpj = spocCourse.sfksqbpj ?: existing?.sfksqbpj ?: "1",
+              yxsfktjst = spocCourse.yxsfktjst ?: existing?.yxsfktjst,
+          )
 
       courseMap[key] = merged
     }

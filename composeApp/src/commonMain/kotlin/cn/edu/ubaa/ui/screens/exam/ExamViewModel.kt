@@ -27,22 +27,22 @@ class ExamViewModel : ViewModel() {
       _uiState.value = _uiState.value.copy(isLoading = true, error = null)
 
       termRepository
-        .getTerms()
-        .onSuccess { terms ->
-          val selectedTerm = terms.find { it.selected } ?: terms.firstOrNull()
-          _uiState.value =
-            _uiState.value.copy(
-              isLoading = false,
-              terms = terms,
-              selectedTerm = selectedTerm,
-              error = null,
-            )
-          selectedTerm?.let { loadExams(it.itemCode) }
-        }
-        .onFailure { exception ->
-          _uiState.value =
-            _uiState.value.copy(isLoading = false, error = exception.message ?: "加载学期信息失败")
-        }
+          .getTerms()
+          .onSuccess { terms ->
+            val selectedTerm = terms.find { it.selected } ?: terms.firstOrNull()
+            _uiState.value =
+                _uiState.value.copy(
+                    isLoading = false,
+                    terms = terms,
+                    selectedTerm = selectedTerm,
+                    error = null,
+                )
+            selectedTerm?.let { loadExams(it.itemCode) }
+          }
+          .onFailure { exception ->
+            _uiState.value =
+                _uiState.value.copy(isLoading = false, error = exception.message ?: "加载学期信息失败")
+          }
     }
   }
 
@@ -58,22 +58,23 @@ class ExamViewModel : ViewModel() {
       _uiState.value = _uiState.value.copy(isLoading = true, error = null)
 
       scheduleApi
-        .getExamArrangement(termCode)
-        .onSuccess { examData ->
-          _uiState.value = _uiState.value.copy(isLoading = false, examData = examData, error = null)
-        }
-        .onFailure { exception ->
-          _uiState.value =
-            _uiState.value.copy(isLoading = false, error = exception.message ?: "加载考试信息失败")
-        }
+          .getExamArrangement(termCode)
+          .onSuccess { examData ->
+            _uiState.value =
+                _uiState.value.copy(isLoading = false, examData = examData, error = null)
+          }
+          .onFailure { exception ->
+            _uiState.value =
+                _uiState.value.copy(isLoading = false, error = exception.message ?: "加载考试信息失败")
+          }
     }
   }
 }
 
 data class ExamUiState(
-  val isLoading: Boolean = false,
-  val terms: List<Term> = emptyList(),
-  val selectedTerm: Term? = null,
-  val examData: ExamArrangementData? = null,
-  val error: String? = null,
+    val isLoading: Boolean = false,
+    val terms: List<Term> = emptyList(),
+    val selectedTerm: Term? = null,
+    val examData: ExamArrangementData? = null,
+    val error: String? = null,
 )

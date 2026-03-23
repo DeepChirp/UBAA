@@ -56,24 +56,24 @@ fun App() {
 
     // 根据认证状态和加载进度决定何时隐藏 Splash 界面
     LaunchedEffect(
-      uiState.isLoggedIn,
-      uiState.error,
-      uiState.isLoading,
-      uiState.isPreloading,
-      uiState.isRefreshingCaptcha,
+        uiState.isLoggedIn,
+        uiState.error,
+        uiState.isLoading,
+        uiState.isPreloading,
+        uiState.isRefreshingCaptcha,
     ) {
       val shouldEndSplash =
-        (uiState.isLoggedIn && uiState.userData != null) ||
-          (uiState.error != null &&
-            !uiState.isLoading &&
-            !uiState.isPreloading &&
-            !uiState.isRefreshingCaptcha) ||
-          (!uiState.isLoading &&
-            !uiState.isPreloading &&
-            !uiState.isRefreshingCaptcha &&
-            !uiState.isLoggedIn &&
-            uiState.error == null &&
-            !loginForm.autoLogin)
+          (uiState.isLoggedIn && uiState.userData != null) ||
+              (uiState.error != null &&
+                  !uiState.isLoading &&
+                  !uiState.isPreloading &&
+                  !uiState.isRefreshingCaptcha) ||
+              (!uiState.isLoading &&
+                  !uiState.isPreloading &&
+                  !uiState.isRefreshingCaptcha &&
+                  !uiState.isLoggedIn &&
+                  uiState.error == null &&
+                  !loginForm.autoLogin)
 
       if (shouldEndSplash) isSplashFinished = true
     }
@@ -82,20 +82,20 @@ fun App() {
     if (updateInfo != null) {
       val release = updateInfo!!
       AlertDialog(
-        onDismissRequest = { updateInfo = null },
-        title = { Text("发现新版本 ${release.tagName}") },
-        text = { Text(release.body ?: "点击下方按钮前往下载最新版本。") },
-        confirmButton = {
-          TextButton(
-            onClick = {
-              uriHandler.openUri(release.htmlUrl)
-              updateInfo = null
+          onDismissRequest = { updateInfo = null },
+          title = { Text("发现新版本 ${release.tagName}") },
+          text = { Text(release.body ?: "点击下方按钮前往下载最新版本。") },
+          confirmButton = {
+            TextButton(
+                onClick = {
+                  uriHandler.openUri(release.htmlUrl)
+                  updateInfo = null
+                }
+            ) {
+              Text("前往下载")
             }
-          ) {
-            Text("前往下载")
-          }
-        },
-        dismissButton = { TextButton(onClick = { updateInfo = null }) { Text("稍后再说") } },
+          },
+          dismissButton = { TextButton(onClick = { updateInfo = null }) { Text("稍后再说") } },
       )
     }
 
@@ -105,31 +105,31 @@ fun App() {
       uiState.isLoggedIn && uiState.userData != null -> {
         val userData = uiState.userData!!
         MainAppScreen(
-          userData = userData,
-          userInfo = uiState.userInfo,
-          onLogoutClick = { authViewModel.logout() },
-          modifier = Modifier.safeContentPadding().fillMaxSize(),
+            userData = userData,
+            userInfo = uiState.userInfo,
+            onLogoutClick = { authViewModel.logout() },
+            modifier = Modifier.safeContentPadding().fillMaxSize(),
         )
       }
       else -> {
         LoginScreen(
-          loginFormState = loginForm,
-          onUsernameChange = { authViewModel.updateUsername(it) },
-          onPasswordChange = { authViewModel.updatePassword(it) },
-          onCaptchaChange = { authViewModel.updateCaptcha(it) },
-          onRememberPasswordChange = { authViewModel.updateRememberPassword(it) },
-          onAutoLoginChange = { authViewModel.updateAutoLogin(it) },
-          onLoginClick = { authViewModel.login() },
-          onRefreshCaptcha = { authViewModel.refreshCaptcha() },
-          isLoading = uiState.isLoading,
-          isRefreshingCaptcha = uiState.isRefreshingCaptcha,
-          captchaRequired = uiState.captchaRequired,
-          captchaInfo = uiState.captchaInfo,
-          error = uiState.error,
-          modifier =
-            Modifier.background(MaterialTheme.colorScheme.background)
-              .safeContentPadding()
-              .fillMaxSize(),
+            loginFormState = loginForm,
+            onUsernameChange = { authViewModel.updateUsername(it) },
+            onPasswordChange = { authViewModel.updatePassword(it) },
+            onCaptchaChange = { authViewModel.updateCaptcha(it) },
+            onRememberPasswordChange = { authViewModel.updateRememberPassword(it) },
+            onAutoLoginChange = { authViewModel.updateAutoLogin(it) },
+            onLoginClick = { authViewModel.login() },
+            onRefreshCaptcha = { authViewModel.refreshCaptcha() },
+            isLoading = uiState.isLoading,
+            isRefreshingCaptcha = uiState.isRefreshingCaptcha,
+            captchaRequired = uiState.captchaRequired,
+            captchaInfo = uiState.captchaInfo,
+            error = uiState.error,
+            modifier =
+                Modifier.background(MaterialTheme.colorScheme.background)
+                    .safeContentPadding()
+                    .fillMaxSize(),
         )
       }
     }

@@ -31,8 +31,8 @@ internal open class SpocClient(private val username: String) {
   suspend fun getCurrentTerm(): SpocCurrentTermContent {
     return withAuthenticatedCall {
       postEnvelope<SpocCurrentTermContent, SpocQueryOneRequest>(
-        "https://spoc.buaa.edu.cn/spocnewht/inco/ht/queryOne",
-        SpocQueryOneRequest(CURRENT_TERM_PARAM),
+          "https://spoc.buaa.edu.cn/spocnewht/inco/ht/queryOne",
+          SpocQueryOneRequest(CURRENT_TERM_PARAM),
       )
     }
   }
@@ -48,17 +48,22 @@ internal open class SpocClient(private val username: String) {
 
   suspend fun getAssignments(courseId: String): List<SpocAssignmentRaw> {
     return withAuthenticatedCall {
-      getEnvelope<SpocAssignmentListContent>("https://spoc.buaa.edu.cn/spocnewht/kczy/queryXsZyList") {
-        parameter("sskcid", courseId)
-        parameter("flag", 1)
-        parameter("sflx", 2)
-      }.list
+      getEnvelope<SpocAssignmentListContent>(
+              "https://spoc.buaa.edu.cn/spocnewht/kczy/queryXsZyList"
+          ) {
+            parameter("sskcid", courseId)
+            parameter("flag", 1)
+            parameter("sflx", 2)
+          }
+          .list
     }
   }
 
   suspend fun getAssignmentDetail(assignmentId: String): SpocAssignmentDetailRaw {
     return withAuthenticatedCall {
-      getEnvelope<SpocAssignmentDetailRaw>("https://spoc.buaa.edu.cn/spocnewht/kczy/queryKczyInfoByid") {
+      getEnvelope<SpocAssignmentDetailRaw>(
+          "https://spoc.buaa.edu.cn/spocnewht/kczy/queryKczyInfoByid"
+      ) {
         parameter("id", assignmentId)
       }
     }
@@ -66,7 +71,9 @@ internal open class SpocClient(private val username: String) {
 
   suspend fun getSubmission(assignmentId: String): SpocSubmissionRaw? {
     return withAuthenticatedCall {
-      getEnvelope<SpocSubmissionRaw?>("https://spoc.buaa.edu.cn/spocnewht/kczy/queryXsSubmitKczyInfo") {
+      getEnvelope<SpocSubmissionRaw?>(
+          "https://spoc.buaa.edu.cn/spocnewht/kczy/queryXsSubmitKczyInfo"
+      ) {
         parameter("kczyid", assignmentId)
       }
     }
@@ -85,8 +92,8 @@ internal open class SpocClient(private val username: String) {
     val tokens = fetchLoginTokens(session.client)
     val casLogin = performCasLogin(session.client, tokens.token)
     val resolvedRoleCode =
-      SpocParsers.resolveRoleCode(casLogin)
-        ?: throw SpocAuthenticationException("SPOC 登录成功但未获取到角色信息")
+        SpocParsers.resolveRoleCode(casLogin)
+            ?: throw SpocAuthenticationException("SPOC 登录成功但未获取到角色信息")
 
     token = tokens.token
     refreshToken = tokens.refreshToken
@@ -100,11 +107,16 @@ internal open class SpocClient(private val username: String) {
       var currentUrl = VpnCipher.toVpnUrl("https://spoc.buaa.edu.cn/spocnewht/cas")
       repeat(8) {
         val response = noRedirectClient.get(currentUrl)
-        SpocParsers.extractLoginTokens(response.call.request.url.toString())?.let { return it }
+        SpocParsers.extractLoginTokens(response.call.request.url.toString())?.let {
+          return it
+        }
 
-        val location = response.headers[HttpHeaders.Location]
-          ?: throw SpocAuthenticationException("SPOC 登录跳转缺少 Location")
-        SpocParsers.extractLoginTokens(location)?.let { return it }
+        val location =
+            response.headers[HttpHeaders.Location]
+                ?: throw SpocAuthenticationException("SPOC 登录跳转缺少 Location")
+        SpocParsers.extractLoginTokens(location)?.let {
+          return it
+        }
         currentUrl = normalizeUrl(resolveUrl(response.call.request.url.toString(), location))
       }
       throw SpocAuthenticationException("未能在 SPOC 登录跳转链中获取 token")
@@ -113,21 +125,24 @@ internal open class SpocClient(private val username: String) {
     }
   }
 
-  private suspend fun performCasLogin(baseClient: HttpClient, loginToken: String): SpocCasLoginContent {
+  private suspend fun performCasLogin(
+      baseClient: HttpClient,
+      loginToken: String,
+  ): SpocCasLoginContent {
     val response =
-      baseClient.post(normalizeUrl("https://spoc.buaa.edu.cn/spocnewht/sys/casLogin")) {
-        contentType(ContentType.Application.Json)
-        header("X-Requested-With", "XMLHttpRequest")
-        header("Token", "Inco-$loginToken")
-        setBody(SpocCasLoginRequest(loginToken))
-      }
+        baseClient.post(normalizeUrl("https://spoc.buaa.edu.cn/spocnewht/sys/casLogin")) {
+          contentType(ContentType.Application.Json)
+          header("X-Requested-With", "XMLHttpRequest")
+          header("Token", "Inco-$loginToken")
+          setBody(SpocCasLoginRequest(loginToken))
+        }
     val bodyText = response.bodyAsText()
     val envelope = decodeEnvelope<SpocCasLoginContent>(bodyText)
     return unwrapEnvelope(envelope, bodyText)
   }
 
   private suspend inline fun <reified T> withAuthenticatedCall(
-    crossinline block: suspend () -> T
+      crossinline block: suspend () -> T
   ): T {
     ensureLogin()
     return try {
@@ -140,19 +155,19 @@ internal open class SpocClient(private val username: String) {
   }
 
   private suspend inline fun <reified T> getEnvelope(
-    url: String,
-    crossinline builder: io.ktor.client.request.HttpRequestBuilder.() -> Unit = {},
+      url: String,
+      crossinline builder: io.ktor.client.request.HttpRequestBuilder.() -> Unit = {},
   ): T {
     val currentToken = token ?: throw SpocAuthenticationException("SPOC token 未初始化")
     val currentRoleCode = roleCode ?: throw SpocAuthenticationException("SPOC roleCode 未初始化")
     val session = sessionManager.requireSession(username)
     val response =
-      session.client.get(normalizeUrl(url)) {
-        header("X-Requested-With", "XMLHttpRequest")
-        header("Token", "Inco-$currentToken")
-        header("RoleCode", currentRoleCode)
-        builder()
-      }
+        session.client.get(normalizeUrl(url)) {
+          header("X-Requested-With", "XMLHttpRequest")
+          header("Token", "Inco-$currentToken")
+          header("RoleCode", currentRoleCode)
+          builder()
+        }
     val bodyText = response.bodyAsText()
     val envelope = decodeEnvelope<T>(bodyText)
     return unwrapEnvelope(envelope, bodyText)
@@ -163,13 +178,13 @@ internal open class SpocClient(private val username: String) {
     val currentRoleCode = roleCode ?: throw SpocAuthenticationException("SPOC roleCode 未初始化")
     val session = sessionManager.requireSession(username)
     val response =
-      session.client.post(normalizeUrl(url)) {
-        contentType(ContentType.Application.Json)
-        header("X-Requested-With", "XMLHttpRequest")
-        header("Token", "Inco-$currentToken")
-        header("RoleCode", currentRoleCode)
-        setBody(body)
-      }
+        session.client.post(normalizeUrl(url)) {
+          contentType(ContentType.Application.Json)
+          header("X-Requested-With", "XMLHttpRequest")
+          header("Token", "Inco-$currentToken")
+          header("RoleCode", currentRoleCode)
+          setBody(body)
+        }
     val bodyText = response.bodyAsText()
     val envelope = decodeEnvelope<T>(bodyText)
     return unwrapEnvelope(envelope, bodyText)
@@ -213,6 +228,6 @@ internal open class SpocClient(private val username: String) {
 
   companion object {
     private const val CURRENT_TERM_PARAM =
-      "YHrxtTavu6raCwC0/qdgYffB9evWHBkTng/XS4W6j3f/TPo02iEPSoegscDTRNzIPRG49o3RHl4JiFCXAiBkkA=="
+        "YHrxtTavu6raCwC0/qdgYffB9evWHBkTng/XS4W6j3f/TPo02iEPSoegscDTRNzIPRG49o3RHl4JiFCXAiBkkA=="
   }
 }

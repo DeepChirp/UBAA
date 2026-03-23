@@ -13,11 +13,11 @@ import kotlinx.serialization.Serializable
  */
 @Serializable
 data class SigninClassDto(
-  val courseId: String,
-  val courseName: String,
-  val classBeginTime: String,
-  val classEndTime: String,
-  val signStatus: Int, // 0: 未签到, 1: 已签到
+    val courseId: String,
+    val courseName: String,
+    val classBeginTime: String,
+    val classEndTime: String,
+    val signStatus: Int, // 0: 未签到, 1: 已签到
 )
 
 /**
@@ -29,9 +29,9 @@ data class SigninClassDto(
  */
 @Serializable
 data class SigninStatusResponse(
-  val code: Int,
-  val message: String,
-  val data: List<SigninClassDto> = emptyList(),
+    val code: Int,
+    val message: String,
+    val data: List<SigninClassDto> = emptyList(),
 )
 
 /**

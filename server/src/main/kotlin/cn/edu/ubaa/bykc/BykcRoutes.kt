@@ -28,33 +28,35 @@ fun Route.bykcRouting() {
       try {
         val profile = bykcService.getUserProfile(username)
         val profileDto =
-          BykcUserProfileDto(
-            id = profile.id,
-            employeeId = profile.employeeId,
-            realName = profile.realName,
-            studentNo = profile.studentNo,
-            studentType = profile.studentType,
-            classCode = profile.classCode,
-            collegeName = profile.college?.collegeName,
-            termName = profile.term?.termName,
-          )
+            BykcUserProfileDto(
+                id = profile.id,
+                employeeId = profile.employeeId,
+                realName = profile.realName,
+                studentNo = profile.studentNo,
+                studentType = profile.studentType,
+                classCode = profile.classCode,
+                collegeName = profile.college?.collegeName,
+                termName = profile.term?.termName,
+            )
         call.respond(HttpStatusCode.OK, profileDto)
       } catch (e: LoginException) {
         call.respond(
-          HttpStatusCode.Unauthorized,
-          ErrorResponse(ErrorDetails("unauthenticated", e.message ?: "Session is not available.")),
+            HttpStatusCode.Unauthorized,
+            ErrorResponse(
+                ErrorDetails("unauthenticated", e.message ?: "Session is not available.")
+            ),
         )
       } catch (e: BykcException) {
         call.respond(
-          HttpStatusCode.BadGateway,
-          ErrorResponse(ErrorDetails("bykc_error", e.message ?: "Failed to fetch BYKC profile.")),
+            HttpStatusCode.BadGateway,
+            ErrorResponse(ErrorDetails("bykc_error", e.message ?: "Failed to fetch BYKC profile.")),
         )
       } catch (e: Exception) {
         call.respond(
-          HttpStatusCode.InternalServerError,
-          ErrorResponse(
-            ErrorDetails("internal_server_error", "An unexpected server error occurred.")
-          ),
+            HttpStatusCode.InternalServerError,
+            ErrorResponse(
+                ErrorDetails("internal_server_error", "An unexpected server error occurred.")
+            ),
         )
       }
     }
@@ -74,30 +76,30 @@ fun Route.bykcRouting() {
 
       if (page < 1 || size < 1 || size > 500) {
         call.respond(
-          HttpStatusCode.BadRequest,
-          ErrorResponse(ErrorDetails("invalid_request", "Invalid page or size")),
+            HttpStatusCode.BadRequest,
+            ErrorResponse(ErrorDetails("invalid_request", "Invalid page or size")),
         )
         return@get
       }
 
       try {
         val coursePage =
-          if (includeAll) bykcService.getAllCourses(username, page, size)
-          else bykcService.getCourses(username, page, size)
+            if (includeAll) bykcService.getAllCourses(username, page, size)
+            else bykcService.getCourses(username, page, size)
         call.respond(
-          HttpStatusCode.OK,
-          BykcCoursesResponse(
-            courses = coursePage.courses,
-            total = coursePage.totalElements,
-            totalPages = coursePage.totalPages,
-            currentPage = coursePage.currentPage,
-            pageSize = coursePage.pageSize,
-          ),
+            HttpStatusCode.OK,
+            BykcCoursesResponse(
+                courses = coursePage.courses,
+                total = coursePage.totalElements,
+                totalPages = coursePage.totalPages,
+                currentPage = coursePage.currentPage,
+                pageSize = coursePage.pageSize,
+            ),
         )
       } catch (e: Exception) {
         call.respond(
-          HttpStatusCode.InternalServerError,
-          ErrorResponse(ErrorDetails("internal_server_error", e.message ?: "Error")),
+            HttpStatusCode.InternalServerError,
+            ErrorResponse(ErrorDetails("internal_server_error", e.message ?: "Error")),
         )
       }
     }
@@ -110,8 +112,8 @@ fun Route.bykcRouting() {
         call.respond(HttpStatusCode.OK, statistics)
       } catch (e: Exception) {
         call.respond(
-          HttpStatusCode.InternalServerError,
-          ErrorResponse(ErrorDetails("internal_server_error", "Error")),
+            HttpStatusCode.InternalServerError,
+            ErrorResponse(ErrorDetails("internal_server_error", "Error")),
         )
       }
     }
@@ -120,32 +122,32 @@ fun Route.bykcRouting() {
     post("/courses/{courseId}/select") {
       val username = call.jwtUsername!!
       val courseId =
-        call.parameters["courseId"]?.toLongOrNull()
-          ?: return@post call.respond(HttpStatusCode.BadRequest)
+          call.parameters["courseId"]?.toLongOrNull()
+              ?: return@post call.respond(HttpStatusCode.BadRequest)
 
       try {
         bykcService
-          .selectCourse(username, courseId)
-          .fold(
-            onSuccess = { call.respond(HttpStatusCode.OK, BykcSuccessResponse(it)) },
-            onFailure = { error ->
-              val code =
-                when {
-                  error.message?.contains("重复报名") == true -> "already_selected"
-                  error.message?.contains("人数已满") == true -> "course_full"
-                  error.message?.contains("不可选择") == true -> "course_not_selectable"
-                  else -> "select_failed"
-                }
-              call.respond(
-                HttpStatusCode.Conflict,
-                ErrorResponse(ErrorDetails(code, error.message ?: "Failed")),
-              )
-            },
-          )
+            .selectCourse(username, courseId)
+            .fold(
+                onSuccess = { call.respond(HttpStatusCode.OK, BykcSuccessResponse(it)) },
+                onFailure = { error ->
+                  val code =
+                      when {
+                        error.message?.contains("重复报名") == true -> "already_selected"
+                        error.message?.contains("人数已满") == true -> "course_full"
+                        error.message?.contains("不可选择") == true -> "course_not_selectable"
+                        else -> "select_failed"
+                      }
+                  call.respond(
+                      HttpStatusCode.Conflict,
+                      ErrorResponse(ErrorDetails(code, error.message ?: "Failed")),
+                  )
+                },
+            )
       } catch (e: Exception) {
         call.respond(
-          HttpStatusCode.InternalServerError,
-          ErrorResponse(ErrorDetails("internal_error", "Error")),
+            HttpStatusCode.InternalServerError,
+            ErrorResponse(ErrorDetails("internal_error", "Error")),
         )
       }
     }
@@ -154,25 +156,25 @@ fun Route.bykcRouting() {
     delete("/courses/{courseId}/select") {
       val username = call.jwtUsername!!
       val courseId =
-        call.parameters["courseId"]?.toLongOrNull()
-          ?: return@delete call.respond(HttpStatusCode.BadRequest)
+          call.parameters["courseId"]?.toLongOrNull()
+              ?: return@delete call.respond(HttpStatusCode.BadRequest)
 
       try {
         bykcService
-          .deselectCourse(username, courseId)
-          .fold(
-            onSuccess = { call.respond(HttpStatusCode.OK, BykcSuccessResponse(it)) },
-            onFailure = {
-              call.respond(
-                HttpStatusCode.BadRequest,
-                ErrorResponse(ErrorDetails("deselect_failed", it.message ?: "Failed")),
-              )
-            },
-          )
+            .deselectCourse(username, courseId)
+            .fold(
+                onSuccess = { call.respond(HttpStatusCode.OK, BykcSuccessResponse(it)) },
+                onFailure = {
+                  call.respond(
+                      HttpStatusCode.BadRequest,
+                      ErrorResponse(ErrorDetails("deselect_failed", it.message ?: "Failed")),
+                  )
+                },
+            )
       } catch (e: Exception) {
         call.respond(
-          HttpStatusCode.InternalServerError,
-          ErrorResponse(ErrorDetails("internal_error", "Error")),
+            HttpStatusCode.InternalServerError,
+            ErrorResponse(ErrorDetails("internal_error", "Error")),
         )
       }
     }
@@ -185,8 +187,8 @@ fun Route.bykcRouting() {
         call.respond(HttpStatusCode.OK, chosenCourses)
       } catch (e: Exception) {
         call.respond(
-          HttpStatusCode.InternalServerError,
-          ErrorResponse(ErrorDetails("internal_error", "Error")),
+            HttpStatusCode.InternalServerError,
+            ErrorResponse(ErrorDetails("internal_error", "Error")),
         )
       }
     }
@@ -195,15 +197,15 @@ fun Route.bykcRouting() {
     get("/courses/{courseId}") {
       val username = call.jwtUsername!!
       val courseId =
-        call.parameters["courseId"]?.toLongOrNull()
-          ?: return@get call.respond(HttpStatusCode.BadRequest)
+          call.parameters["courseId"]?.toLongOrNull()
+              ?: return@get call.respond(HttpStatusCode.BadRequest)
       try {
         val courseDetail = bykcService.getCourseDetail(username, courseId)
         call.respond(HttpStatusCode.OK, courseDetail)
       } catch (e: Exception) {
         call.respond(
-          HttpStatusCode.InternalServerError,
-          ErrorResponse(ErrorDetails("internal_error", "Error")),
+            HttpStatusCode.InternalServerError,
+            ErrorResponse(ErrorDetails("internal_error", "Error")),
         )
       }
     }
@@ -212,39 +214,39 @@ fun Route.bykcRouting() {
     post("/courses/{courseId}/sign") {
       val username = call.jwtUsername!!
       val courseId =
-        call.parameters["courseId"]?.toLongOrNull()
-          ?: return@post call.respond(HttpStatusCode.BadRequest)
+          call.parameters["courseId"]?.toLongOrNull()
+              ?: return@post call.respond(HttpStatusCode.BadRequest)
       val signRequest =
-        try {
-          call.receive<BykcSignRequest>()
-        } catch (e: Exception) {
-          return@post call.respond(
-            HttpStatusCode.BadRequest,
-            ErrorResponse(ErrorDetails("invalid_request", "Invalid body")),
-          )
-        }
+          try {
+            call.receive<BykcSignRequest>()
+          } catch (e: Exception) {
+            return@post call.respond(
+                HttpStatusCode.BadRequest,
+                ErrorResponse(ErrorDetails("invalid_request", "Invalid body")),
+            )
+          }
 
       try {
         val result =
-          if (signRequest.signType == 1) {
-            bykcService.signIn(username, courseId, signRequest.lat, signRequest.lng)
-          } else {
-            bykcService.signOut(username, courseId, signRequest.lat, signRequest.lng)
-          }
+            if (signRequest.signType == 1) {
+              bykcService.signIn(username, courseId, signRequest.lat, signRequest.lng)
+            } else {
+              bykcService.signOut(username, courseId, signRequest.lat, signRequest.lng)
+            }
 
         result.fold(
-          onSuccess = { call.respond(HttpStatusCode.OK, BykcSuccessResponse(it)) },
-          onFailure = {
-            call.respond(
-              HttpStatusCode.BadRequest,
-              ErrorResponse(ErrorDetails("sign_failed", it.message ?: "Failed")),
-            )
-          },
+            onSuccess = { call.respond(HttpStatusCode.OK, BykcSuccessResponse(it)) },
+            onFailure = {
+              call.respond(
+                  HttpStatusCode.BadRequest,
+                  ErrorResponse(ErrorDetails("sign_failed", it.message ?: "Failed")),
+              )
+            },
         )
       } catch (e: Exception) {
         call.respond(
-          HttpStatusCode.InternalServerError,
-          ErrorResponse(ErrorDetails("internal_error", "Error")),
+            HttpStatusCode.InternalServerError,
+            ErrorResponse(ErrorDetails("internal_error", "Error")),
         )
       }
     }

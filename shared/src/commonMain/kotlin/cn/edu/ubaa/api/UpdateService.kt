@@ -19,24 +19,24 @@ import kotlinx.serialization.json.Json
  */
 @Serializable
 data class GitHubRelease(
-  @SerialName("tag_name") val tagName: String,
-  @SerialName("html_url") val htmlUrl: String,
-  val body: String? = null,
+    @SerialName("tag_name") val tagName: String,
+    @SerialName("html_url") val htmlUrl: String,
+    val body: String? = null,
 )
 
 /** 更新检测服务。 负责从 GitHub 检查是否有可用的新版本发布。 */
 class UpdateService {
   private val client =
-    HttpClient(getDefaultEngine()) {
-      install(ContentNegotiation) {
-        json(
-          Json {
-            ignoreUnknownKeys = true
-            isLenient = true
-          }
-        )
+      HttpClient(getDefaultEngine()) {
+        install(ContentNegotiation) {
+          json(
+              Json {
+                ignoreUnknownKeys = true
+                isLenient = true
+              }
+          )
+        }
       }
-    }
 
   /**
    * 检查是否有新版本。 比较当前 [BuildKonfig.VERSION] 与 GitHub 上的最新版本。
@@ -46,7 +46,7 @@ class UpdateService {
   suspend fun checkUpdate(): GitHubRelease? {
     return try {
       val latestRelease: GitHubRelease =
-        client.get("https://api.botium.cn/github/repos/BUAASubnet/UBAA/releases/latest").body()
+          client.get("https://api.botium.cn/github/repos/BUAASubnet/UBAA/releases/latest").body()
       val currentVersion = BuildKonfig.VERSION
 
       println("UpdateCheck: Latest=${latestRelease.tagName}, Current=$currentVersion")

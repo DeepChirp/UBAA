@@ -47,36 +47,38 @@ class ClassroomViewModel(private val api: ClassroomApi = ClassroomApi()) : ViewM
 
   /** 当前查询结果中的可选楼栋列表。 */
   val availableBuildings: StateFlow<List<String>> =
-    _uiState
-      .map { state ->
-        if (state is ClassroomUiState.Success) {
-          state.data.d.list.keys.toList()
-        } else {
-          emptyList()
-        }
-      }
-      .stateIn(viewModelScope, SharingStarted.Eagerly, emptyList())
+      _uiState
+          .map { state ->
+            if (state is ClassroomUiState.Success) {
+              state.data.d.list.keys.toList()
+            } else {
+              emptyList()
+            }
+          }
+          .stateIn(viewModelScope, SharingStarted.Eagerly, emptyList())
 
   /** 根据楼栋与搜索关键字过滤后的教室数据流。 */
   val filteredData: StateFlow<Map<String, List<ClassroomInfo>>> =
-    combine(_uiState, _selectedBuilding, _searchQuery) { state, selectedBuilding, query ->
-        if (state is ClassroomUiState.Success) {
-          val allData = state.data.d.list
-          val buildingFilteredData =
-            selectedBuilding?.let { building ->
-              allData[building]?.let { listOfClassroom -> mapOf(building to listOfClassroom) }
-                ?: emptyMap()
-            } ?: allData
-          if (query.isBlank()) {
-            buildingFilteredData
-          } else {
-            buildingFilteredData
-              .mapValues { (_, list) -> list.filter { it.name.contains(query, true) } }
-              .filter { (building, list) -> building.contains(query, true) || list.isNotEmpty() }
+      combine(_uiState, _selectedBuilding, _searchQuery) { state, selectedBuilding, query ->
+            if (state is ClassroomUiState.Success) {
+              val allData = state.data.d.list
+              val buildingFilteredData =
+                  selectedBuilding?.let { building ->
+                    allData[building]?.let { listOfClassroom -> mapOf(building to listOfClassroom) }
+                        ?: emptyMap()
+                  } ?: allData
+              if (query.isBlank()) {
+                buildingFilteredData
+              } else {
+                buildingFilteredData
+                    .mapValues { (_, list) -> list.filter { it.name.contains(query, true) } }
+                    .filter { (building, list) ->
+                      building.contains(query, true) || list.isNotEmpty()
+                    }
+              }
+            } else emptyMap()
           }
-        } else emptyMap()
-      }
-      .stateIn(viewModelScope, SharingStarted.Eagerly, emptyMap())
+          .stateIn(viewModelScope, SharingStarted.Eagerly, emptyMap())
 
   /** 更新搜索关键字。 */
   fun setSearchQuery(query: String) {
@@ -106,15 +108,14 @@ class ClassroomViewModel(private val api: ClassroomApi = ClassroomApi()) : ViewM
   fun query() {
     viewModelScope.launch {
       _uiState.value = ClassroomUiState.Loading
-      api
-        .queryClassrooms(_xqid.value, _date.value)
-        .onSuccess {
-          _uiState.value = ClassroomUiState.Success(it)
-          if (_selectedBuilding.value !in it.d.list.keys) {
-            _selectedBuilding.value = null
+      api.queryClassrooms(_xqid.value, _date.value)
+          .onSuccess {
+            _uiState.value = ClassroomUiState.Success(it)
+            if (_selectedBuilding.value !in it.d.list.keys) {
+              _selectedBuilding.value = null
+            }
           }
-        }
-        .onFailure { _uiState.value = ClassroomUiState.Error(it.message ?: "未知错误") }
+          .onFailure { _uiState.value = ClassroomUiState.Error(it.message ?: "未知错误") }
     }
   }
 

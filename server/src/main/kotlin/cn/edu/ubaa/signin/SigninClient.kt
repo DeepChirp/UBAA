@@ -26,22 +26,22 @@ class SigninClient(private val studentId: String) {
 
   /** 创建专用于 iclass 的 HttpClient，配置较宽松的 SSL 验证。 */
   private val client =
-    HttpClient(CIO) {
-      install(ContentNegotiation) { json(json) }
-      install(HttpTimeout) { requestTimeoutMillis = 30000 }
-      engine {
-        https {
-          trustManager =
-            object : X509TrustManager {
-              override fun checkClientTrusted(c: Array<out X509Certificate>?, a: String?) {}
+      HttpClient(CIO) {
+        install(ContentNegotiation) { json(json) }
+        install(HttpTimeout) { requestTimeoutMillis = 30000 }
+        engine {
+          https {
+            trustManager =
+                object : X509TrustManager {
+                  override fun checkClientTrusted(c: Array<out X509Certificate>?, a: String?) {}
 
-              override fun checkServerTrusted(c: Array<out X509Certificate>?, a: String?) {}
+                  override fun checkServerTrusted(c: Array<out X509Certificate>?, a: String?) {}
 
-              override fun getAcceptedIssuers(): Array<X509Certificate> = arrayOf()
-            }
+                  override fun getAcceptedIssuers(): Array<X509Certificate> = arrayOf()
+                }
+          }
         }
       }
-    }
 
   private var userId: String? = null
   private var sessionId: String? = null
@@ -50,13 +50,13 @@ class SigninClient(private val studentId: String) {
   private suspend fun login(): Boolean {
     return try {
       val response =
-        client.get(VpnCipher.toVpnUrl("https://iclass.buaa.edu.cn:8347/app/user/login.action")) {
-          parameter("password", "")
-          parameter("phone", studentId)
-          parameter("userLevel", "1")
-          parameter("verificationType", "2")
-          parameter("verificationUrl", "")
-        }
+          client.get(VpnCipher.toVpnUrl("https://iclass.buaa.edu.cn:8347/app/user/login.action")) {
+            parameter("password", "")
+            parameter("phone", studentId)
+            parameter("userLevel", "1")
+            parameter("verificationType", "2")
+            parameter("verificationUrl", "")
+          }
       if (!response.status.isSuccess()) return false
       val body = response.bodyAsText()
       val jsonResponse = json.parseToJsonElement(body).jsonObject
@@ -76,26 +76,26 @@ class SigninClient(private val studentId: String) {
     if (userId == null || sessionId == null) if (!login()) return emptyList()
     return try {
       val response =
-        client.get(
-          VpnCipher.toVpnUrl(
-            "https://iclass.buaa.edu.cn:8347/app/course/get_stu_course_sched.action"
-          )
-        ) {
-          header("sessionId", sessionId)
-          parameter("id", userId)
-          parameter("dateStr", dateStr)
-        }
+          client.get(
+              VpnCipher.toVpnUrl(
+                  "https://iclass.buaa.edu.cn:8347/app/course/get_stu_course_sched.action"
+              )
+          ) {
+            header("sessionId", sessionId)
+            parameter("id", userId)
+            parameter("dateStr", dateStr)
+          }
       val body = response.bodyAsText()
       val result =
-        json.parseToJsonElement(body).jsonObject["result"]?.jsonArray ?: return emptyList()
+          json.parseToJsonElement(body).jsonObject["result"]?.jsonArray ?: return emptyList()
       result.map {
         val obj = it.jsonObject
         SigninClassDto(
-          courseId = obj["id"]?.jsonPrimitive?.content ?: "",
-          courseName = obj["courseName"]?.jsonPrimitive?.content ?: "",
-          classBeginTime = obj["classBeginTime"]?.jsonPrimitive?.content ?: "",
-          classEndTime = obj["classEndTime"]?.jsonPrimitive?.content ?: "",
-          signStatus = obj["signStatus"]?.jsonPrimitive?.intOrNull ?: 0,
+            courseId = obj["id"]?.jsonPrimitive?.content ?: "",
+            courseName = obj["courseName"]?.jsonPrimitive?.content ?: "",
+            classBeginTime = obj["classBeginTime"]?.jsonPrimitive?.content ?: "",
+            classEndTime = obj["classEndTime"]?.jsonPrimitive?.content ?: "",
+            signStatus = obj["signStatus"]?.jsonPrimitive?.intOrNull ?: 0,
         )
       }
     } catch (_: Exception) {
@@ -107,18 +107,31 @@ class SigninClient(private val studentId: String) {
   suspend fun signIn(courseId: String): Pair<Boolean, String> {
     if (userId == null || sessionId == null) if (!login()) return false to "登录失败"
     return try {
+      val serverTimestamp =
+          client
+              .get(
+                  VpnCipher.toVpnUrl(
+                      "http://iclass.buaa.edu.cn:8081/app/common/get_timestamp.action"
+                  )
+              )
+              .body<JsonObject>()
+              .get("timestamp")
+              ?.jsonPrimitive
+              ?.content ?: return false to "获取服务器时间失败"
+
       val response =
-        client.post(
-          VpnCipher.toVpnUrl("http://iclass.buaa.edu.cn:8081/app/course/stu_scan_sign.action")
-        ) {
-          parameter("courseSchedId", courseId)
-          parameter("timestamp", System.currentTimeMillis().toString())
-          setBody(FormDataContent(Parameters.build { append("id", userId!!) }))
-        }
+          client.post(
+              VpnCipher.toVpnUrl("http://iclass.buaa.edu.cn:8081/app/course/stu_scan_sign.action")
+          ) {
+            parameter("courseSchedId", courseId)
+            parameter("timestamp", serverTimestamp)
+            setBody(FormDataContent(Parameters.build { append("id", userId!!) }))
+          }
       val jsonResponse = json.parseToJsonElement(response.bodyAsText()).jsonObject
       val success =
-        jsonResponse["STATUS"]?.jsonPrimitive?.intOrNull == 0 &&
-          jsonResponse["result"]?.jsonObject?.get("stuSignStatus")?.jsonPrimitive?.intOrNull == 1
+          jsonResponse["STATUS"]?.jsonPrimitive?.intOrNull == 0 &&
+              jsonResponse["result"]?.jsonObject?.get("stuSignStatus")?.jsonPrimitive?.intOrNull ==
+                  1
       success to (jsonResponse["ERRMSG"]?.jsonPrimitive?.content ?: "未知状态")
     } catch (e: Exception) {
       false to (e.message ?: "网络异常")

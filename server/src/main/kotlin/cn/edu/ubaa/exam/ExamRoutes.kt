@@ -25,8 +25,8 @@ fun Route.examRouting() {
 
       if (termCode.isNullOrBlank()) {
         return@get call.respond(
-          HttpStatusCode.BadRequest,
-          ErrorResponse(ErrorDetails("invalid_request", "termCode is required")),
+            HttpStatusCode.BadRequest,
+            ErrorResponse(ErrorDetails("invalid_request", "termCode is required")),
         )
       }
 
@@ -35,7 +35,7 @@ fun Route.examRouting() {
         call.respond(HttpStatusCode.OK, examData)
       } catch (e: Exception) {
         val status =
-          if (e is LoginException) HttpStatusCode.Unauthorized else HttpStatusCode.BadGateway
+            if (e is LoginException) HttpStatusCode.Unauthorized else HttpStatusCode.BadGateway
         call.respond(status, ErrorResponse(ErrorDetails("error", e.message ?: "Error")))
       }
     }

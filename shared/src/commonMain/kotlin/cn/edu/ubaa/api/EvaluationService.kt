@@ -35,12 +35,12 @@ class EvaluationService(private val apiClient: ApiClient) {
   suspend fun submitEvaluations(courses: List<EvaluationCourse>): List<EvaluationResult> {
     return try {
       apiClient
-        .getClient()
-        .post("/api/v1/evaluation/submit") {
-          contentType(ContentType.Application.Json)
-          setBody(courses)
-        }
-        .body()
+          .getClient()
+          .post("/api/v1/evaluation/submit") {
+            contentType(ContentType.Application.Json)
+            setBody(courses)
+          }
+          .body()
     } catch (e: Exception) {
       println("Error submitting evaluations: ${e.message}")
       // Return failed results for all input courses on network error

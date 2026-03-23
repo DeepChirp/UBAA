@@ -33,21 +33,21 @@ object BykcCourseStatus {
  */
 @Serializable
 data class BykcCourseDto(
-  val id: Long,
-  val courseName: String,
-  val coursePosition: String? = null,
-  val courseTeacher: String? = null,
-  val courseStartDate: String? = null,
-  val courseEndDate: String? = null,
-  val courseSelectStartDate: String? = null,
-  val courseSelectEndDate: String? = null,
-  val courseMaxCount: Int = 0,
-  val courseCurrentCount: Int = 0,
-  val category: String? = null,
-  val subCategory: String? = null,
-  val status: String,
-  val selected: Boolean = false,
-  val courseDesc: String? = null,
+    val id: Long,
+    val courseName: String,
+    val coursePosition: String? = null,
+    val courseTeacher: String? = null,
+    val courseStartDate: String? = null,
+    val courseEndDate: String? = null,
+    val courseSelectStartDate: String? = null,
+    val courseSelectEndDate: String? = null,
+    val courseMaxCount: Int = 0,
+    val courseCurrentCount: Int = 0,
+    val category: String? = null,
+    val subCategory: String? = null,
+    val status: String,
+    val selected: Boolean = false,
+    val courseDesc: String? = null,
 )
 
 /**
@@ -77,27 +77,27 @@ data class BykcCourseDto(
  */
 @Serializable
 data class BykcCourseDetailDto(
-  val id: Long,
-  val courseName: String,
-  val coursePosition: String? = null,
-  val courseContact: String? = null,
-  val courseContactMobile: String? = null,
-  val courseTeacher: String? = null,
-  val courseStartDate: String? = null,
-  val courseEndDate: String? = null,
-  val courseSelectStartDate: String? = null,
-  val courseSelectEndDate: String? = null,
-  val courseCancelEndDate: String? = null,
-  val courseMaxCount: Int = 0,
-  val courseCurrentCount: Int = 0,
-  val category: String? = null,
-  val subCategory: String? = null,
-  val status: String,
-  val selected: Boolean = false,
-  val courseDesc: String? = null,
-  val signConfig: BykcSignConfigDto? = null,
-  val checkin: Int? = null,
-  val pass: Int? = null,
+    val id: Long,
+    val courseName: String,
+    val coursePosition: String? = null,
+    val courseContact: String? = null,
+    val courseContactMobile: String? = null,
+    val courseTeacher: String? = null,
+    val courseStartDate: String? = null,
+    val courseEndDate: String? = null,
+    val courseSelectStartDate: String? = null,
+    val courseSelectEndDate: String? = null,
+    val courseCancelEndDate: String? = null,
+    val courseMaxCount: Int = 0,
+    val courseCurrentCount: Int = 0,
+    val category: String? = null,
+    val subCategory: String? = null,
+    val status: String,
+    val selected: Boolean = false,
+    val courseDesc: String? = null,
+    val signConfig: BykcSignConfigDto? = null,
+    val checkin: Int? = null,
+    val pass: Int? = null,
 )
 
 /**
@@ -127,27 +127,27 @@ data class BykcCourseDetailDto(
  */
 @Serializable
 data class BykcChosenCourseDto(
-  val id: Long,
-  val courseId: Long, // 课程本身的 ID（用于查询课程详情）
-  val courseName: String,
-  val coursePosition: String? = null,
-  val courseTeacher: String? = null,
-  val courseStartDate: String? = null,
-  val courseEndDate: String? = null,
-  val selectDate: String? = null,
-  val category: String? = null,
-  val subCategory: String? = null,
-  val checkin: Int = 0,
-  val score: Int? = null,
-  val pass: Int? = null,
-  val canSign: Boolean = false,
-  val canSignOut: Boolean = false,
-  val signConfig: BykcSignConfigDto? = null,
-  val courseSignType: Int? = null,
-  val homework: String? = null,
-  val homeworkAttachmentName: String? = null,
-  val homeworkAttachmentPath: String? = null,
-  val signInfo: String? = null,
+    val id: Long,
+    val courseId: Long, // 课程本身的 ID（用于查询课程详情）
+    val courseName: String,
+    val coursePosition: String? = null,
+    val courseTeacher: String? = null,
+    val courseStartDate: String? = null,
+    val courseEndDate: String? = null,
+    val selectDate: String? = null,
+    val category: String? = null,
+    val subCategory: String? = null,
+    val checkin: Int = 0,
+    val score: Int? = null,
+    val pass: Int? = null,
+    val canSign: Boolean = false,
+    val canSignOut: Boolean = false,
+    val signConfig: BykcSignConfigDto? = null,
+    val courseSignType: Int? = null,
+    val homework: String? = null,
+    val homeworkAttachmentName: String? = null,
+    val homeworkAttachmentPath: String? = null,
+    val signInfo: String? = null,
 )
 
 /**
@@ -161,11 +161,11 @@ data class BykcChosenCourseDto(
  */
 @Serializable
 data class BykcSignConfigDto(
-  val signStartDate: String? = null,
-  val signEndDate: String? = null,
-  val signOutStartDate: String? = null,
-  val signOutEndDate: String? = null,
-  val signPoints: List<BykcSignPointDto> = emptyList(),
+    val signStartDate: String? = null,
+    val signEndDate: String? = null,
+    val signOutStartDate: String? = null,
+    val signOutEndDate: String? = null,
+    val signPoints: List<BykcSignPointDto> = emptyList(),
 )
 
 /**
@@ -192,14 +192,14 @@ data class BykcSignPointDto(val lat: Double, val lng: Double, val radius: Double
  */
 @Serializable
 data class BykcUserProfileDto(
-  val id: Long,
-  val employeeId: String,
-  val realName: String,
-  val studentNo: String? = null,
-  val studentType: String? = null,
-  val classCode: String? = null,
-  val collegeName: String? = null,
-  val termName: String? = null,
+    val id: Long,
+    val employeeId: String,
+    val realName: String,
+    val studentNo: String? = null,
+    val studentType: String? = null,
+    val classCode: String? = null,
+    val collegeName: String? = null,
+    val termName: String? = null,
 )
 
 /**
@@ -210,8 +210,8 @@ data class BykcUserProfileDto(
  */
 @Serializable
 data class BykcStatisticsDto(
-  val totalValidCount: Int,
-  val categories: List<BykcCategoryStatisticsDto>,
+    val totalValidCount: Int,
+    val categories: List<BykcCategoryStatisticsDto>,
 )
 
 /**
@@ -225,11 +225,11 @@ data class BykcStatisticsDto(
  */
 @Serializable
 data class BykcCategoryStatisticsDto(
-  val categoryName: String, // 大类 (e.g. "博雅课程")
-  val subCategoryName: String, // 小类 (e.g. "德育")
-  val requiredCount: Int, // 考核指标
-  val passedCount: Int, // 考核通过
-  val isQualified: Boolean, // 是否达标 (passed >= required)
+    val categoryName: String, // 大类 (e.g. "博雅课程")
+    val subCategoryName: String, // 小类 (e.g. "德育")
+    val requiredCount: Int, // 考核指标
+    val passedCount: Int, // 考核通过
+    val isQualified: Boolean, // 是否达标 (passed >= required)
 )
 
 /** 选课请求负载。 */
@@ -245,31 +245,31 @@ data class BykcCategoryStatisticsDto(
  */
 @Serializable
 data class BykcSignRequest(
-  val courseId: Long,
-  val lat: Double? = null,
-  val lng: Double? = null,
-  /** 1=签到, 2=签退 */
-  val signType: Int,
+    val courseId: Long,
+    val lat: Double? = null,
+    val lng: Double? = null,
+    /** 1=签到, 2=签退 */
+    val signType: Int,
 )
 
 /** 博雅课程分页查询结果。 */
 @Serializable
 data class BykcCoursePage(
-  val courses: List<BykcCourseDto>,
-  val totalElements: Int,
-  val totalPages: Int,
-  val currentPage: Int,
-  val pageSize: Int,
+    val courses: List<BykcCourseDto>,
+    val totalElements: Int,
+    val totalPages: Int,
+    val currentPage: Int,
+    val pageSize: Int,
 )
 
 /** 博雅课程列表 API 响应体。 */
 @Serializable
 data class BykcCoursesResponse(
-  val courses: List<BykcCourseDto>,
-  val total: Int,
-  val totalPages: Int = 0,
-  val currentPage: Int = 1,
-  val pageSize: Int = 20,
+    val courses: List<BykcCourseDto>,
+    val total: Int,
+    val totalPages: Int = 0,
+    val currentPage: Int = 1,
+    val pageSize: Int = 20,
 )
 
 /** 统一的操作成功响应消息。 */

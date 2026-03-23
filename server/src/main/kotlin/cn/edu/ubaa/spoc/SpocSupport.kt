@@ -14,13 +14,13 @@ import kotlinx.serialization.json.jsonPrimitive
 import org.jsoup.Jsoup
 
 internal open class SpocException(message: String, cause: Throwable? = null) :
-  RuntimeException(message, cause)
+    RuntimeException(message, cause)
 
 internal class SpocAuthenticationException(message: String) : SpocException(message)
 
 internal data class SpocLoginTokens(
-  val token: String,
-  val refreshToken: String? = null,
+    val token: String,
+    val refreshToken: String? = null,
 )
 
 internal object SpocParsers {
@@ -31,10 +31,13 @@ internal object SpocParsers {
     if (query.isBlank()) return null
 
     val params =
-      query.split("&").mapNotNull { part ->
-        val pieces = part.split("=", limit = 2)
-        if (pieces.isEmpty()) null else pieces[0] to pieces.getOrNull(1).orEmpty()
-      }.toMap()
+        query
+            .split("&")
+            .mapNotNull { part ->
+              val pieces = part.split("=", limit = 2)
+              if (pieces.isEmpty()) null else pieces[0] to pieces.getOrNull(1).orEmpty()
+            }
+            .toMap()
 
     val token = params["token"]?.takeIf { it.isNotBlank() } ?: return null
     val refreshToken = params["refreshToken"]?.takeIf { it.isNotBlank() }
@@ -43,8 +46,8 @@ internal object SpocParsers {
 
   fun resolveRoleCode(content: SpocCasLoginContent): String? {
     return content.jsdm?.takeIf { it.isNotBlank() }
-      ?: firstString(content.rolecode)
-      ?: firstString(content.jsdmList)
+        ?: firstString(content.rolecode)
+        ?: firstString(content.jsdmList)
   }
 
   fun toPlainText(html: String?): String? {
@@ -65,7 +68,8 @@ internal object SpocParsers {
     return when (status) {
       SpocSubmissionStatus.SUBMITTED -> "已提交"
       SpocSubmissionStatus.UNSUBMITTED -> "未提交"
-      SpocSubmissionStatus.UNKNOWN -> rawStatus?.takeIf { it.isNotBlank() }?.let { "未知状态($it)" } ?: "未知状态"
+      SpocSubmissionStatus.UNKNOWN ->
+          rawStatus?.takeIf { it.isNotBlank() }?.let { "未知状态($it)" } ?: "未知状态"
     }
   }
 
@@ -73,95 +77,96 @@ internal object SpocParsers {
     return when (element) {
       null -> null
       is JsonPrimitive -> element.contentOrNull?.takeIf { it.isNotBlank() }
-      else -> element.jsonArray.firstNotNullOfOrNull { it.jsonPrimitive.contentOrNull?.takeIf { value -> value.isNotBlank() } }
+      else ->
+          element.jsonArray.firstNotNullOfOrNull {
+            it.jsonPrimitive.contentOrNull?.takeIf { value -> value.isNotBlank() }
+          }
     }
   }
 }
 
 internal fun SpocAssignmentSummaryDto.toDetail(
-  contentPlainText: String?,
-  contentHtml: String?,
-  submittedAt: String?,
+    contentPlainText: String?,
+    contentHtml: String?,
+    submittedAt: String?,
 ): SpocAssignmentDetailDto {
   return SpocAssignmentDetailDto(
-    assignmentId = assignmentId,
-    courseId = courseId,
-    courseName = courseName,
-    teacherName = teacherName,
-    title = title,
-    startTime = startTime,
-    dueTime = dueTime,
-    score = score,
-    submissionStatus = submissionStatus,
-    submissionStatusText = submissionStatusText,
-    contentPlainText = contentPlainText,
-    contentHtml = contentHtml,
-    submittedAt = submittedAt,
+      assignmentId = assignmentId,
+      courseId = courseId,
+      courseName = courseName,
+      teacherName = teacherName,
+      title = title,
+      startTime = startTime,
+      dueTime = dueTime,
+      score = score,
+      submissionStatus = submissionStatus,
+      submissionStatusText = submissionStatusText,
+      contentPlainText = contentPlainText,
+      contentHtml = contentHtml,
+      submittedAt = submittedAt,
   )
 }
 
 @Serializable
 internal data class SpocEnvelope<T>(
-  val code: Int,
-  val msg: String? = null,
-  @SerialName("msg_en") val msgEn: String? = null,
-  val content: T? = null,
+    val code: Int,
+    val msg: String? = null,
+    @SerialName("msg_en") val msgEn: String? = null,
+    val content: T? = null,
 )
 
-@Serializable
-internal data class SpocCasLoginRequest(val token: String)
+@Serializable internal data class SpocCasLoginRequest(val token: String)
 
-@Serializable
-internal data class SpocQueryOneRequest(val param: String)
+@Serializable internal data class SpocQueryOneRequest(val param: String)
 
 @Serializable
 internal data class SpocCurrentTermContent(
-  val dqxq: String? = null,
-  val mrxq: String? = null,
+    val dqxq: String? = null,
+    val mrxq: String? = null,
 )
 
 @Serializable
 internal data class SpocCourseRaw(
-  val kcid: String,
-  val kcmc: String,
-  val skjs: String? = null,
+    val kcid: String,
+    val kcmc: String,
+    val skjs: String? = null,
 )
 
 @Serializable
 internal data class SpocAssignmentListContent(
-  val list: List<SpocAssignmentRaw> = emptyList(),
+    val list: List<SpocAssignmentRaw> = emptyList(),
 )
 
 @Serializable
 internal data class SpocAssignmentRaw(
-  val id: String,
-  val zymc: String,
-  val zykssj: String? = null,
-  val zyjzsj: String? = null,
-  val zyfs: String? = null,
-  val sskcid: String? = null,
+    val id: String,
+    val zymc: String,
+    val zykssj: String? = null,
+    val zyjzsj: String? = null,
+    val zyfs: String? = null,
+    val sskcid: String? = null,
 )
 
 @Serializable
 internal data class SpocAssignmentDetailRaw(
-  val id: String,
-  val zymc: String,
-  val zynr: String? = null,
-  val zykssj: String? = null,
-  val zyjzsj: String? = null,
-  val zyfs: String? = null,
-  val sskcid: String? = null,
+    val id: String,
+    val zymc: String,
+    val zynr: String? = null,
+    val zykssj: String? = null,
+    val zyjzsj: String? = null,
+    val zyfs: String? = null,
+    val sskcid: String? = null,
 )
 
 @Serializable
 internal data class SpocSubmissionRaw(
-  val tjzt: String? = null,
-  val tjsj: String? = null,
+    val tjzt: String? = null,
+    val tjsj: String? = null,
 )
 
 @Serializable
 internal data class SpocCasLoginContent(
-  val jsdm: String? = null,
-  val rolecode: JsonElement? = null,
-  val jsdmList: JsonElement? = null,
+    val jsdm: String? = null,
+    val rolecode: JsonElement? = null,
+    val jsdmList: JsonElement? = null,
 )

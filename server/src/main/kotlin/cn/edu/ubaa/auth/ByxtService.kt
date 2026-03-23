@@ -11,7 +11,7 @@ import org.slf4j.LoggerFactory
 object ByxtService {
   private val log = LoggerFactory.getLogger(ByxtService::class.java)
   private val BYXT_INDEX_URL =
-    VpnCipher.toVpnUrl("https://byxt.buaa.edu.cn/jwapp/sys/homeapp/api/home/currentUser.do")
+      VpnCipher.toVpnUrl("https://byxt.buaa.edu.cn/jwapp/sys/homeapp/api/home/currentUser.do")
 
   /** 初始化 BYXT 会话。 */
   suspend fun initializeSession(client: HttpClient) {
@@ -19,9 +19,9 @@ object ByxtService {
     try {
       val indexResponse = client.get(BYXT_INDEX_URL)
       log.debug(
-        "BYXT index page accessed. Status: {}, Final URL: {}",
-        indexResponse.status,
-        indexResponse.request.url,
+          "BYXT index page accessed. Status: {}, Final URL: {}",
+          indexResponse.status,
+          indexResponse.request.url,
       )
     } catch (e: Exception) {
       log.error("Failed to initialize BYXT session", e)

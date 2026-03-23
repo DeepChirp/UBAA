@@ -24,7 +24,7 @@ fun Route.userRouting() {
         call.respond(HttpStatusCode.OK, userInfo)
       } catch (e: Exception) {
         val status =
-          if (e is LoginException) HttpStatusCode.Unauthorized else HttpStatusCode.BadGateway
+            if (e is LoginException) HttpStatusCode.Unauthorized else HttpStatusCode.BadGateway
         call.respond(status, ErrorResponse(ErrorDetails("error", e.message ?: "Error")))
       }
     }

@@ -62,8 +62,8 @@ class BykcCryptoTest {
     // SHA1 produces 20 bytes = 40 hex chars
     assertEquals(40, signature.length, "SHA1 signature should be 40 hex chars")
     assertTrue(
-      signature.all { it.isDigit() || it in 'a'..'f' },
-      "Signature should be lowercase hex",
+        signature.all { it.isDigit() || it in 'a'..'f' },
+        "Signature should be lowercase hex",
     )
   }
 
@@ -148,7 +148,7 @@ class BykcCryptoTest {
     // Server side: encrypt response using same AES key
     val responseJson = """{"status":"0","errmsg":"选课成功","data":{}}"""
     val serverEncrypted =
-      BykcCrypto.aesEncrypt(responseJson.toByteArray(Charsets.UTF_8), encryptedRequest.aesKey)
+        BykcCrypto.aesEncrypt(responseJson.toByteArray(Charsets.UTF_8), encryptedRequest.aesKey)
     val serverResponseBase64 = Base64.getEncoder().encodeToString(serverEncrypted)
 
     // Client side: decrypt response

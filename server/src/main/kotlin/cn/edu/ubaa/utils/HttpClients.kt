@@ -20,20 +20,20 @@ object HttpClients {
         if (System.getenv("TRUST_ALL_CERTS")?.lowercase() == "true") {
           https {
             trustManager =
-              object : javax.net.ssl.X509TrustManager {
-                override fun checkClientTrusted(
-                  c: Array<java.security.cert.X509Certificate>?,
-                  a: String?,
-                ) {}
+                object : javax.net.ssl.X509TrustManager {
+                  override fun checkClientTrusted(
+                      c: Array<java.security.cert.X509Certificate>?,
+                      a: String?,
+                  ) {}
 
-                override fun checkServerTrusted(
-                  c: Array<java.security.cert.X509Certificate>?,
-                  a: String?,
-                ) {}
+                  override fun checkServerTrusted(
+                      c: Array<java.security.cert.X509Certificate>?,
+                      a: String?,
+                  ) {}
 
-                override fun getAcceptedIssuers(): Array<java.security.cert.X509Certificate> =
-                  arrayOf()
-              }
+                  override fun getAcceptedIssuers(): Array<java.security.cert.X509Certificate> =
+                      arrayOf()
+                }
           }
         }
       }

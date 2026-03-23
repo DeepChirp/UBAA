@@ -24,15 +24,15 @@ import cn.edu.ubaa.model.dto.BykcCourseStatus
 @OptIn(ExperimentalMaterial3Api::class, ExperimentalMaterialApi::class)
 @Composable
 fun BykcCoursesScreen(
-  courses: List<BykcCourseDto>,
-  isLoading: Boolean,
-  isLoadingMore: Boolean,
-  hasMorePages: Boolean,
-  error: String?,
-  onCourseClick: (BykcCourseDto) -> Unit,
-  onRefresh: () -> Unit,
-  onLoadMore: () -> Unit,
-  modifier: Modifier = Modifier,
+    courses: List<BykcCourseDto>,
+    isLoading: Boolean,
+    isLoadingMore: Boolean,
+    hasMorePages: Boolean,
+    error: String?,
+    onCourseClick: (BykcCourseDto) -> Unit,
+    onRefresh: () -> Unit,
+    onLoadMore: () -> Unit,
+    modifier: Modifier = Modifier,
 ) {
   val pullRefreshState = rememberPullRefreshState(refreshing = isLoading, onRefresh = onRefresh)
 
@@ -50,8 +50,8 @@ fun BykcCoursesScreen(
         }
         error != null -> {
           Box(
-            modifier = Modifier.fillMaxSize().padding(16.dp),
-            contentAlignment = Alignment.Center,
+              modifier = Modifier.fillMaxSize().padding(16.dp),
+              contentAlignment = Alignment.Center,
           ) {
             Text(text = "加载失败: $error", color = MaterialTheme.colorScheme.error)
           }
@@ -63,9 +63,9 @@ fun BykcCoursesScreen(
         }
         else -> {
           LazyColumn(
-            modifier = Modifier.fillMaxSize(),
-            contentPadding = PaddingValues(16.dp),
-            verticalArrangement = Arrangement.spacedBy(12.dp),
+              modifier = Modifier.fillMaxSize(),
+              contentPadding = PaddingValues(16.dp),
+              verticalArrangement = Arrangement.spacedBy(12.dp),
           ) {
             items(courses) { course ->
               BykcCourseCard(course = course, onClick = { onCourseClick(course) })
@@ -75,8 +75,8 @@ fun BykcCoursesScreen(
             if (hasMorePages) {
               item {
                 Box(
-                  modifier = Modifier.fillMaxWidth().padding(16.dp),
-                  contentAlignment = Alignment.Center,
+                    modifier = Modifier.fillMaxWidth().padding(16.dp),
+                    contentAlignment = Alignment.Center,
                 ) {
                   if (isLoadingMore) {
                     Column(horizontalAlignment = Alignment.CenterHorizontally) {
@@ -94,13 +94,13 @@ fun BykcCoursesScreen(
             } else if (courses.isNotEmpty()) {
               item {
                 Box(
-                  modifier = Modifier.fillMaxWidth().padding(16.dp),
-                  contentAlignment = Alignment.Center,
+                    modifier = Modifier.fillMaxWidth().padding(16.dp),
+                    contentAlignment = Alignment.Center,
                 ) {
                   Text(
-                    "没有更多课程了",
-                    style = MaterialTheme.typography.bodySmall,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                      "没有更多课程了",
+                      style = MaterialTheme.typography.bodySmall,
+                      color = MaterialTheme.colorScheme.onSurfaceVariant,
                   )
                 }
               }
@@ -111,12 +111,12 @@ fun BykcCoursesScreen(
     }
 
     PullRefreshIndicator(
-      refreshing = isLoading,
-      state = pullRefreshState,
-      modifier = Modifier.align(Alignment.TopCenter),
-      backgroundColor = MaterialTheme.colorScheme.surface,
-      contentColor = MaterialTheme.colorScheme.primary,
-      scale = true,
+        refreshing = isLoading,
+        state = pullRefreshState,
+        modifier = Modifier.align(Alignment.TopCenter),
+        backgroundColor = MaterialTheme.colorScheme.surface,
+        contentColor = MaterialTheme.colorScheme.primary,
+        scale = true,
     )
   }
 }
@@ -124,24 +124,24 @@ fun BykcCoursesScreen(
 @Composable
 fun BykcCourseCard(course: BykcCourseDto, onClick: () -> Unit, modifier: Modifier = Modifier) {
   Card(
-    modifier = modifier.fillMaxWidth().clickable(onClick = onClick),
-    shape = RoundedCornerShape(12.dp),
-    elevation = CardDefaults.cardElevation(defaultElevation = 2.dp),
+      modifier = modifier.fillMaxWidth().clickable(onClick = onClick),
+      shape = RoundedCornerShape(12.dp),
+      elevation = CardDefaults.cardElevation(defaultElevation = 2.dp),
   ) {
     Column(modifier = Modifier.padding(16.dp)) {
       // 课程名称与状态
       Row(
-        modifier = Modifier.fillMaxWidth(),
-        horizontalArrangement = Arrangement.SpaceBetween,
-        verticalAlignment = Alignment.CenterVertically,
+          modifier = Modifier.fillMaxWidth(),
+          horizontalArrangement = Arrangement.SpaceBetween,
+          verticalAlignment = Alignment.CenterVertically,
       ) {
         Text(
-          text = course.courseName,
-          style = MaterialTheme.typography.titleMedium,
-          fontWeight = FontWeight.Bold,
-          modifier = Modifier.weight(1f),
-          maxLines = 2,
-          overflow = TextOverflow.Ellipsis,
+            text = course.courseName,
+            style = MaterialTheme.typography.titleMedium,
+            fontWeight = FontWeight.Bold,
+            modifier = Modifier.weight(1f),
+            maxLines = 2,
+            overflow = TextOverflow.Ellipsis,
         )
 
         Spacer(modifier = Modifier.width(8.dp))
@@ -167,15 +167,15 @@ fun BykcCourseCard(course: BykcCourseDto, onClick: () -> Unit, modifier: Modifie
         Row {
           course.category?.let { category ->
             SuggestionChip(
-              onClick = {},
-              label = { Text(category, style = MaterialTheme.typography.labelSmall) },
-              modifier = Modifier.padding(end = 4.dp),
+                onClick = {},
+                label = { Text(category, style = MaterialTheme.typography.labelSmall) },
+                modifier = Modifier.padding(end = 4.dp),
             )
           }
           course.subCategory?.let { subCategory ->
             SuggestionChip(
-              onClick = {},
-              label = { Text(subCategory, style = MaterialTheme.typography.labelSmall) },
+                onClick = {},
+                label = { Text(subCategory, style = MaterialTheme.typography.labelSmall) },
             )
           }
         }
@@ -184,20 +184,23 @@ fun BykcCourseCard(course: BykcCourseDto, onClick: () -> Unit, modifier: Modifie
       // 选课情况
       Spacer(modifier = Modifier.height(8.dp))
       val progress =
-        remember(course.courseCurrentCount, course.courseMaxCount) {
-          if (course.courseMaxCount > 0) {
-            (course.courseCurrentCount.toFloat() / course.courseMaxCount.toFloat()).coerceIn(0f, 1f)
-          } else 0f
-        }
+          remember(course.courseCurrentCount, course.courseMaxCount) {
+            if (course.courseMaxCount > 0) {
+              (course.courseCurrentCount.toFloat() / course.courseMaxCount.toFloat()).coerceIn(
+                  0f,
+                  1f,
+              )
+            } else 0f
+          }
       LinearProgressIndicator(
-        progress = { progress },
-        modifier = Modifier.fillMaxWidth().height(6.dp),
+          progress = { progress },
+          modifier = Modifier.fillMaxWidth().height(6.dp),
       )
       Spacer(modifier = Modifier.height(4.dp))
       Text(
-        text = "已报名 ${course.courseCurrentCount} / ${course.courseMaxCount}",
-        style = MaterialTheme.typography.bodySmall,
-        color = MaterialTheme.colorScheme.onSurfaceVariant,
+          text = "已报名 ${course.courseCurrentCount} / ${course.courseMaxCount}",
+          style = MaterialTheme.typography.bodySmall,
+          color = MaterialTheme.colorScheme.onSurfaceVariant,
       )
     }
   }
@@ -206,43 +209,49 @@ fun BykcCourseCard(course: BykcCourseDto, onClick: () -> Unit, modifier: Modifie
 @Composable
 fun CourseStatusChip(status: String, selected: Boolean) {
   val (containerColor, labelColor) =
-    when {
-      selected ->
-        Pair(
-          MaterialTheme.colorScheme.primaryContainer,
-          MaterialTheme.colorScheme.onPrimaryContainer,
-        )
-      status == BykcCourseStatus.AVAILABLE ->
-        Pair(
-          MaterialTheme.colorScheme.tertiaryContainer,
-          MaterialTheme.colorScheme.onTertiaryContainer,
-        )
-      status == BykcCourseStatus.FULL ||
-        status == BykcCourseStatus.ENDED ||
-        status == BykcCourseStatus.EXPIRED ->
-        Pair(MaterialTheme.colorScheme.errorContainer, MaterialTheme.colorScheme.onErrorContainer)
-      else ->
-        Pair(
-          MaterialTheme.colorScheme.secondaryContainer,
-          MaterialTheme.colorScheme.onSecondaryContainer,
-        )
-    }
+      when {
+        selected ->
+            Pair(
+                MaterialTheme.colorScheme.primaryContainer,
+                MaterialTheme.colorScheme.onPrimaryContainer,
+            )
+        status == BykcCourseStatus.AVAILABLE ->
+            Pair(
+                MaterialTheme.colorScheme.tertiaryContainer,
+                MaterialTheme.colorScheme.onTertiaryContainer,
+            )
+        status == BykcCourseStatus.FULL ||
+            status == BykcCourseStatus.ENDED ||
+            status == BykcCourseStatus.EXPIRED ->
+            Pair(
+                MaterialTheme.colorScheme.errorContainer,
+                MaterialTheme.colorScheme.onErrorContainer,
+            )
+        else ->
+            Pair(
+                MaterialTheme.colorScheme.secondaryContainer,
+                MaterialTheme.colorScheme.onSecondaryContainer,
+            )
+      }
 
   AssistChip(
-    onClick = {},
-    label = {
-      Text(
-        text = if (selected) "已选" else status,
-        style = MaterialTheme.typography.labelMedium,
-        color = labelColor,
-      )
-    },
-    leadingIcon =
-      if (selected) {
-        { Icon(Icons.Default.Check, contentDescription = null, tint = labelColor) }
-      } else null,
-    colors =
-      AssistChipDefaults.assistChipColors(containerColor = containerColor, labelColor = labelColor),
+      onClick = {},
+      label = {
+        Text(
+            text = if (selected) "已选" else status,
+            style = MaterialTheme.typography.labelMedium,
+            color = labelColor,
+        )
+      },
+      leadingIcon =
+          if (selected) {
+            { Icon(Icons.Default.Check, contentDescription = null, tint = labelColor) }
+          } else null,
+      colors =
+          AssistChipDefaults.assistChipColors(
+              containerColor = containerColor,
+              labelColor = labelColor,
+          ),
   )
 }
 
@@ -250,15 +259,15 @@ fun CourseStatusChip(status: String, selected: Boolean) {
 fun InfoRow(label: String, value: String) {
   Row(modifier = Modifier.padding(vertical = 2.dp)) {
     Text(
-      text = "$label: ",
-      style = MaterialTheme.typography.bodyMedium,
-      color = MaterialTheme.colorScheme.onSurfaceVariant,
+        text = "$label: ",
+        style = MaterialTheme.typography.bodyMedium,
+        color = MaterialTheme.colorScheme.onSurfaceVariant,
     )
     Text(
-      text = value,
-      style = MaterialTheme.typography.bodyMedium,
-      maxLines = 1,
-      overflow = TextOverflow.Ellipsis,
+        text = value,
+        style = MaterialTheme.typography.bodyMedium,
+        maxLines = 1,
+        overflow = TextOverflow.Ellipsis,
     )
   }
 }
