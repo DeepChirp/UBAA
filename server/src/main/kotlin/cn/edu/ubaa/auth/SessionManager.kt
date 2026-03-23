@@ -2,6 +2,7 @@ package cn.edu.ubaa.auth
 
 import cn.edu.ubaa.model.dto.UserData
 import cn.edu.ubaa.utils.JwtUtil
+import io.github.cdimascio.dotenv.dotenv
 import io.ktor.client.HttpClient
 import io.ktor.client.engine.cio.CIO
 import io.ktor.client.plugins.HttpTimeout
@@ -384,7 +385,10 @@ class SessionManager(
   internal fun restoreMutexCountForTesting(): Int = restoreMutexes.size
 
   companion object {
-    private val DEFAULT_REDIS_URI: String = System.getenv("REDIS_URI") ?: "redis://localhost:6379"
+    private val dotenv = dotenv { ignoreIfMissing = true }
+
+    private val DEFAULT_REDIS_URI: String =
+        dotenv["REDIS_URI"] ?: System.getenv("REDIS_URI") ?: "redis://localhost:6379"
   }
 }
 
