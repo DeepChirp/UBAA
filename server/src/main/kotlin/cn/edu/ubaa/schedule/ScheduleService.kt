@@ -1,6 +1,8 @@
 package cn.edu.ubaa.schedule
 
 import cn.edu.ubaa.auth.GlobalSessionManager
+import cn.edu.ubaa.auth.ByxtService
+import cn.edu.ubaa.auth.LoginException
 import cn.edu.ubaa.auth.SessionManager
 import cn.edu.ubaa.model.dto.*
 import cn.edu.ubaa.utils.VpnCipher
@@ -37,8 +39,10 @@ class ScheduleService(
     val response = session.getTerms()
     val body = response.bodyAsText()
 
-    if (response.status == HttpStatusCode.Unauthorized)
-        throw ScheduleException("BYXT session expired")
+    if (isByxtSessionExpired(response, body)) {
+      sessionManager.invalidateSession(username)
+      throw LoginException("BYXT session expired")
+    }
     if (response.status != HttpStatusCode.OK) throw ScheduleException("Fetch terms failed")
 
     val termResponse =
@@ -58,6 +62,10 @@ class ScheduleService(
     val response = session.getWeeks(termCode)
     val body = response.bodyAsText()
 
+    if (isByxtSessionExpired(response, body)) {
+      sessionManager.invalidateSession(username)
+      throw LoginException("BYXT session expired")
+    }
     if (response.status != HttpStatusCode.OK) throw ScheduleException("Fetch weeks failed")
     val weekResponse =
         try {
@@ -75,6 +83,10 @@ class ScheduleService(
     val response = session.getWeeklySchedule(termCode, week)
     val body = response.bodyAsText()
 
+    if (isByxtSessionExpired(response, body)) {
+      sessionManager.invalidateSession(username)
+      throw LoginException("BYXT session expired")
+    }
     if (response.status != HttpStatusCode.OK) throw ScheduleException("Fetch schedule failed")
     val scheduleResponse =
         try {
@@ -93,6 +105,10 @@ class ScheduleService(
     val response = session.getTodaySchedule(today)
     val body = response.bodyAsText()
 
+    if (isByxtSessionExpired(response, body)) {
+      sessionManager.invalidateSession(username)
+      throw LoginException("BYXT session expired")
+    }
     if (response.status != HttpStatusCode.OK) throw ScheduleException("Fetch today schedule failed")
     val todayResponse =
         try {
@@ -155,6 +171,10 @@ class ScheduleService(
       applyScheduleHeaders()
     }
   }
+
+  private fun isByxtSessionExpired(response: HttpResponse, body: String): Boolean =
+      response.status == HttpStatusCode.Unauthorized ||
+          !ByxtService.isSessionReady(response.status, response.request.url.toString(), body)
 }
 
 class ScheduleException(message: String) : Exception(message)

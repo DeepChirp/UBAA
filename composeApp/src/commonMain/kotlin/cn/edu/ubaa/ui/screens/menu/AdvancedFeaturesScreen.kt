@@ -15,6 +15,7 @@ import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
 import androidx.compose.foundation.lazy.grid.items
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.AssignmentTurnedIn
+import androidx.compose.material.icons.filled.DateRange
 import androidx.compose.material.icons.filled.HowToReg
 import androidx.compose.material.icons.filled.MoreHoriz
 import androidx.compose.material3.Card
@@ -40,6 +41,7 @@ private data class AdvancedFeatureItem(
 @Composable
 fun AdvancedFeaturesScreen(
     onSigninClick: () -> Unit,
+    onCgyyClick: () -> Unit,
     onEvaluationClick: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
@@ -50,6 +52,12 @@ fun AdvancedFeaturesScreen(
               title = "课程签到",
               description = "快速完成课堂签到",
               icon = Icons.Default.HowToReg,
+          ),
+          AdvancedFeatureItem(
+              id = "cgyy",
+              title = "研讨室预约",
+              description = "查询、提交和管理研讨室预约",
+              icon = Icons.Default.DateRange,
           ),
           AdvancedFeatureItem(
               id = "evaluation",
@@ -77,6 +85,7 @@ fun AdvancedFeaturesScreen(
             onClick = {
               when (feature.id) {
                 "signin" -> onSigninClick()
+                "cgyy" -> onCgyyClick()
                 "evaluation" -> onEvaluationClick()
               }
             },

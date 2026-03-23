@@ -1,6 +1,7 @@
 package cn.edu.ubaa.user
 
 import cn.edu.ubaa.auth.GlobalSessionManager
+import cn.edu.ubaa.auth.LoginException
 import cn.edu.ubaa.auth.SessionManager
 import cn.edu.ubaa.model.dto.UserInfo
 import cn.edu.ubaa.model.dto.UserInfoResponse
@@ -26,8 +27,11 @@ class UserService(
     val response = session.getUserInfo()
     val body = response.bodyAsText()
 
-    if (response.status != HttpStatusCode.OK)
-        throw UserInfoException("Fetch failed: ${response.status}")
+    if (isUcSessionExpired(response, body)) {
+      sessionManager.invalidateSession(username)
+      throw LoginException("UC session expired")
+    }
+    if (response.status != HttpStatusCode.OK) throw UserInfoException("Fetch failed: ${response.status}")
 
     val resp =
         try {
@@ -43,6 +47,16 @@ class UserService(
 
   private suspend fun SessionManager.UserSession.getUserInfo(): HttpResponse {
     return client.get(VpnCipher.toVpnUrl("https://uc.buaa.edu.cn/api/uc/userinfo"))
+  }
+
+  private fun isUcSessionExpired(response: HttpResponse, body: String): Boolean {
+    if (response.status == HttpStatusCode.Unauthorized) return true
+    if (response.call.request.url.toString().contains("sso.buaa.edu.cn", ignoreCase = true)) return true
+    val trimmed = body.trimStart()
+    return trimmed.startsWith("<!DOCTYPE html", ignoreCase = true) ||
+        trimmed.startsWith("<html", ignoreCase = true) ||
+        body.contains("input name=\"execution\"") ||
+        body.contains("统一身份认证", ignoreCase = true)
   }
 }
 

@@ -124,7 +124,7 @@ fun Route.authRouting() {
     get("/status") {
       try {
         val session = call.getUserSession()
-        if (session != null) {
+        if (session != null && authService.validateSession(session)) {
           application.log.info(
               "Session status check: user {} is authenticated",
               session.userData.name,
@@ -134,9 +134,10 @@ fun Route.authRouting() {
                   user = session.userData,
                   lastActivity = session.lastActivity().toString(),
                   authenticatedAt = session.authenticatedAt.toString(),
-              )
+          )
           call.respond(HttpStatusCode.OK, statusResponse)
         } else {
+          session?.let { sessionManager.invalidateSession(it.username) }
           application.log.warn("Session status check failed: invalid or expired token")
           call.respond(
               HttpStatusCode.Unauthorized,

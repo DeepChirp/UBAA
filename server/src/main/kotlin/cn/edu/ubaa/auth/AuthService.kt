@@ -171,18 +171,19 @@ class AuthService(
       )
 
       val userData: UserData?
+      val byxtReady: Boolean
       coroutineScope {
         val byxtJob = async { ByxtService.initializeSession(client) }
         userData = verifySession(client)
-        byxtJob.await()
+        byxtReady = byxtJob.await()
       }
 
-      if (userData != null) {
+      if (userData != null && byxtReady) {
         sessionManager.commitSession(activeCandidate, userData)
         committed = true
         return refreshTokenService.issueLoginTokens(userData)
       }
-      failLogin("session verification failed")
+      failLogin("session verification failed or BYXT initialization failed")
     } finally {
       if (!committed) {
         sessionCandidate?.let {
@@ -238,13 +239,14 @@ class AuthService(
           )
 
           val userData: UserData?
+          val byxtReady: Boolean
           coroutineScope {
             val byxtJob = async { ByxtService.initializeSession(client) }
             userData = verifySession(client)
-            byxtJob.await()
+            byxtReady = byxtJob.await()
           }
 
-          if (userData != null && !userData.schoolid.isNullOrBlank()) {
+          if (userData != null && byxtReady && !userData.schoolid.isNullOrBlank()) {
             val sessionCandidate =
                 sessionManager.promotePreLoginSession(clientId, userData.schoolid)
             if (sessionCandidate != null) {
@@ -359,6 +361,17 @@ class AuthService(
 
   suspend fun refreshTokens(refreshToken: String): TokenRefreshResponse? =
       refreshTokenService.refreshTokens(refreshToken, sessionManager)
+
+  suspend fun validateSession(session: SessionManager.UserSession): Boolean {
+    val userData: UserData?
+    val byxtReady: Boolean
+    coroutineScope {
+      val byxtJob = async { ByxtService.initializeSession(session.client) }
+      userData = verifySession(session.client)
+      byxtReady = byxtJob.await()
+    }
+    return userData != null && byxtReady
+  }
 
   /**
    * 跟随 SSO 流程中的所有重定向，并检测是否存在错误提示或依然停留在登录页。

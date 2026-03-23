@@ -23,6 +23,12 @@ import cn.edu.ubaa.ui.common.components.BottomNavigation
 import cn.edu.ubaa.ui.common.components.Sidebar
 import cn.edu.ubaa.ui.common.util.BackHandlerCompat
 import cn.edu.ubaa.ui.screens.bykc.*
+import cn.edu.ubaa.ui.screens.cgyy.CgyyHomeScreen
+import cn.edu.ubaa.ui.screens.cgyy.CgyyLockCodeScreen
+import cn.edu.ubaa.ui.screens.cgyy.CgyyOrdersScreen
+import cn.edu.ubaa.ui.screens.cgyy.CgyyReserveFormScreen
+import cn.edu.ubaa.ui.screens.cgyy.CgyyReservePickerScreen
+import cn.edu.ubaa.ui.screens.cgyy.CgyyViewModel
 import cn.edu.ubaa.ui.screens.classroom.ClassroomQueryScreen
 import cn.edu.ubaa.ui.screens.classroom.ClassroomViewModel
 import cn.edu.ubaa.ui.screens.evaluation.EvaluationScreen
@@ -56,6 +62,11 @@ enum class AppScreen {
   BYKC_CHOSEN,
   BYKC_STATISTICS,
   SIGNIN,
+  CGYY_HOME,
+  CGYY_RESERVE_PICKER,
+  CGYY_RESERVE_FORM,
+  CGYY_ORDERS,
+  CGYY_LOCK_CODE,
   CLASSROOM_QUERY,
   EVALUATION,
   SPOC_ASSIGNMENTS,
@@ -95,6 +106,7 @@ fun MainAppScreen(
   val signinViewModel: SigninViewModel =
       viewModel(key = "signin-${userData.schoolid}") { SigninViewModel() }
   val evaluationViewModel: EvaluationViewModel = viewModel { EvaluationViewModel() }
+  val cgyyViewModel: CgyyViewModel = viewModel(key = "cgyy-${userData.schoolid}") { CgyyViewModel() }
   val classroomViewModel: ClassroomViewModel = viewModel { ClassroomViewModel() }
   val spocViewModel: SpocViewModel =
       viewModel(key = "spoc-${userData.schoolid}") { SpocViewModel() }
@@ -139,6 +151,11 @@ fun MainAppScreen(
               AppScreen.BYKC_CHOSEN,
               AppScreen.BYKC_STATISTICS,
               AppScreen.SIGNIN,
+              AppScreen.CGYY_HOME,
+              AppScreen.CGYY_RESERVE_PICKER,
+              AppScreen.CGYY_RESERVE_FORM,
+              AppScreen.CGYY_ORDERS,
+              AppScreen.CGYY_LOCK_CODE,
               AppScreen.EVALUATION -> BottomNavTab.ADVANCED
               else -> null
             }
@@ -167,6 +184,11 @@ fun MainAppScreen(
             AppScreen.BYKC_CHOSEN,
             AppScreen.BYKC_STATISTICS,
             AppScreen.SIGNIN,
+            AppScreen.CGYY_HOME,
+            AppScreen.CGYY_RESERVE_PICKER,
+            AppScreen.CGYY_RESERVE_FORM,
+            AppScreen.CGYY_ORDERS,
+            AppScreen.CGYY_LOCK_CODE,
             AppScreen.EVALUATION -> BottomNavTab.ADVANCED
             else -> null
           }
@@ -199,6 +221,11 @@ fun MainAppScreen(
         AppScreen.BYKC_CHOSEN -> "我的课程"
         AppScreen.BYKC_STATISTICS -> "课程统计"
         AppScreen.SIGNIN -> "课程签到"
+        AppScreen.CGYY_HOME -> "研讨室预约"
+        AppScreen.CGYY_RESERVE_PICKER -> "预约研讨室"
+        AppScreen.CGYY_RESERVE_FORM -> "填写预约信息"
+        AppScreen.CGYY_ORDERS -> "我的预约"
+        AppScreen.CGYY_LOCK_CODE -> "查看密码"
         AppScreen.CLASSROOM_QUERY -> "空教室查询"
         AppScreen.EVALUATION -> "自动评教"
         AppScreen.SPOC_ASSIGNMENTS -> "SPOC作业"
@@ -285,6 +312,7 @@ fun MainAppScreen(
           AppScreen.ADVANCED ->
               AdvancedFeaturesScreen(
                   onSigninClick = { navigateTo(AppScreen.SIGNIN) },
+                  onCgyyClick = { navigateTo(AppScreen.CGYY_HOME) },
                   onEvaluationClick = { navigateTo(AppScreen.EVALUATION) },
               )
           AppScreen.MY -> MyScreen(userInfo = userInfo)
@@ -376,6 +404,28 @@ fun MainAppScreen(
               )
           AppScreen.CLASSROOM_QUERY ->
               ClassroomQueryScreen(viewModel = classroomViewModel, onBackClick = { navigateBack() })
+          AppScreen.CGYY_HOME ->
+              CgyyHomeScreen(
+                  onReserveClick = { navigateTo(AppScreen.CGYY_RESERVE_PICKER) },
+                  onOrdersClick = {
+                    cgyyViewModel.ensureOrdersLoaded()
+                    navigateTo(AppScreen.CGYY_ORDERS)
+                  },
+                  onLockCodeClick = { navigateTo(AppScreen.CGYY_LOCK_CODE) },
+              )
+          AppScreen.CGYY_RESERVE_PICKER ->
+              CgyyReservePickerScreen(
+                  viewModel = cgyyViewModel,
+                  onNext = { navigateTo(AppScreen.CGYY_RESERVE_FORM) },
+              )
+          AppScreen.CGYY_RESERVE_FORM ->
+              CgyyReserveFormScreen(
+                  viewModel = cgyyViewModel,
+                  onBackToSelection = { navigateBack() },
+                  onSubmitSuccess = { navigateTo(AppScreen.CGYY_ORDERS) },
+              )
+          AppScreen.CGYY_ORDERS -> CgyyOrdersScreen(viewModel = cgyyViewModel)
+          AppScreen.CGYY_LOCK_CODE -> CgyyLockCodeScreen(viewModel = cgyyViewModel)
           AppScreen.EVALUATION -> EvaluationScreen(viewModel = evaluationViewModel)
           AppScreen.SPOC_ASSIGNMENTS ->
               SpocAssignmentsScreen(
@@ -412,6 +462,11 @@ fun MainAppScreen(
                   AppScreen.BYKC_CHOSEN,
                   AppScreen.BYKC_STATISTICS,
                   AppScreen.CLASSROOM_QUERY,
+                  AppScreen.CGYY_HOME,
+                  AppScreen.CGYY_RESERVE_PICKER,
+                  AppScreen.CGYY_RESERVE_FORM,
+                  AppScreen.CGYY_ORDERS,
+                  AppScreen.CGYY_LOCK_CODE,
                   AppScreen.EVALUATION,
                   AppScreen.SPOC_ASSIGNMENTS,
                   AppScreen.SPOC_ASSIGNMENT_DETAIL,
