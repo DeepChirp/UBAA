@@ -107,9 +107,9 @@ class CgyyViewModel(
               purposeTypes = purposeTypes,
               selectedSiteId = siteId,
               purposeType =
-                  _uiState.value.purposeType
-                      ?.takeIf { currentType -> purposeTypes.any { it.key == currentType } }
-                      ?: purposeTypes.firstOrNull()?.key,
+                  _uiState.value.purposeType?.takeIf { currentType ->
+                    purposeTypes.any { it.key == currentType }
+                  } ?: purposeTypes.firstOrNull()?.key,
               initialError =
                   sitesResult.exceptionOrNull()?.message
                       ?: purposeTypesResult.exceptionOrNull()?.message,
@@ -190,7 +190,8 @@ class CgyyViewModel(
             timeId = timeId,
             venueSpaceGroupId = venueSpaceGroupId,
         )
-    val orderedTimeIds = currentState.dayInfo?.timeSlots?.mapIndexed { index, slot -> slot.id to index }?.toMap()
+    val orderedTimeIds =
+        currentState.dayInfo?.timeSlots?.mapIndexed { index, slot -> slot.id to index }?.toMap()
     val existingSelections =
         currentState.selections.sortedBy { orderedTimeIds?.get(it.timeId) ?: Int.MAX_VALUE }
     val nextSelections =
@@ -201,8 +202,9 @@ class CgyyViewModel(
           existingSelections.any { it.spaceId != spaceId } -> listOf(tappedSelection)
           existingSelections.size == 1 &&
               areAdjacent(existingSelections.first().timeId, timeId, orderedTimeIds) ->
-              listOf(existingSelections.first(), tappedSelection)
-                  .sortedBy { orderedTimeIds?.get(it.timeId) ?: Int.MAX_VALUE }
+              listOf(existingSelections.first(), tappedSelection).sortedBy {
+                orderedTimeIds?.get(it.timeId) ?: Int.MAX_VALUE
+              }
           else -> listOf(tappedSelection)
         }
     val nextState = _uiState.value.copy(selections = nextSelections, actionMessage = null)
@@ -459,7 +461,11 @@ class CgyyViewModel(
     )
   }
 
-  private fun areAdjacent(firstTimeId: Int, secondTimeId: Int, orderedTimeIds: Map<Int, Int>?): Boolean {
+  private fun areAdjacent(
+      firstTimeId: Int,
+      secondTimeId: Int,
+      orderedTimeIds: Map<Int, Int>?,
+  ): Boolean {
     val firstIndex = orderedTimeIds?.get(firstTimeId) ?: return false
     val secondIndex = orderedTimeIds[secondTimeId] ?: return false
     return abs(firstIndex - secondIndex) == 1

@@ -1,7 +1,7 @@
 package cn.edu.ubaa.ui
 
-import cn.edu.ubaa.api.CgyyReservationFormStore
 import cn.edu.ubaa.api.CgyyApi
+import cn.edu.ubaa.api.CgyyReservationFormStore
 import cn.edu.ubaa.model.dto.CgyyDayInfoResponse
 import cn.edu.ubaa.model.dto.CgyyLockCodeResponse
 import cn.edu.ubaa.model.dto.CgyyOrderDto
@@ -244,7 +244,7 @@ class CgyyViewModelTest {
                                       timeId = 243,
                                       reservationStatus = 1,
                                       isReservable = true,
-                                  )
+                                  ),
                               ),
                       ),
                       CgyySpaceAvailabilityDto(
@@ -267,7 +267,7 @@ class CgyyViewModelTest {
                                       timeId = 243,
                                       reservationStatus = 1,
                                       isReservable = true,
-                                  )
+                                  ),
                               ),
                       ),
                   ),
