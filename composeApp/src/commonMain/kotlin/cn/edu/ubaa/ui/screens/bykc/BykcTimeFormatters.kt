@@ -1,3 +1,5 @@
+@file:OptIn(kotlin.time.ExperimentalTime::class)
+
 package cn.edu.ubaa.ui.screens.bykc
 
 import cn.edu.ubaa.model.dto.BykcCourseDetailDto

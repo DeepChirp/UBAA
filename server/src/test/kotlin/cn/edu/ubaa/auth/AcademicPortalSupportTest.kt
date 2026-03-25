@@ -45,6 +45,19 @@ class AcademicPortalSupportTest {
   }
 
   @Test
+  fun classifyGraduatePortalResponseWithVpnRewrittenUrl() {
+    val result =
+        ByxtService.classifyGraduateResponse(
+            status = HttpStatusCode.OK,
+            finalUrl =
+                "https://d.buaa.edu.cn/http/77726476706e69737468656265737421fff944d226387d1e7b0dc7a99c406d36/gsapp/sys/yjsemaphome/modules/pubWork/getUserInfo.do",
+            body = """{"code":"0","data":{"userId":"SY2511503"}}""",
+        )
+
+    assertEquals(AcademicPortalProbeResult.GRADUATE_READY, result)
+  }
+
+  @Test
   fun classifySsoRedirectAsUnauthenticated() {
     val result =
         ByxtService.classifyUndergradResponse(
@@ -138,6 +151,13 @@ class AcademicPortalSupportTest {
     assertEquals(AcademicPortalType.GRADUATE, session.portalType)
   }
 
+  @Test
+  fun initializeSessionUsesGraduatePortalWhenUndergradRequiresSso() = runBlocking {
+    val result = ByxtService.initializeSession(undergradSsoGraduateReadyMockClient())
+
+    assertEquals(AcademicPortalProbeResult.GRADUATE_READY, result)
+  }
+
   private fun createSessionManager(): SessionManager {
     return SessionManager(
         sessionStore = InMemorySessionStore(),
@@ -170,6 +190,37 @@ class AcademicPortalSupportTest {
                     content = "",
                     status = HttpStatusCode.OK,
                     headers = jsonHeaders(),
+                )
+            request.url.encodedPath.endsWith(
+                "/gsapp/sys/yjsemaphome/modules/pubWork/getUserInfo.do"
+            ) ->
+                respond(
+                    content = """{"code":"0","data":{"userId":"SY2511503"}}""",
+                    status = HttpStatusCode.OK,
+                    headers = jsonHeaders(),
+                )
+            else ->
+                respond(
+                    content = "",
+                    status = HttpStatusCode.OK,
+                    headers = jsonHeaders(),
+                )
+          }
+        }
+      }
+    }
+  }
+
+  private fun undergradSsoGraduateReadyMockClient(): HttpClient {
+    return HttpClient(MockEngine) {
+      engine {
+        addHandler { request ->
+          when {
+            request.url.encodedPath.endsWith("/jwapp/sys/homeapp/api/home/currentUser.do") ->
+                respond(
+                    content = "",
+                    status = HttpStatusCode.Found,
+                    headers = headersOf(HttpHeaders.Location, "https://sso.buaa.edu.cn/login"),
                 )
             request.url.encodedPath.endsWith(
                 "/gsapp/sys/yjsemaphome/modules/pubWork/getUserInfo.do"

@@ -40,19 +40,17 @@ object ByxtService {
     if (undergradResult == AcademicPortalProbeResult.UNDERGRAD_READY) {
       return undergradResult
     }
-    if (undergradResult == AcademicPortalProbeResult.SSO_REQUIRED) {
-      return undergradResult
-    }
 
     val graduateResult = probeGraduatePortal(client)
     if (graduateResult.isReady) {
       return graduateResult
     }
 
-    return if (graduateResult == AcademicPortalProbeResult.SSO_REQUIRED) {
-      graduateResult
-    } else {
-      undergradResult
+    return when {
+      undergradResult == AcademicPortalProbeResult.SSO_REQUIRED ||
+          graduateResult == AcademicPortalProbeResult.SSO_REQUIRED ->
+          AcademicPortalProbeResult.SSO_REQUIRED
+      else -> AcademicPortalProbeResult.UNAVAILABLE
     }
   }
 
@@ -99,9 +97,6 @@ object ByxtService {
   ): AcademicPortalProbeResult {
     if (isSsoRedirect(status, finalUrl, body)) return AcademicPortalProbeResult.SSO_REQUIRED
     if (status != HttpStatusCode.OK) return AcademicPortalProbeResult.UNAVAILABLE
-    if (!finalUrl.contains("gsmis.buaa.edu.cn", ignoreCase = true)) {
-      return AcademicPortalProbeResult.UNAVAILABLE
-    }
 
     return try {
       val parsed = json.decodeFromString(GraduateUserInfoResponse.serializer(), body)

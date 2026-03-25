@@ -6,6 +6,7 @@ import cn.edu.ubaa.auth.SessionManager
 import cn.edu.ubaa.model.dto.SpocSubmissionStatus
 import kotlin.test.Test
 import kotlin.test.assertEquals
+import kotlin.test.assertTrue
 import kotlinx.coroutines.runBlocking
 
 class SpocServiceTest {
@@ -59,6 +60,20 @@ class SpocServiceTest {
         assertEquals("2026-03-11 23:40:00", detail.submittedAt)
         assertEquals("请尽量给出自己的思考。", detail.contentPlainText)
       }
+
+  @Test
+  fun `get assignments tolerates course lookup failure with degraded metadata`() = runBlocking {
+    val fakeClient = CourseLookupFailureSpocClient()
+    val service = SpocService(clientProvider = { fakeClient })
+
+    val response = service.getAssignments("24182104")
+
+    assertEquals(1, response.assignments.size)
+    assertEquals("编译原理", response.assignments.first().courseName)
+    assertEquals(null, response.assignments.first().teacherName)
+    assertEquals(1, fakeClient.courseCalls)
+    assertTrue(fakeClient.pagedAssignmentsCalls > 0)
+  }
 
   private class FakeSpocClient :
       SpocClient(
@@ -128,6 +143,54 @@ class SpocServiceTest {
       } else {
         null
       }
+    }
+
+    override fun close() = Unit
+  }
+
+  private class CourseLookupFailureSpocClient :
+      SpocClient(
+          username = "24182104",
+          sessionManager =
+              SessionManager(
+                  sessionStore = InMemorySessionStore(),
+                  cookieStorageFactory = InMemoryCookieStorageFactory(),
+              ),
+      ) {
+    var courseCalls = 0
+    var pagedAssignmentsCalls = 0
+
+    override suspend fun getCurrentTerm(): SpocCurrentTermContent {
+      return SpocCurrentTermContent(dqxq = "2026年春季学期", mrxq = "2025-20262")
+    }
+
+    override suspend fun getCourses(termCode: String): List<SpocCourseRaw> {
+      courseCalls++
+      throw SpocException("course lookup failed")
+    }
+
+    override suspend fun getAllAssignments(termCode: String): List<SpocPagedAssignmentRaw> {
+      pagedAssignmentsCalls++
+      return listOf(
+          SpocPagedAssignmentRaw(
+              zyid = "a1",
+              tjzt = "未做",
+              zyjzsj = "2026-03-11T15:59:00.000+00:00",
+              zymc = "关于Agentic Coding的思考",
+              zykssj = "2026-03-03T16:00:00.000+00:00",
+              sskcid = "course-1",
+              kcmc = "编译原理",
+              mf = "满分:0",
+          )
+      )
+    }
+
+    override suspend fun getAssignmentDetail(assignmentId: String): SpocAssignmentDetailRaw {
+      throw UnsupportedOperationException("not needed for this test")
+    }
+
+    override suspend fun getSubmission(assignmentId: String): SpocSubmissionRaw? {
+      throw UnsupportedOperationException("not needed for this test")
     }
 
     override fun close() = Unit

@@ -4,6 +4,7 @@ import cn.edu.ubaa.model.dto.SpocAssignmentDetailDto
 import cn.edu.ubaa.model.dto.SpocAssignmentSummaryDto
 import cn.edu.ubaa.model.dto.SpocAssignmentsResponse
 import java.util.concurrent.ConcurrentHashMap
+import org.slf4j.LoggerFactory
 
 /** SPOC 作业业务服务。 */
 internal class SpocService(private val clientProvider: (String) -> SpocClient = ::SpocClient) {
@@ -13,13 +14,25 @@ internal class SpocService(private val clientProvider: (String) -> SpocClient = 
   )
 
   private val clientCache = ConcurrentHashMap<String, CachedClient>()
+  private val log = LoggerFactory.getLogger(SpocService::class.java)
 
   suspend fun getAssignments(username: String): SpocAssignmentsResponse {
     val client = getClient(username)
     val term = client.getCurrentTerm()
     val termCode = term.mrxq ?: throw SpocException("无法获取 SPOC 当前学期代码")
     val courseMap =
-        runCatching { client.getCourses(termCode).associateBy { it.kcid } }.getOrDefault(emptyMap())
+        try {
+          client.getCourses(termCode).associateBy { it.kcid }
+        } catch (e: Exception) {
+          // Degrade gracefully: assignments can still be shown even if course metadata is missing.
+          log.warn(
+              "Failed to fetch SPOC courses for username={} termCode={}, continuing without course metadata",
+              username,
+              termCode,
+              e,
+          )
+          emptyMap()
+        }
     val rawAssignments = client.getAllAssignments(termCode)
 
     val assignments =

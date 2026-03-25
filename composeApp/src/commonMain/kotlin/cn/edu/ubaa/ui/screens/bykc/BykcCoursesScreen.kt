@@ -22,8 +22,13 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import cn.edu.ubaa.model.dto.BykcCourseDto
 import cn.edu.ubaa.model.dto.BykcCourseStatus
+import kotlin.time.Clock
+import kotlin.time.ExperimentalTime
+import kotlinx.coroutines.delay
+import kotlinx.datetime.TimeZone
+import kotlinx.datetime.toLocalDateTime
 
-@OptIn(ExperimentalMaterial3Api::class, ExperimentalMaterialApi::class)
+@OptIn(ExperimentalMaterial3Api::class, ExperimentalMaterialApi::class, ExperimentalTime::class)
 @Composable
 fun BykcCoursesScreen(
     courses: List<BykcCourseDto>,
@@ -39,6 +44,15 @@ fun BykcCoursesScreen(
     modifier: Modifier = Modifier,
 ) {
   val pullRefreshState = rememberPullRefreshState(refreshing = isLoading, onRefresh = onRefresh)
+  val now by
+      produceState(
+          initialValue = Clock.System.now().toLocalDateTime(TimeZone.currentSystemDefault())
+      ) {
+        while (true) {
+          delay(60_000)
+          value = Clock.System.now().toLocalDateTime(TimeZone.currentSystemDefault())
+        }
+      }
   val visibleCourses =
       remember(courses, hideFullCourses) {
         if (hideFullCourses) courses.filterNot { it.isFullCourse() } else courses
@@ -97,7 +111,7 @@ fun BykcCoursesScreen(
               }
             } else {
               items(visibleCourses) { course ->
-                BykcCourseCard(course = course, onClick = { onCourseClick(course) })
+                BykcCourseCard(course = course, now = now, onClick = { onCourseClick(course) })
               }
             }
 
@@ -156,7 +170,12 @@ private fun BykcCourseDto.isFullCourse(): Boolean =
 
 @OptIn(ExperimentalLayoutApi::class)
 @Composable
-fun BykcCourseCard(course: BykcCourseDto, onClick: () -> Unit, modifier: Modifier = Modifier) {
+fun BykcCourseCard(
+    course: BykcCourseDto,
+    now: kotlinx.datetime.LocalDateTime,
+    onClick: () -> Unit,
+    modifier: Modifier = Modifier,
+) {
   Card(
       modifier = modifier.fillMaxWidth().clickable(onClick = onClick),
       shape = RoundedCornerShape(12.dp),
@@ -195,9 +214,11 @@ fun BykcCourseCard(course: BykcCourseDto, onClick: () -> Unit, modifier: Modifie
         InfoRow(label = "时间", value = formatDateRange(startDate, endDate))
       }
       val selectTimeDisplay =
-          remember(course.courseSelectStartDate, course.courseSelectEndDate) {
-            resolveSelectTimeDisplay(course.courseSelectStartDate, course.courseSelectEndDate)
-          }
+          resolveSelectTimeDisplay(
+              startDate = course.courseSelectStartDate,
+              endDate = course.courseSelectEndDate,
+              now = now,
+          )
       selectTimeDisplay?.let { selectTime ->
         InfoRow(label = selectTime.label, value = selectTime.value)
       }

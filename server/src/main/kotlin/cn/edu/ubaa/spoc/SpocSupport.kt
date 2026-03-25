@@ -31,6 +31,7 @@ internal data class SpocLoginTokens(
 )
 
 internal object SpocCrypto {
+  // SPOC 接口要求使用这组固定的 AES 参数进行前端兼容加解密，它们是协议常量而不是部署密钥。
   private val keyBytes = "inco12345678ocni".toByteArray(Charsets.UTF_8)
   private val ivBytes = "ocni12345678inco".toByteArray(Charsets.UTF_8)
   private const val blockSize = 16
