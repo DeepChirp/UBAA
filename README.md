@@ -14,6 +14,18 @@
 
 ---
 
+## 📦 安装 (Installation)
+
+### Arch Linux (AUR)
+
+如果你使用的是 Arch Linux，可以直接通过 AUR 安装客户端：
+
+```bash
+yay -S ubaa
+```
+
+---
+
 ## ✨ 核心特性 (Features)
 
 ### 🖥️ 多端覆盖
