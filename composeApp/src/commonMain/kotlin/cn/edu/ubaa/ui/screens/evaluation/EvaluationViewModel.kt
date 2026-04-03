@@ -33,16 +33,23 @@ class EvaluationViewModel(
     viewModelScope.launch {
       _uiState.value =
           _uiState.value.copy(isLoading = true, error = null, submissionResults = emptyList())
-      val response = evaluationService.getAllEvaluations()
-      val courses = response.courses
-      _uiState.value =
-          _uiState.value.copy(
-              isLoading = false,
-              // 未评教的课程默认选中，已评教的课程不选中（且不可选）
-              courses = courses.map { it to !it.isEvaluated },
-              progress = response.progress,
-              error = if (courses.isEmpty() && !uiState.value.isLoading) "暂无评教课程" else null,
-          )
+      evaluationService
+          .getAllEvaluations()
+          .onSuccess { response ->
+            val courses = response.courses
+            _uiState.value =
+                _uiState.value.copy(
+                    isLoading = false,
+                    // 未评教的课程默认选中，已评教的课程不选中（且不可选）
+                    courses = courses.map { it to !it.isEvaluated },
+                    progress = response.progress,
+                    error = if (courses.isEmpty()) "暂无评教课程" else null,
+                )
+          }
+          .onFailure { error ->
+            _uiState.value =
+                _uiState.value.copy(isLoading = false, error = error.message ?: "评教列表加载失败")
+          }
     }
   }
 

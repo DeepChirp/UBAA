@@ -8,6 +8,7 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.async
 import kotlinx.coroutines.cancel
+import kotlinx.coroutines.isActive
 import kotlinx.coroutines.launch
 
 class AcademicPortalWarmupCoordinator(
@@ -16,6 +17,7 @@ class AcademicPortalWarmupCoordinator(
         ByxtService::initializeSession,
     private val scope: CoroutineScope = CoroutineScope(SupervisorJob() + Dispatchers.IO),
 ) {
+  @Volatile private var closed = false
   private val inflightProbes =
       ConcurrentHashMap<String, kotlinx.coroutines.Deferred<AcademicPortalProbeResult>>()
 
@@ -32,10 +34,14 @@ class AcademicPortalWarmupCoordinator(
   }
 
   fun close() {
+    if (closed) return
+    closed = true
     inflightProbes.values.forEach { it.cancel() }
     inflightProbes.clear()
     scope.cancel()
   }
+
+  fun isClosed(): Boolean = closed || !scope.isActive
 
   private fun ensureProbe(
       username: String,
@@ -70,5 +76,25 @@ class AcademicPortalWarmupCoordinator(
 }
 
 object GlobalAcademicPortalWarmupCoordinator {
-  val instance: AcademicPortalWarmupCoordinator by lazy { AcademicPortalWarmupCoordinator() }
+  @Volatile private var current: AcademicPortalWarmupCoordinator? = null
+
+  val instance: AcademicPortalWarmupCoordinator
+    get() {
+      current?.takeUnless { it.isClosed() }?.let { return it }
+      return synchronized(this) {
+        current?.takeUnless { it.isClosed() }
+            ?: AcademicPortalWarmupCoordinator().also { current = it }
+      }
+    }
+
+  fun clear(username: String) {
+    current?.takeUnless { it.isClosed() }?.clear(username)
+  }
+
+  fun close() {
+    synchronized(this) {
+      current?.close()
+      current = null
+    }
+  }
 }

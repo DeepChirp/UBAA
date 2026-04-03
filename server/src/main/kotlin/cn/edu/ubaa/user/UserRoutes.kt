@@ -1,9 +1,8 @@
 package cn.edu.ubaa.user
 
-import cn.edu.ubaa.auth.ErrorDetails
-import cn.edu.ubaa.auth.ErrorResponse
 import cn.edu.ubaa.auth.JwtAuth.jwtUsername
 import cn.edu.ubaa.auth.LoginException
+import cn.edu.ubaa.auth.respondError
 import io.ktor.http.HttpStatusCode
 import io.ktor.server.application.call
 import io.ktor.server.response.respond
@@ -25,7 +24,8 @@ fun Route.userRouting() {
       } catch (e: Exception) {
         val status =
             if (e is LoginException) HttpStatusCode.Unauthorized else HttpStatusCode.BadGateway
-        call.respond(status, ErrorResponse(ErrorDetails("error", e.message ?: "Error")))
+        val code = if (e is LoginException) "invalid_token" else "user_info_failed"
+        call.respondError(status, code)
       }
     }
   }

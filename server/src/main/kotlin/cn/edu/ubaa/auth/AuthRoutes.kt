@@ -40,17 +40,13 @@ fun Route.authRouting(loginMetricsSink: LoginMetricsSink = NoOpLoginMetricsSink)
         val preloadResponse = authService.preloadLoginState(request.clientId)
         call.respond(HttpStatusCode.OK, preloadResponse)
       } catch (e: ContentTransformationException) {
-        call.respond(
-            HttpStatusCode.BadRequest,
-            ErrorResponse(
-                ErrorDetails("invalid_request", "Invalid request body: clientId is required")
-            ),
-        )
+        call.respondError(HttpStatusCode.BadRequest, "invalid_request", "请提供有效的客户端标识")
       } catch (e: Exception) {
         application.log.error("An unexpected error occurred during login preload.", e)
-        call.respond(
+        call.respondError(
             HttpStatusCode.InternalServerError,
-            ErrorResponse(ErrorDetails("internal_server_error", "Failed to preload login state")),
+            "internal_server_error",
+            "登录状态加载失败，请稍后重试",
         )
       }
     }
@@ -64,28 +60,17 @@ fun Route.authRouting(loginMetricsSink: LoginMetricsSink = NoOpLoginMetricsSink)
         application.log.info("Login successful for user: {}", request.username)
         call.respond(HttpStatusCode.OK, loginResponse)
       } catch (e: ContentTransformationException) {
-        call.respond(
-            HttpStatusCode.BadRequest,
-            ErrorResponse(ErrorDetails("invalid_request", "Invalid request body: ${e.message}")),
-        )
+        call.respondError(HttpStatusCode.BadRequest, "invalid_request", "登录请求格式不正确")
       } catch (e: CaptchaRequiredException) {
         call.respond(
             HttpStatusCode.UnprocessableEntity, // 需验证码
             CaptchaRequiredResponse(e.captchaInfo, e.execution, e.message ?: "需要验证码"),
         )
       } catch (e: LoginException) {
-        call.respond(
-            HttpStatusCode.Unauthorized,
-            ErrorResponse(ErrorDetails("invalid_credentials", e.message ?: "Login failed")),
-        )
+        call.respondError(HttpStatusCode.Unauthorized, "invalid_credentials")
       } catch (e: Exception) {
         application.log.error("An unexpected error occurred during login.", e)
-        call.respond(
-            HttpStatusCode.InternalServerError,
-            ErrorResponse(
-                ErrorDetails("internal_server_error", "An unexpected server error occurred.")
-            ),
-        )
+        call.respondError(HttpStatusCode.InternalServerError, "internal_server_error")
       }
     }
 
@@ -97,28 +82,13 @@ fun Route.authRouting(loginMetricsSink: LoginMetricsSink = NoOpLoginMetricsSink)
         if (refreshResponse != null) {
           call.respond(HttpStatusCode.OK, refreshResponse)
         } else {
-          call.respond(
-              HttpStatusCode.Unauthorized,
-              ErrorResponse(
-                  ErrorDetails("invalid_refresh_token", "Invalid or expired refresh token")
-              ),
-          )
+          call.respondError(HttpStatusCode.Unauthorized, "invalid_refresh_token")
         }
       } catch (e: ContentTransformationException) {
-        call.respond(
-            HttpStatusCode.BadRequest,
-            ErrorResponse(
-                ErrorDetails("invalid_request", "Invalid request body: refreshToken is required")
-            ),
-        )
+        call.respondError(HttpStatusCode.BadRequest, "invalid_request", "刷新令牌请求格式不正确")
       } catch (e: Exception) {
         application.log.error("An unexpected error occurred during token refresh.", e)
-        call.respond(
-            HttpStatusCode.InternalServerError,
-            ErrorResponse(
-                ErrorDetails("internal_server_error", "An unexpected server error occurred.")
-            ),
-        )
+        call.respondError(HttpStatusCode.InternalServerError, "internal_server_error")
       }
     }
 
@@ -141,19 +111,11 @@ fun Route.authRouting(loginMetricsSink: LoginMetricsSink = NoOpLoginMetricsSink)
         } else {
           session?.let { sessionManager.invalidateSession(it.username) }
           application.log.warn("Session status check failed: invalid or expired token")
-          call.respond(
-              HttpStatusCode.Unauthorized,
-              ErrorResponse(ErrorDetails("invalid_token", "Invalid or expired JWT token")),
-          )
+          call.respondError(HttpStatusCode.Unauthorized, "invalid_token")
         }
       } catch (e: Exception) {
         application.log.error("An unexpected error occurred during status check.", e)
-        call.respond(
-            HttpStatusCode.InternalServerError,
-            ErrorResponse(
-                ErrorDetails("internal_server_error", "An unexpected server error occurred.")
-            ),
-        )
+        call.respondError(HttpStatusCode.InternalServerError, "internal_server_error")
       }
     }
 
@@ -165,19 +127,11 @@ fun Route.authRouting(loginMetricsSink: LoginMetricsSink = NoOpLoginMetricsSink)
           authService.logout(session.username)
           call.respond(HttpStatusCode.OK, mapOf("message" to "Logged out successfully"))
         } else {
-          call.respond(
-              HttpStatusCode.Unauthorized,
-              ErrorResponse(ErrorDetails("invalid_token", "Invalid or expired JWT token")),
-          )
+          call.respondError(HttpStatusCode.Unauthorized, "invalid_token")
         }
       } catch (e: Exception) {
         application.log.error("An unexpected error occurred during logout.", e)
-        call.respond(
-            HttpStatusCode.InternalServerError,
-            ErrorResponse(
-                ErrorDetails("internal_server_error", "An unexpected server error occurred.")
-            ),
-        )
+        call.respondError(HttpStatusCode.InternalServerError, "internal_server_error")
       }
     }
 
@@ -186,10 +140,7 @@ fun Route.authRouting(loginMetricsSink: LoginMetricsSink = NoOpLoginMetricsSink)
       try {
         val captchaId = call.parameters["captchaId"]
         if (captchaId.isNullOrBlank()) {
-          call.respond(
-              HttpStatusCode.BadRequest,
-              ErrorResponse(ErrorDetails("invalid_request", "captchaId parameter is required")),
-          )
+          call.respondError(HttpStatusCode.BadRequest, "invalid_request", "请提供验证码标识")
           return@get
         }
 
@@ -198,19 +149,11 @@ fun Route.authRouting(loginMetricsSink: LoginMetricsSink = NoOpLoginMetricsSink)
         if (imageBytes != null) {
           call.respondBytes(bytes = imageBytes, contentType = ContentType.Image.JPEG)
         } else {
-          call.respond(
-              HttpStatusCode.NotFound,
-              ErrorResponse(ErrorDetails("captcha_not_found", "CAPTCHA image not found")),
-          )
+          call.respondError(HttpStatusCode.NotFound, "captcha_not_found")
         }
       } catch (e: Exception) {
         application.log.error("An unexpected error occurred during CAPTCHA fetch.", e)
-        call.respond(
-            HttpStatusCode.InternalServerError,
-            ErrorResponse(
-                ErrorDetails("internal_server_error", "An unexpected server error occurred.")
-            ),
-        )
+        call.respondError(HttpStatusCode.InternalServerError, "internal_server_error")
       }
     }
   }

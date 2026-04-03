@@ -1,8 +1,7 @@
 package cn.edu.ubaa.classroom
 
-import cn.edu.ubaa.auth.ErrorDetails
-import cn.edu.ubaa.auth.ErrorResponse
 import cn.edu.ubaa.auth.JwtAuth.jwtUsername
+import cn.edu.ubaa.auth.respondError
 import io.ktor.http.*
 import io.ktor.server.application.*
 import io.ktor.server.response.*
@@ -18,12 +17,13 @@ fun Route.classroomRouting() {
      * @param date 查询日期（yyyy-MM-dd）。
      */
     get("/query") {
-      val username = call.jwtUsername ?: return@get call.respond(HttpStatusCode.Unauthorized)
+      val username =
+          call.jwtUsername ?: return@get call.respondError(HttpStatusCode.Unauthorized, "invalid_token")
       val xqid = call.parameters["xqid"]?.toIntOrNull() ?: 1
       val date = call.parameters["date"] ?: ""
 
       if (date.isEmpty()) {
-        return@get call.respond(HttpStatusCode.BadRequest, "Date is required")
+        return@get call.respondError(HttpStatusCode.BadRequest, "invalid_request")
       }
 
       try {
@@ -31,10 +31,7 @@ fun Route.classroomRouting() {
         val result = client.query(xqid, date)
         call.respond(HttpStatusCode.OK, result)
       } catch (e: Exception) {
-        call.respond(
-            HttpStatusCode.InternalServerError,
-            ErrorResponse(ErrorDetails("classroom_query_failed", e.message ?: "Error")),
-        )
+        call.respondError(HttpStatusCode.InternalServerError, "classroom_query_failed")
       }
     }
   }

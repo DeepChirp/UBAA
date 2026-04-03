@@ -1,8 +1,7 @@
 package cn.edu.ubaa.spoc
 
-import cn.edu.ubaa.auth.ErrorDetails
-import cn.edu.ubaa.auth.ErrorResponse
 import cn.edu.ubaa.auth.JwtAuth.requireUserSession
+import cn.edu.ubaa.auth.respondError
 import cn.edu.ubaa.utils.UpstreamTimeoutException
 import io.ktor.http.HttpStatusCode
 import io.ktor.server.application.ApplicationCall
@@ -27,10 +26,7 @@ fun Route.spocRouting() {
       val session = call.requireUserSession()
       val assignmentId =
           call.parameters["assignmentId"]?.takeIf { it.isNotBlank() }
-              ?: return@get call.respond(
-                  HttpStatusCode.BadRequest,
-                  ErrorResponse(ErrorDetails("invalid_request", "assignmentId is required")),
-              )
+              ?: return@get call.respondError(HttpStatusCode.BadRequest, "invalid_request")
 
       call.runSpocCall {
         call.respond(
@@ -46,26 +42,12 @@ private suspend fun ApplicationCall.runSpocCall(block: suspend () -> Unit) {
   try {
     block()
   } catch (e: UpstreamTimeoutException) {
-    respond(
-        HttpStatusCode.GatewayTimeout,
-        ErrorResponse(ErrorDetails(e.code, e.message ?: "SPOC request timed out")),
-    )
+    respondError(HttpStatusCode.GatewayTimeout, e.code, "SPOC 服务响应超时，请稍后重试")
   } catch (e: SpocAuthenticationException) {
-    respond(
-        HttpStatusCode.BadGateway,
-        ErrorResponse(ErrorDetails("spoc_auth_failed", e.message ?: "SPOC authentication failed")),
-    )
+    respondError(HttpStatusCode.BadGateway, "spoc_auth_failed")
   } catch (e: SpocException) {
-    respond(
-        HttpStatusCode.BadGateway,
-        ErrorResponse(ErrorDetails("spoc_error", e.message ?: "SPOC request failed")),
-    )
+    respondError(HttpStatusCode.BadGateway, "spoc_error")
   } catch (e: Exception) {
-    respond(
-        HttpStatusCode.InternalServerError,
-        ErrorResponse(
-            ErrorDetails("internal_server_error", "An unexpected server error occurred.")
-        ),
-    )
+    respondError(HttpStatusCode.InternalServerError, "internal_server_error")
   }
 }

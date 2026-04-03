@@ -3,6 +3,7 @@ package cn.edu.ubaa.ygdk
 import cn.edu.ubaa.auth.ErrorDetails
 import cn.edu.ubaa.auth.ErrorResponse
 import cn.edu.ubaa.auth.JwtAuth.jwtUsername
+import cn.edu.ubaa.auth.respondError
 import cn.edu.ubaa.model.dto.YgdkClockinSubmitRequest
 import cn.edu.ubaa.model.dto.YgdkPhotoUpload
 import cn.edu.ubaa.utils.UpstreamTimeoutException
@@ -51,10 +52,7 @@ internal fun Route.ygdkRouting(ygdkService: YgdkService = GlobalYgdkService.inst
           try {
             call.parseClockinRequest()
           } catch (_: Exception) {
-            return@post call.respond(
-                HttpStatusCode.BadRequest,
-                ErrorResponse(ErrorDetails("invalid_request", "无效的打卡提交内容")),
-            )
+            return@post call.respondError(HttpStatusCode.BadRequest, "invalid_request")
           }
       try {
         call.respond(HttpStatusCode.OK, ygdkService.submitClockin(username, request))
@@ -119,12 +117,9 @@ private suspend fun ApplicationCall.respondYgdkError(e: YgdkException) {
         "unauthenticated" -> HttpStatusCode.Unauthorized
         else -> HttpStatusCode.BadGateway
       }
-  respond(status, ErrorResponse(ErrorDetails(e.code, e.message ?: "阳光打卡请求失败")))
+  respondError(status, e.code)
 }
 
 private suspend fun ApplicationCall.respondUpstreamTimeout(e: UpstreamTimeoutException) {
-  respond(
-      HttpStatusCode.GatewayTimeout,
-      ErrorResponse(ErrorDetails(e.code, e.message ?: "阳光打卡请求超时")),
-  )
+  respondError(HttpStatusCode.GatewayTimeout, e.code)
 }

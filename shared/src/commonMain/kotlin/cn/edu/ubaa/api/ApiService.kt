@@ -131,15 +131,12 @@ class ApiServiceImpl(private val apiClient: ApiClient) : ApiService {
       page: Int,
       pageSize: Int,
       all: Boolean,
-  ): Result<BykcCoursesResponse> = runCatching {
-    apiClient
-        .getClient()
-        .get("api/v1/bykc/courses") {
-          parameter("page", page)
-          parameter("size", pageSize)
-          parameter("all", all)
-        }
-        .body<BykcCoursesResponse>()
+  ): Result<BykcCoursesResponse> = safeApiCall {
+    apiClient.getClient().get("api/v1/bykc/courses") {
+      parameter("page", page)
+      parameter("size", pageSize)
+      parameter("all", all)
+    }
   }
 
   override suspend fun getBykcCourseDetail(id: Int): Result<BykcCourseDetailDto> = safeApiCall {

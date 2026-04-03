@@ -1,12 +1,12 @@
 package cn.edu.ubaa.evaluation
 
-import cn.edu.ubaa.auth.ErrorDetails
-import cn.edu.ubaa.auth.ErrorResponse
 import cn.edu.ubaa.auth.JwtAuth.jwtUsername
+import cn.edu.ubaa.auth.respondError
 import cn.edu.ubaa.model.evaluation.EvaluationCourse
 import cn.edu.ubaa.utils.UpstreamTimeoutException
 import io.ktor.http.*
 import io.ktor.server.application.*
+import io.ktor.server.plugins.ContentTransformationException
 import io.ktor.server.request.*
 import io.ktor.server.response.*
 import io.ktor.server.routing.*
@@ -22,44 +22,36 @@ fun Route.evaluationRouting() {
 
     /** GET /api/v1/evaluation/list 获取所有评教课程列表（包括已评教和未评教），附带进度信息。 需要 JWT 认证。 */
     get("/list") {
-      val username = call.jwtUsername ?: return@get call.respond(HttpStatusCode.Unauthorized)
+      val username =
+          call.jwtUsername ?: return@get call.respondError(HttpStatusCode.Unauthorized, "invalid_token")
       try {
         val response = evaluationService.getAllCourses(username)
         call.respond(HttpStatusCode.OK, response)
       } catch (e: UpstreamTimeoutException) {
-        call.respond(
-            HttpStatusCode.GatewayTimeout,
-            ErrorResponse(ErrorDetails(e.code, e.message ?: "Evaluation request timed out")),
-        )
+        call.respondError(HttpStatusCode.GatewayTimeout, e.code, "评教服务响应超时，请稍后重试")
       } catch (e: Exception) {
         log.error("Failed to fetch evaluation list for $username", e)
-        call.respond(
-            HttpStatusCode.InternalServerError,
-            ErrorResponse(ErrorDetails("error", e.message ?: "Unknown Error")),
-        )
+        call.respondError(HttpStatusCode.InternalServerError, "evaluation_error")
       }
     }
 
     /** POST /api/v1/evaluation/submit 提交评教任务。 接收 EvaluationCourse 列表，执行自动评教并返回结果。 需要 JWT 认证。 */
     post("/submit") {
-      val username = call.jwtUsername ?: return@post call.respond(HttpStatusCode.Unauthorized)
+      val username =
+          call.jwtUsername ?: return@post call.respondError(HttpStatusCode.Unauthorized, "invalid_token")
       try {
         val coursesToEvaluate = call.receive<List<EvaluationCourse>>()
         if (coursesToEvaluate.isEmpty()) {
-          return@post call.respond(
-              HttpStatusCode.BadRequest,
-              ErrorResponse(ErrorDetails("error", "No courses selected")),
-          )
+          return@post call.respondError(HttpStatusCode.BadRequest, "invalid_request")
         }
 
         val results = evaluationService.autoEvaluate(username, coursesToEvaluate)
         call.respond(HttpStatusCode.OK, results)
+      } catch (e: ContentTransformationException) {
+        call.respondError(HttpStatusCode.BadRequest, "invalid_request")
       } catch (e: Exception) {
         log.error("Failed to submit evaluations for $username", e)
-        call.respond(
-            HttpStatusCode.InternalServerError,
-            ErrorResponse(ErrorDetails("error", e.message ?: "Unknown Error")),
-        )
+        call.respondError(HttpStatusCode.InternalServerError, "evaluation_error")
       }
     }
   }

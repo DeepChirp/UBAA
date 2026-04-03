@@ -57,12 +57,10 @@ class AuthService(private val apiClient: ApiClient = ApiClientProvider.shared) {
           preloadResponse.toStoredAuthTokensOrNull()?.let { apiClient.updateTokens(it) }
           Result.success(preloadResponse)
         }
-        else -> {
-          Result.failure(Exception("Failed to preload login state: ${response.status}"))
-        }
+        else -> Result.failure(UserFacingApiException(response.userFacingErrorMessage()))
       }
     } catch (e: Exception) {
-      Result.failure(e)
+      Result.failure(e.toUserFacingApiException("登录状态加载失败，请稍后重试"))
     }
   }
 
@@ -95,10 +93,7 @@ class AuthService(private val apiClient: ApiClient = ApiClientProvider.shared) {
           apiClient.updateTokens(loginResponse.toStoredAuthTokens())
           Result.success(loginResponse)
         }
-        HttpStatusCode.Unauthorized -> {
-          val error = runCatching { response.body<ApiErrorResponse>() }.getOrNull()
-          Result.failure(Exception(error?.error?.message ?: "Unauthorized"))
-        }
+        HttpStatusCode.Unauthorized -> Result.failure(UserFacingApiException(response.userFacingErrorMessage()))
         HttpStatusCode.UnprocessableEntity -> { // 422 - 需要验证码
           val captchaResponse = response.body<CaptchaRequiredResponse>()
           Result.failure(
@@ -109,12 +104,10 @@ class AuthService(private val apiClient: ApiClient = ApiClientProvider.shared) {
               )
           )
         }
-        else -> {
-          Result.failure(Exception("Login failed with status: ${response.status}"))
-        }
+        else -> Result.failure(UserFacingApiException(response.userFacingErrorMessage()))
       }
     } catch (e: Exception) {
-      Result.failure(e)
+      Result.failure(e.toUserFacingApiException("登录失败，请稍后重试"))
     }
   }
 
@@ -153,7 +146,7 @@ class AuthService(private val apiClient: ApiClient = ApiClientProvider.shared) {
       // 网络异常时也要清理本地状态
       apiClient.clearAuthTokens()
       apiClient.close()
-      Result.failure(e)
+      Result.failure(e.toUserFacingApiException("注销时出现异常，本地登录状态已清除"))
     }
   }
 }

@@ -3,6 +3,7 @@ package cn.edu.ubaa.cgyy
 import cn.edu.ubaa.auth.ErrorDetails
 import cn.edu.ubaa.auth.ErrorResponse
 import cn.edu.ubaa.auth.JwtAuth.jwtUsername
+import cn.edu.ubaa.auth.respondError
 import cn.edu.ubaa.model.dto.CgyyReservationSubmitRequest
 import cn.edu.ubaa.utils.UpstreamTimeoutException
 import io.ktor.http.HttpStatusCode
@@ -45,16 +46,10 @@ fun Route.cgyyRouting() {
       val username = call.jwtUsername!!
       val venueSiteId =
           call.request.queryParameters["venueSiteId"]?.toIntOrNull()
-              ?: return@get call.respond(
-                  HttpStatusCode.BadRequest,
-                  ErrorResponse(ErrorDetails("invalid_request", "venueSiteId is required")),
-              )
+              ?: return@get call.respondError(HttpStatusCode.BadRequest, "invalid_request")
       val date =
           call.request.queryParameters["date"]
-              ?: return@get call.respond(
-                  HttpStatusCode.BadRequest,
-                  ErrorResponse(ErrorDetails("invalid_request", "date is required")),
-              )
+              ?: return@get call.respondError(HttpStatusCode.BadRequest, "invalid_request")
       try {
         call.respond(HttpStatusCode.OK, cgyyService.getDayInfo(username, venueSiteId, date))
       } catch (e: UpstreamTimeoutException) {
@@ -70,10 +65,7 @@ fun Route.cgyyRouting() {
           try {
             call.receive<CgyyReservationSubmitRequest>()
           } catch (_: Exception) {
-            return@post call.respond(
-                HttpStatusCode.BadRequest,
-                ErrorResponse(ErrorDetails("invalid_request", "Invalid request body")),
-            )
+            return@post call.respondError(HttpStatusCode.BadRequest, "invalid_request")
           }
       try {
         call.respond(HttpStatusCode.OK, cgyyService.submitReservation(username, request))
@@ -113,10 +105,7 @@ fun Route.cgyyRouting() {
         val username = call.jwtUsername!!
         val orderId =
             call.parameters["orderId"]?.toIntOrNull()
-                ?: return@get call.respond(
-                    HttpStatusCode.BadRequest,
-                    ErrorResponse(ErrorDetails("invalid_request", "orderId is required")),
-                )
+                ?: return@get call.respondError(HttpStatusCode.BadRequest, "invalid_request")
         try {
           call.respond(HttpStatusCode.OK, cgyyService.getOrderDetail(username, orderId))
         } catch (e: UpstreamTimeoutException) {
@@ -130,10 +119,7 @@ fun Route.cgyyRouting() {
         val username = call.jwtUsername!!
         val orderId =
             call.parameters["orderId"]?.toIntOrNull()
-                ?: return@post call.respond(
-                    HttpStatusCode.BadRequest,
-                    ErrorResponse(ErrorDetails("invalid_request", "orderId is required")),
-                )
+                ?: return@post call.respondError(HttpStatusCode.BadRequest, "invalid_request")
         try {
           call.respond(HttpStatusCode.OK, cgyyService.cancelOrder(username, orderId))
         } catch (e: UpstreamTimeoutException) {
@@ -156,12 +142,9 @@ private suspend fun ApplicationCall.respondCgyyError(e: CgyyException) {
         "captcha_error" -> HttpStatusCode.BadGateway
         else -> HttpStatusCode.BadGateway
       }
-  respond(status, ErrorResponse(ErrorDetails(e.code, e.message ?: "研讨室请求失败")))
+  respondError(status, e.code)
 }
 
 private suspend fun ApplicationCall.respondUpstreamTimeout(e: UpstreamTimeoutException) {
-  respond(
-      HttpStatusCode.GatewayTimeout,
-      ErrorResponse(ErrorDetails(e.code, e.message ?: "研讨室请求超时")),
-  )
+  respondError(HttpStatusCode.GatewayTimeout, e.code)
 }

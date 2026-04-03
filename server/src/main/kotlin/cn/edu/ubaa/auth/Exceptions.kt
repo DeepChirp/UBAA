@@ -9,7 +9,7 @@ open class LoginException(message: String) : Exception(message)
 class CaptchaRequiredException(
     val captchaInfo: CaptchaInfo,
     val execution: String,
-    message: String = "CAPTCHA verification required",
+    message: String = "需要验证码",
 ) : LoginException(message)
 
 /** 当前账号类型暂不支持访问该接口。 */

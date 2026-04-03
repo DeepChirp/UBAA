@@ -99,7 +99,7 @@ class AuthServiceTest {
               ByteReadChannel(
                   json.encodeToString(
                       ApiErrorResponse(
-                          ApiErrorDetails(code = "unauthorized", message = "Invalid credentials")
+                          ApiErrorDetails(code = "invalid_credentials", message = "Invalid credentials")
                       )
                   )
               ),
@@ -114,7 +114,7 @@ class AuthServiceTest {
     val result = authService.login("username", "wrong-password")
 
     assertTrue(result.isFailure)
-    assertEquals("Invalid credentials", result.exceptionOrNull()?.message)
+    assertEquals("账号或密码错误，请重试", result.exceptionOrNull()?.message)
   }
 
   @Test

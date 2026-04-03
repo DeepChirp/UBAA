@@ -1,10 +1,9 @@
 package cn.edu.ubaa.exam
 
-import cn.edu.ubaa.auth.ErrorDetails
-import cn.edu.ubaa.auth.ErrorResponse
 import cn.edu.ubaa.auth.JwtAuth.jwtUsername
 import cn.edu.ubaa.auth.LoginException
 import cn.edu.ubaa.auth.UnsupportedAcademicPortalException
+import cn.edu.ubaa.auth.respondError
 import io.ktor.http.*
 import io.ktor.server.application.*
 import io.ktor.server.response.*
@@ -25,10 +24,7 @@ fun Route.examRouting() {
       val termCode = call.request.queryParameters["termCode"]
 
       if (termCode.isNullOrBlank()) {
-        return@get call.respond(
-            HttpStatusCode.BadRequest,
-            ErrorResponse(ErrorDetails("invalid_request", "termCode is required")),
-        )
+        return@get call.respondError(HttpStatusCode.BadRequest, "invalid_request")
       }
 
       try {
@@ -41,8 +37,8 @@ fun Route.examRouting() {
               is UnsupportedAcademicPortalException -> HttpStatusCode.NotImplemented
               else -> HttpStatusCode.BadGateway
             }
-        val code = if (e is UnsupportedAcademicPortalException) "unsupported_portal" else "error"
-        call.respond(status, ErrorResponse(ErrorDetails(code, e.message ?: "Error")))
+        val code = if (e is UnsupportedAcademicPortalException) "unsupported_portal" else "exam_error"
+        call.respondError(status, code)
       }
     }
   }

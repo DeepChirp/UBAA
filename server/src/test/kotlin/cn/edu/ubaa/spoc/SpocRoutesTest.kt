@@ -18,5 +18,6 @@ class SpocRoutesTest {
 
     assertEquals(HttpStatusCode.Unauthorized, response.status)
     assertTrue(response.bodyAsText().contains("invalid_token"))
+    assertTrue(response.bodyAsText().contains("登录状态已失效，请重新登录"))
   }
 }

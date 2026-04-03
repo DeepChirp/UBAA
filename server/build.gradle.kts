@@ -53,6 +53,7 @@ dependencies {
   implementation(libs.ktor.server.call.logging)
   implementation(libs.ktor.server.content.negotiation)
   implementation(libs.ktor.server.cors)
+  implementation(libs.ktor.server.status.pages)
   implementation(libs.ktor.server.metrics.micrometer)
   implementation(libs.micrometer.registry.prometheus)
   implementation(libs.ktor.serialization.kotlinx.json)

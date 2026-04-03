@@ -47,7 +47,7 @@ object JwtAuth {
         challenge { _, _ ->
           call.respond(
               HttpStatusCode.Unauthorized,
-              JwtErrorResponse(JwtErrorDetails("invalid_token", "Invalid or expired JWT token")),
+              JwtErrorResponse(JwtErrorDetails("invalid_token", "登录状态已失效，请重新登录")),
           )
         }
       }

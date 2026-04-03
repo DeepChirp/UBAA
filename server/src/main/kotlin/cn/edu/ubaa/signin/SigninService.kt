@@ -31,7 +31,7 @@ object SigninService {
   suspend fun getTodayClasses(studentId: String): SigninStatusResponse {
     val today = LocalDate.now().format(DateTimeFormatter.ofPattern("yyyyMMdd"))
     val classes = getClient(studentId).getClasses(today)
-    return SigninStatusResponse(code = 200, message = "Success", data = classes)
+    return SigninStatusResponse(code = 200, message = "获取成功", data = classes)
   }
 
   /** 执行签到动作。 */

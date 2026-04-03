@@ -4,6 +4,7 @@ import cn.edu.ubaa.auth.ErrorDetails
 import cn.edu.ubaa.auth.ErrorResponse
 import cn.edu.ubaa.auth.JwtAuth.jwtUsername
 import cn.edu.ubaa.auth.LoginException
+import cn.edu.ubaa.auth.respondError
 import cn.edu.ubaa.model.dto.BykcCoursesResponse
 import cn.edu.ubaa.model.dto.BykcSignRequest
 import cn.edu.ubaa.model.dto.BykcSuccessResponse
@@ -66,10 +67,7 @@ fun Route.bykcRouting() {
       val includeAll = call.request.queryParameters["all"]?.toBoolean() ?: false
 
       if (page < 1 || size < 1 || size > 500) {
-        call.respond(
-            HttpStatusCode.BadRequest,
-            ErrorResponse(ErrorDetails("invalid_request", "Invalid page or size")),
-        )
+        call.respondError(HttpStatusCode.BadRequest, "invalid_request")
         return@get
       }
 
@@ -120,7 +118,7 @@ fun Route.bykcRouting() {
       val username = call.jwtUsername!!
       val courseId =
           call.parameters["courseId"]?.toLongOrNull()
-              ?: return@post call.respond(HttpStatusCode.BadRequest)
+              ?: return@post call.respondError(HttpStatusCode.BadRequest, "invalid_request")
 
       try {
         bykcService
@@ -137,7 +135,7 @@ fun Route.bykcRouting() {
                       }
                   call.respond(
                       HttpStatusCode.Conflict,
-                      ErrorResponse(ErrorDetails(code, error.message ?: "Failed")),
+                      ErrorResponse(ErrorDetails(code, cn.edu.ubaa.auth.userFacingMessage(code))),
                   )
                 },
             )
@@ -153,7 +151,7 @@ fun Route.bykcRouting() {
       val username = call.jwtUsername!!
       val courseId =
           call.parameters["courseId"]?.toLongOrNull()
-              ?: return@delete call.respond(HttpStatusCode.BadRequest)
+              ?: return@delete call.respondError(HttpStatusCode.BadRequest, "invalid_request")
 
       try {
         bykcService
@@ -163,7 +161,9 @@ fun Route.bykcRouting() {
                 onFailure = {
                   call.respond(
                       HttpStatusCode.BadRequest,
-                      ErrorResponse(ErrorDetails("deselect_failed", it.message ?: "Failed")),
+                      ErrorResponse(
+                          ErrorDetails("deselect_failed", cn.edu.ubaa.auth.userFacingMessage("deselect_failed"))
+                      ),
                   )
                 },
             )
@@ -196,7 +196,7 @@ fun Route.bykcRouting() {
       val username = call.jwtUsername!!
       val courseId =
           call.parameters["courseId"]?.toLongOrNull()
-              ?: return@get call.respond(HttpStatusCode.BadRequest)
+              ?: return@get call.respondError(HttpStatusCode.BadRequest, "invalid_request")
       try {
         val courseDetail = bykcService.getCourseDetail(username, courseId)
         call.respond(HttpStatusCode.OK, courseDetail)
@@ -216,15 +216,12 @@ fun Route.bykcRouting() {
       val username = call.jwtUsername!!
       val courseId =
           call.parameters["courseId"]?.toLongOrNull()
-              ?: return@post call.respond(HttpStatusCode.BadRequest)
+              ?: return@post call.respondError(HttpStatusCode.BadRequest, "invalid_request")
       val signRequest =
           try {
             call.receive<BykcSignRequest>()
           } catch (e: Exception) {
-            return@post call.respond(
-                HttpStatusCode.BadRequest,
-                ErrorResponse(ErrorDetails("invalid_request", "Invalid body")),
-            )
+            return@post call.respondError(HttpStatusCode.BadRequest, "invalid_request")
           }
 
       try {
@@ -240,7 +237,9 @@ fun Route.bykcRouting() {
             onFailure = {
               call.respond(
                   HttpStatusCode.BadRequest,
-                  ErrorResponse(ErrorDetails("sign_failed", it.message ?: "Failed")),
+                  ErrorResponse(
+                      ErrorDetails("sign_failed", cn.edu.ubaa.auth.userFacingMessage("sign_failed"))
+                  ),
               )
             },
         )
@@ -258,16 +257,19 @@ private suspend fun ApplicationCall.respondBykcError(error: Throwable) {
       when (error) {
         is LoginException ->
             HttpStatusCode.Unauthorized to
-                ErrorDetails("unauthenticated", error.message ?: "Session is not available.")
+                ErrorDetails("unauthenticated", cn.edu.ubaa.auth.userFacingMessage("unauthenticated"))
         is UpstreamTimeoutException ->
             HttpStatusCode.GatewayTimeout to
-                ErrorDetails(error.code, error.message ?: "BYKC request timed out.")
+                ErrorDetails(error.code, cn.edu.ubaa.auth.userFacingMessage(error.code))
         is BykcException ->
             HttpStatusCode.BadGateway to
-                ErrorDetails("bykc_error", error.message ?: "BYKC request failed.")
+                ErrorDetails("bykc_error", cn.edu.ubaa.auth.userFacingMessage("bykc_error"))
         else ->
             HttpStatusCode.InternalServerError to
-                ErrorDetails("internal_server_error", "An unexpected server error occurred.")
+                ErrorDetails(
+                    "internal_server_error",
+                    cn.edu.ubaa.auth.userFacingMessage("internal_server_error"),
+                )
       }
   respond(status, ErrorResponse(details))
 }

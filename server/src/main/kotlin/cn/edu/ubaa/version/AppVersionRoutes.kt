@@ -1,7 +1,6 @@
 package cn.edu.ubaa.version
 
-import cn.edu.ubaa.auth.ErrorDetails
-import cn.edu.ubaa.auth.ErrorResponse
+import cn.edu.ubaa.auth.respondError
 import io.ktor.http.HttpStatusCode
 import io.ktor.server.application.call
 import io.ktor.server.response.respond
@@ -16,14 +15,9 @@ fun Route.appVersionRouting(appVersionService: AppVersionService) {
     get("/version") {
       val clientVersion =
           call.request.queryParameters["clientVersion"]
-              ?: return@get call.respond(
+              ?: return@get call.respondError(
                   HttpStatusCode.BadRequest,
-                  ErrorResponse(
-                      ErrorDetails(
-                          code = "missing_client_version",
-                          message = "Missing required query parameter: clientVersion",
-                      )
-                  ),
+                  "missing_client_version",
               )
 
       call.respond(HttpStatusCode.OK, appVersionService.checkVersion(clientVersion))

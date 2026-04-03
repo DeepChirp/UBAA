@@ -1,10 +1,9 @@
 package cn.edu.ubaa.schedule
 
-import cn.edu.ubaa.auth.ErrorDetails
-import cn.edu.ubaa.auth.ErrorResponse
 import cn.edu.ubaa.auth.JwtAuth.jwtUsername
 import cn.edu.ubaa.auth.LoginException
 import cn.edu.ubaa.auth.UnsupportedAcademicPortalException
+import cn.edu.ubaa.auth.respondError
 import io.ktor.http.*
 import io.ktor.server.application.*
 import io.ktor.server.response.*
@@ -27,8 +26,8 @@ fun Route.scheduleRouting() {
               is UnsupportedAcademicPortalException -> HttpStatusCode.NotImplemented
               else -> HttpStatusCode.BadGateway
             }
-        val code = if (e is UnsupportedAcademicPortalException) "unsupported_portal" else "error"
-        call.respond(status, ErrorResponse(ErrorDetails(code, e.message ?: "Error")))
+        val code = if (e is UnsupportedAcademicPortalException) "unsupported_portal" else "schedule_error"
+        call.respondError(status, code)
       }
     }
 
@@ -37,7 +36,7 @@ fun Route.scheduleRouting() {
       val username = call.jwtUsername!!
       val termCode =
           call.request.queryParameters["termCode"]
-              ?: return@get call.respond(HttpStatusCode.BadRequest)
+              ?: return@get call.respondError(HttpStatusCode.BadRequest, "invalid_request")
       try {
         val weeks = scheduleService.fetchWeeks(username, termCode)
         call.respond(HttpStatusCode.OK, weeks)
@@ -48,11 +47,8 @@ fun Route.scheduleRouting() {
               is UnsupportedAcademicPortalException -> HttpStatusCode.NotImplemented
               else -> HttpStatusCode.BadGateway
             }
-        val code = if (e is UnsupportedAcademicPortalException) "unsupported_portal" else "error"
-        call.respond(
-            status,
-            ErrorResponse(ErrorDetails(code, e.message ?: "Error")),
-        )
+        val code = if (e is UnsupportedAcademicPortalException) "unsupported_portal" else "schedule_error"
+        call.respondError(status, code)
       }
     }
 
@@ -61,10 +57,10 @@ fun Route.scheduleRouting() {
       val username = call.jwtUsername!!
       val termCode =
           call.request.queryParameters["termCode"]
-              ?: return@get call.respond(HttpStatusCode.BadRequest)
+              ?: return@get call.respondError(HttpStatusCode.BadRequest, "invalid_request")
       val week =
           call.request.queryParameters["week"]?.toIntOrNull()
-              ?: return@get call.respond(HttpStatusCode.BadRequest)
+              ?: return@get call.respondError(HttpStatusCode.BadRequest, "invalid_request")
       try {
         val schedule = scheduleService.fetchWeeklySchedule(username, termCode, week)
         call.respond(HttpStatusCode.OK, schedule)
@@ -75,11 +71,8 @@ fun Route.scheduleRouting() {
               is UnsupportedAcademicPortalException -> HttpStatusCode.NotImplemented
               else -> HttpStatusCode.BadGateway
             }
-        val code = if (e is UnsupportedAcademicPortalException) "unsupported_portal" else "error"
-        call.respond(
-            status,
-            ErrorResponse(ErrorDetails(code, e.message ?: "Error")),
-        )
+        val code = if (e is UnsupportedAcademicPortalException) "unsupported_portal" else "schedule_error"
+        call.respondError(status, code)
       }
     }
 
@@ -96,11 +89,8 @@ fun Route.scheduleRouting() {
               is UnsupportedAcademicPortalException -> HttpStatusCode.NotImplemented
               else -> HttpStatusCode.BadGateway
             }
-        val code = if (e is UnsupportedAcademicPortalException) "unsupported_portal" else "error"
-        call.respond(
-            status,
-            ErrorResponse(ErrorDetails(code, e.message ?: "Error")),
-        )
+        val code = if (e is UnsupportedAcademicPortalException) "unsupported_portal" else "schedule_error"
+        call.respondError(status, code)
       }
     }
   }

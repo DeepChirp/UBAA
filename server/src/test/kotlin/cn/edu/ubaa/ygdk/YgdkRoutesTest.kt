@@ -55,6 +55,7 @@ class YgdkRoutesTest {
 
     assertEquals(HttpStatusCode.Unauthorized, response.status)
     assertTrue(response.bodyAsText().contains("invalid_token"))
+    assertTrue(response.bodyAsText().contains("登录状态已失效，请重新登录"))
   }
 
   @Test
@@ -161,6 +162,8 @@ class YgdkRoutesTest {
 
     assertEquals(HttpStatusCode.GatewayTimeout, response.status)
     assertTrue(response.bodyAsText().contains("ygdk_timeout"))
+    assertTrue(response.bodyAsText().contains("阳光打卡服务响应超时，请稍后重试"))
+    assertTrue(response.bodyAsText().contains("阳光打卡概览加载超时").not())
   }
 
   private fun Application.testYgdkApp(service: YgdkService) {
@@ -177,7 +180,7 @@ class YgdkRoutesTest {
         challenge { _, _ ->
           call.respond(
               HttpStatusCode.Unauthorized,
-              JwtErrorResponse(JwtErrorDetails("invalid_token", "Invalid or expired JWT token")),
+              JwtErrorResponse(JwtErrorDetails("invalid_token", "登录状态已失效，请重新登录")),
           )
         }
       }
