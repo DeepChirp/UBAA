@@ -61,9 +61,9 @@ data class AppVersionRuntimeConfig(
         }
 
     private fun loadVersionFromManifest(): String? =
-        AppVersionRuntimeConfig::class.java.`package`?.implementationVersion
-            ?.trim()
-            ?.takeIf { it.isNotEmpty() }
+        AppVersionRuntimeConfig::class.java.`package`?.implementationVersion?.trim()?.takeIf {
+          it.isNotEmpty()
+        }
 
     private fun loadVersionFromGradlePropertiesFile(): String? {
       val gradleProperties = File("gradle.properties")
