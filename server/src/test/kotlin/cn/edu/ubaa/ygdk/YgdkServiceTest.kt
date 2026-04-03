@@ -115,6 +115,28 @@ class YgdkServiceTest {
   }
 
   @Test
+  fun `cleanupExpiredClients removes expired contexts and orphaned mutexes`() {
+    val service = YgdkService(clientProvider = { FakeYgdkClient() })
+    val now = System.currentTimeMillis()
+
+    service.cacheContextForTesting("expired", now - 1)
+    service.cacheContextForTesting("active", now + 60_000)
+    service.cacheClientForTesting(
+        username = "active",
+        client = FakeYgdkClient(),
+        lastAccessAt = now,
+    )
+
+    val removed = service.cleanupExpiredClients()
+
+    assertEquals(0, removed)
+    assertFalse(service.hasCachedContextForTesting("expired"))
+    assertFalse(service.hasContextMutexForTesting("expired"))
+    assertTrue(service.hasCachedContextForTesting("active"))
+    assertTrue(service.hasContextMutexForTesting("active"))
+  }
+
+  @Test
   fun `image generator creates fully transparent png`() {
     val generated = YgdkImageGenerator(fileNameProvider = { "transparent.png" }).generate()
     val image = ImageIO.read(ByteArrayInputStream(generated.bytes))

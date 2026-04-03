@@ -8,6 +8,8 @@ import io.ktor.server.application.install
 import io.ktor.server.plugins.ContentTransformationException
 import io.ktor.server.plugins.statuspages.StatusPages
 import io.ktor.server.plugins.statuspages.exception
+import io.ktor.server.request.httpMethod
+import io.ktor.server.request.uri
 import io.ktor.server.response.respond
 
 internal fun userFacingMessage(code: String, fallback: String? = null): String {
@@ -69,6 +71,10 @@ internal suspend fun PipelineCall.respondError(
 internal fun Application.configureGlobalErrorHandling() {
   install(StatusPages) {
     exception(ContentTransformationException::class.java) { cause ->
+      context.application.environment.log.debug(
+          "Failed to transform request body for ${context.requestDescription()}",
+          cause,
+      )
       if (!context.response.isCommitted) {
         context.respondError(HttpStatusCode.BadRequest, "invalid_request")
       }
@@ -76,10 +82,17 @@ internal fun Application.configureGlobalErrorHandling() {
 
     exception(IllegalStateException::class.java) { cause ->
       if (cause.message == "No valid session found for request") {
+        context.application.environment.log.debug(
+            "Missing valid session for ${context.requestDescription()}"
+        )
         if (!context.response.isCommitted) {
           context.respondError(HttpStatusCode.Unauthorized, "invalid_token")
         }
       } else {
+        context.application.environment.log.error(
+            "Unexpected application state for ${context.requestDescription()}",
+            cause,
+        )
         if (!context.response.isCommitted) {
           context.respondError(HttpStatusCode.InternalServerError, "internal_server_error")
         }
@@ -87,9 +100,16 @@ internal fun Application.configureGlobalErrorHandling() {
     }
 
     exception(Throwable::class.java) { cause ->
+      context.application.environment.log.error(
+          "Unhandled exception for ${context.requestDescription()}",
+          cause,
+      )
       if (!context.response.isCommitted) {
         context.respondError(HttpStatusCode.InternalServerError, "internal_server_error")
       }
     }
   }
 }
+
+private fun ApplicationCall.requestDescription(): String =
+    "${request.httpMethod.value} ${request.uri}"

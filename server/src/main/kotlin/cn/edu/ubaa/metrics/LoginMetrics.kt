@@ -11,6 +11,7 @@ import java.time.Clock
 import java.time.Duration
 import java.time.Instant
 import java.util.concurrent.ConcurrentHashMap
+import java.util.concurrent.atomic.AtomicLong
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import org.slf4j.LoggerFactory
@@ -89,10 +90,28 @@ class LoginMetricsRecorder(
 class RedisLoginStatsStore(
     private val redisUri: String = AuthConfig.redisUri,
 ) : LoginStatsStore {
+  private enum class WindowMetricType {
+    EVENTS,
+    UNIQUE_USERS,
+  }
+
+  private data class CachedWindowValue(
+      val value: Long,
+      val expiresAtMillis: Long,
+  )
+
+  private data class WindowCacheKey(
+      val type: WindowMetricType,
+      val window: LoginMetricWindow,
+      val currentBucket: Long,
+  )
+
   private val client: RedisClient by lazy { RedisClient.create(redisUri) }
   private val connection: StatefulRedisConnection<String, String> by lazy { client.connect() }
   private val commands: RedisCommands<String, String> by lazy { connection.sync() }
   private val keyTtl = Duration.ofDays(32)
+  private val readCacheTtl = Duration.ofSeconds(15)
+  private val windowCache = ConcurrentHashMap<WindowCacheKey, CachedWindowValue>()
 
   override suspend fun recordLogin(username: String, recordedAt: Instant) {
     val bucket = bucketOf(recordedAt)
@@ -107,26 +126,33 @@ class RedisLoginStatsStore(
       commands.pfadd(uniqueKey, usernameHash)
       commands.expire(uniqueKey, ttlSeconds)
     }
+    windowCache.clear()
   }
 
   override fun countEvents(window: LoginMetricWindow, now: Instant): Long {
-    val buckets = bucketsFor(window, now)
-    return runCatching {
-          buckets.sumOf { bucket -> commands.get(eventKey(bucket))?.toLongOrNull() ?: 0L }
-        }
-        .getOrDefault(0L)
+    return cachedWindowValue(WindowMetricType.EVENTS, window, now) {
+      val keys = bucketsFor(window, now).map(::eventKey)
+      if (keys.isEmpty()) {
+        0L
+      } else {
+        commands.mget(*keys.toTypedArray()).sumOf { entry -> entry.value?.toLongOrNull() ?: 0L }
+      }
+    }
   }
 
   override fun countUniqueUsers(window: LoginMetricWindow, now: Instant): Long {
-    val keys = bucketsFor(window, now).map(::uniqueKey)
-    return if (keys.isEmpty()) {
-      0L
-    } else {
-      runCatching { commands.pfcount(*keys.toTypedArray()) }.getOrDefault(0L)
+    return cachedWindowValue(WindowMetricType.UNIQUE_USERS, window, now) {
+      val keys = bucketsFor(window, now).map(::uniqueKey)
+      if (keys.isEmpty()) {
+        0L
+      } else {
+        commands.pfcount(*keys.toTypedArray())
+      }
     }
   }
 
   override fun close() {
+    windowCache.clear()
     runCatching { connection.close() }
     runCatching { client.shutdown() }
   }
@@ -143,36 +169,60 @@ class RedisLoginStatsStore(
 
   private fun uniqueKey(bucket: Long): String = "metrics:login:users:$bucket"
 
-  private fun hashUsername(username: String): String {
-    val digest = MessageDigest.getInstance("SHA-256")
-    val hash = digest.digest(username.toByteArray(StandardCharsets.UTF_8))
-    return hash.joinToString("") { "%02x".format(it) }
+  private fun cachedWindowValue(
+      type: WindowMetricType,
+      window: LoginMetricWindow,
+      now: Instant,
+      loader: () -> Long,
+  ): Long {
+    val currentBucket = bucketOf(now)
+    val cacheKey = WindowCacheKey(type, window, currentBucket)
+    val nowMillis = System.currentTimeMillis()
+    windowCache[cacheKey]
+        ?.takeIf { it.expiresAtMillis > nowMillis }
+        ?.let {
+          return it.value
+        }
+
+    val value = runCatching(loader).getOrDefault(0L)
+    windowCache[cacheKey] =
+        CachedWindowValue(value = value, expiresAtMillis = nowMillis + readCacheTtl.toMillis())
+    cleanupExpiredWindowCache(nowMillis)
+    return value
+  }
+
+  private fun cleanupExpiredWindowCache(nowMillis: Long) {
+    for ((key, cached) in windowCache.entries.toList()) {
+      if (cached.expiresAtMillis > nowMillis) continue
+      windowCache.remove(key, cached)
+    }
   }
 }
 
 class InMemoryLoginStatsStore : LoginStatsStore {
   private data class LoginBucket(
-      var events: Long = 0,
-      val users: MutableSet<String> = linkedSetOf(),
+      val events: AtomicLong = AtomicLong(0),
+      val users: MutableSet<String> = ConcurrentHashMap.newKeySet(),
   )
 
   private val buckets = ConcurrentHashMap<Long, LoginBucket>()
 
   override suspend fun recordLogin(username: String, recordedAt: Instant) {
     val bucket = buckets.computeIfAbsent(bucketOf(recordedAt)) { LoginBucket() }
-    bucket.events += 1
+    bucket.events.incrementAndGet()
     bucket.users += hashUsername(username)
   }
 
   override fun countEvents(window: LoginMetricWindow, now: Instant): Long {
-    return bucketsFor(window, now).sumOf { bucket -> buckets[bucket]?.events ?: 0L }
+    return bucketsFor(window, now).sumOf { bucket -> buckets[bucket]?.events?.get() ?: 0L }
   }
 
   override fun countUniqueUsers(window: LoginMetricWindow, now: Instant): Long {
-    return bucketsFor(window, now)
-        .flatMapTo(linkedSetOf()) { bucket -> buckets[bucket]?.users.orEmpty() }
-        .size
-        .toLong()
+    val uniqueUsers = linkedSetOf<String>()
+    for (bucket in bucketsFor(window, now)) {
+      uniqueUsers += buckets[bucket]?.users.orEmpty()
+    }
+    return uniqueUsers.size.toLong()
   }
 
   override fun close() {
@@ -186,10 +236,10 @@ class InMemoryLoginStatsStore : LoginStatsStore {
   }
 
   private fun bucketOf(at: Instant): Long = at.epochSecond / 3600
+}
 
-  private fun hashUsername(username: String): String {
-    val digest = MessageDigest.getInstance("SHA-256")
-    val hash = digest.digest(username.toByteArray(StandardCharsets.UTF_8))
-    return hash.joinToString("") { "%02x".format(it) }
-  }
+private fun hashUsername(username: String): String {
+  val digest = MessageDigest.getInstance("SHA-256")
+  val hash = digest.digest(username.toByteArray(StandardCharsets.UTF_8))
+  return hash.joinToString("") { "%02x".format(it) }
 }

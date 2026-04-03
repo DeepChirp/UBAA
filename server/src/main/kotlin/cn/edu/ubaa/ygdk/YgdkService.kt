@@ -161,7 +161,8 @@ internal class YgdkService(
   }
 
   fun cleanupExpiredClients(maxIdleMillis: Long = DEFAULT_MAX_IDLE_MILLIS): Int {
-    val cutoff = System.currentTimeMillis() - maxIdleMillis
+    val now = System.currentTimeMillis()
+    val cutoff = now - maxIdleMillis
     var removed = 0
     for ((username, cached) in clientCache.entries.toList()) {
       if (cached.lastAccessAt >= cutoff) continue
@@ -169,6 +170,8 @@ internal class YgdkService(
       cached.client.close()
       removed++
     }
+    cleanupExpiredContexts(now)
+    cleanupOrphanedContextMutexes()
     return removed
   }
 
@@ -180,6 +183,39 @@ internal class YgdkService(
     contextCache.clear()
     contextMutexes.clear()
   }
+
+  internal fun cacheClientForTesting(
+      username: String,
+      client: YgdkClient,
+      lastAccessAt: Long = System.currentTimeMillis(),
+  ) {
+    clientCache[username] = CachedClient(client, lastAccessAt)
+  }
+
+  internal fun cacheContextForTesting(
+      username: String,
+      expiresAtMillis: Long,
+  ) {
+    val defaultItem = YgdkItemRaw(itemId = 1, name = "跑步")
+    contextCache[username] =
+        CachedContext(
+            context =
+                ResolvedContext(
+                    classify = YgdkClassifyRaw(classifyId = 1, name = "阳光体育"),
+                    items = listOf(defaultItem),
+                    defaultItem = defaultItem,
+                    summary = YgdkTermSummaryDto(termCount = 0),
+                ),
+            expiresAtMillis = expiresAtMillis,
+        )
+    contextMutexes.computeIfAbsent(username) { Mutex() }
+  }
+
+  internal fun hasCachedContextForTesting(username: String): Boolean =
+      contextCache.containsKey(username)
+
+  internal fun hasContextMutexForTesting(username: String): Boolean =
+      contextMutexes.containsKey(username)
 
   private suspend fun resolveContext(username: String): ResolvedContext {
     val now = System.currentTimeMillis()
@@ -249,6 +285,20 @@ internal class YgdkService(
 
   private fun invalidateContext(username: String) {
     contextCache.remove(username)
+  }
+
+  private fun cleanupExpiredContexts(nowMillis: Long) {
+    for ((username, cached) in contextCache.entries.toList()) {
+      if (cached.expiresAtMillis > nowMillis) continue
+      contextCache.remove(username, cached)
+    }
+  }
+
+  private fun cleanupOrphanedContextMutexes() {
+    for ((username, mutex) in contextMutexes.entries.toList()) {
+      if (contextCache.containsKey(username) || clientCache.containsKey(username)) continue
+      contextMutexes.remove(username, mutex)
+    }
   }
 
   private fun resolveSportsClassify(classifies: List<YgdkClassifyRaw>): YgdkClassifyRaw {
