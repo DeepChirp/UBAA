@@ -3,16 +3,18 @@ package cn.edu.ubaa.metrics
 import io.micrometer.core.instrument.FunctionCounter
 import io.micrometer.core.instrument.MeterRegistry
 import java.util.concurrent.ConcurrentHashMap
+import java.util.WeakHashMap
 import java.util.concurrent.atomic.AtomicReference
 
 internal object FunctionCounterBindings {
   private data class CounterKey(
-      val registryId: Int,
       val name: String,
       val tags: List<Pair<String, String>>,
   )
 
-  private val suppliers = ConcurrentHashMap<CounterKey, AtomicReference<() -> Double>>()
+  // Keep bindings scoped to the registry lifecycle so transient registries do not accumulate.
+  private val suppliersByRegistry =
+      WeakHashMap<MeterRegistry, ConcurrentHashMap<CounterKey, AtomicReference<() -> Double>>>()
 
   fun bind(
       registry: MeterRegistry,
@@ -21,9 +23,9 @@ internal object FunctionCounterBindings {
       supplier: () -> Double,
   ) {
     val normalizedTags = tags.toSortedMap().toList()
-    val key = CounterKey(System.identityHashCode(registry), name, normalizedTags)
+    val key = CounterKey(name, normalizedTags)
     val ref =
-        suppliers.computeIfAbsent(key) {
+        registrySuppliers(registry).computeIfAbsent(key) {
           val counterSupplier = AtomicReference<() -> Double>({ 0.0 })
           val builder =
               FunctionCounter.builder(name, counterSupplier) { state ->
@@ -38,4 +40,11 @@ internal object FunctionCounterBindings {
         }
     ref.set(supplier)
   }
+
+  private fun registrySuppliers(
+      registry: MeterRegistry
+  ): ConcurrentHashMap<CounterKey, AtomicReference<() -> Double>> =
+      synchronized(suppliersByRegistry) {
+        suppliersByRegistry.getOrPut(registry) { ConcurrentHashMap() }
+      }
 }

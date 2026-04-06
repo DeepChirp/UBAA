@@ -3,16 +3,18 @@ package cn.edu.ubaa.metrics
 import io.micrometer.core.instrument.Gauge
 import io.micrometer.core.instrument.MeterRegistry
 import java.util.concurrent.ConcurrentHashMap
+import java.util.WeakHashMap
 import java.util.concurrent.atomic.AtomicReference
 
 internal object GaugeBindings {
   private data class GaugeKey(
-      val registryId: Int,
       val name: String,
       val tags: List<Pair<String, String>>,
   )
 
-  private val suppliers = ConcurrentHashMap<GaugeKey, AtomicReference<() -> Double>>()
+  // Keep bindings scoped to the registry lifecycle so transient registries do not accumulate.
+  private val suppliersByRegistry =
+      WeakHashMap<MeterRegistry, ConcurrentHashMap<GaugeKey, AtomicReference<() -> Double>>>()
 
   fun bind(
       registry: MeterRegistry,
@@ -21,9 +23,9 @@ internal object GaugeBindings {
       supplier: () -> Double,
   ) {
     val normalizedTags = tags.toSortedMap().toList()
-    val key = GaugeKey(System.identityHashCode(registry), name, normalizedTags)
+    val key = GaugeKey(name, normalizedTags)
     val ref =
-        suppliers.computeIfAbsent(key) {
+        registrySuppliers(registry).computeIfAbsent(key) {
           val gaugeSupplier = AtomicReference<() -> Double>({ 0.0 })
           val builder =
               Gauge.builder(name, gaugeSupplier) { state ->
@@ -38,4 +40,11 @@ internal object GaugeBindings {
         }
     ref.set(supplier)
   }
+
+  private fun registrySuppliers(
+      registry: MeterRegistry
+  ): ConcurrentHashMap<GaugeKey, AtomicReference<() -> Double>> =
+      synchronized(suppliersByRegistry) {
+        suppliersByRegistry.getOrPut(registry) { ConcurrentHashMap() }
+      }
 }

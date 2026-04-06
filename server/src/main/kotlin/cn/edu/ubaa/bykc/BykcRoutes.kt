@@ -18,6 +18,7 @@ import io.ktor.server.application.ApplicationCall
 import io.ktor.server.request.*
 import io.ktor.server.response.*
 import io.ktor.server.routing.*
+import kotlinx.coroutines.CancellationException
 
 /** 注册博雅课程 (BYKC) 相关路由。 包含用户信息、课程列表、统计信息、选课、退选及签到功能。 */
 fun Route.bykcRouting() {
@@ -45,7 +46,7 @@ fun Route.bykcRouting() {
                   termName = profile.term?.termName,
               )
           call.respond(HttpStatusCode.OK, profileDto)
-        } catch (e: Throwable) {
+        } catch (e: Exception) {
           call.respondBykcError(e, this)
         }
       }
@@ -87,7 +88,7 @@ fun Route.bykcRouting() {
                   pageSize = coursePage.pageSize,
               ),
           )
-        } catch (e: Throwable) {
+        } catch (e: Exception) {
           call.respondBykcError(e, this)
         }
       }
@@ -100,7 +101,7 @@ fun Route.bykcRouting() {
         try {
           val statistics = bykcService.getStatistics(username)
           call.respond(HttpStatusCode.OK, statistics)
-        } catch (e: Throwable) {
+        } catch (e: Exception) {
           call.respondBykcError(e, this)
         }
       }
@@ -134,7 +135,7 @@ fun Route.bykcRouting() {
                     )
                   },
               )
-        } catch (e: Throwable) {
+        } catch (e: Exception) {
           call.respondBykcError(e, this)
         }
       }
@@ -166,7 +167,7 @@ fun Route.bykcRouting() {
                     )
                   },
               )
-        } catch (e: Throwable) {
+        } catch (e: Exception) {
           call.respondBykcError(e, this)
         }
       }
@@ -179,7 +180,7 @@ fun Route.bykcRouting() {
         try {
           val chosenCourses = bykcService.getChosenCourses(username)
           call.respond(HttpStatusCode.OK, chosenCourses)
-        } catch (e: Throwable) {
+        } catch (e: Exception) {
           call.respondBykcError(e, this)
         }
       }
@@ -195,7 +196,7 @@ fun Route.bykcRouting() {
         try {
           val courseDetail = bykcService.getCourseDetail(username, courseId)
           call.respond(HttpStatusCode.OK, courseDetail)
-        } catch (e: Throwable) {
+        } catch (e: Exception) {
           call.respondBykcError(e, this)
         }
       }
@@ -238,7 +239,7 @@ fun Route.bykcRouting() {
                 )
               },
           )
-        } catch (e: Throwable) {
+        } catch (e: Exception) {
           call.respondBykcError(e, this)
         }
       }
@@ -247,9 +248,10 @@ fun Route.bykcRouting() {
 }
 
 private suspend fun ApplicationCall.respondBykcError(
-    error: Throwable,
+    error: Exception,
     scope: BusinessOperationScope? = null,
 ) {
+  if (error is CancellationException) throw error
   val (status, details) =
       when (error) {
         is LoginException ->

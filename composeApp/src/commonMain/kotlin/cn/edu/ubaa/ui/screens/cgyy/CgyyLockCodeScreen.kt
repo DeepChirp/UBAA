@@ -45,12 +45,10 @@ fun CgyyLockCodeScreen(viewModel: CgyyViewModel) {
           onRefresh = viewModel::loadLockCode,
       )
 
-  LaunchedEffect(parsedLockCode?.hasLockCode, parsedLockCode?.hasUpcomingReservation) {
-    if (parsedLockCode?.hasLockCode == true || parsedLockCode?.hasUpcomingReservation == true) {
-      while (true) {
-        delay(30_000)
-        viewModel.loadLockCode()
-      }
+  LaunchedEffect(Unit) {
+    while (true) {
+      delay(30_000)
+      viewModel.loadLockCode()
     }
   }
 
