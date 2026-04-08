@@ -259,9 +259,7 @@ class AuthViewModel(
             userInfoLoadedOnce = true
             _uiState.value = _uiState.value.copy(userInfo = info)
           }
-          .onFailure {
-            userInfoLoadedOnce = false
-          }
+          .onFailure { userInfoLoadedOnce = false }
       userInfoLoading = false
     }
   }

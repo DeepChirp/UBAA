@@ -5,9 +5,9 @@ import cn.edu.ubaa.api.AuthService
 import cn.edu.ubaa.api.AuthTokensStore
 import cn.edu.ubaa.api.ClientIdStore
 import cn.edu.ubaa.api.CredentialStore
+import cn.edu.ubaa.api.SessionStatusResponse
 import cn.edu.ubaa.api.StoredAuthTokens
 import cn.edu.ubaa.api.UserService
-import cn.edu.ubaa.api.SessionStatusResponse
 import cn.edu.ubaa.model.dto.LoginPreloadResponse
 import cn.edu.ubaa.model.dto.LoginResponse
 import cn.edu.ubaa.model.dto.UserInfo

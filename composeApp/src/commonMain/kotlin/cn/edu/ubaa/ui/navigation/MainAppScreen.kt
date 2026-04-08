@@ -234,7 +234,9 @@ fun MainAppScreen(
             !bykcViewModel.hasChosenCoursesLoaded()
     homeBootstrapCoordinator.restart(
         HomeBootstrapActions(
-            loadTodaySchedule = { force -> scheduleViewModel.ensureTodayLoaded(forceRefresh = force) },
+            loadTodaySchedule = { force ->
+              scheduleViewModel.ensureTodayLoaded(forceRefresh = force)
+            },
             loadSignin = { force -> signinViewModel.ensureTodayLoaded(forceRefresh = force) },
             loadSpoc = { force -> spocViewModel.ensureAssignmentsLoaded(forceRefresh = force) },
             loadBykc = { force -> bykcViewModel.ensureChosenCoursesLoaded(forceRefresh = force) },

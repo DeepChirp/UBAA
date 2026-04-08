@@ -30,11 +30,10 @@ class AuthServiceConcurrencyTest {
     val counters = RequestCounters()
     val authService = createAuthService(counters)
 
-    val responses =
-        coroutineScope {
-          List(3) { async { authService.login(LoginRequest(username = "2333", password = "secret")) } }
-              .awaitAll()
-        }
+    val responses = coroutineScope {
+      List(3) { async { authService.login(LoginRequest(username = "2333", password = "secret")) } }
+          .awaitAll()
+    }
 
     assertEquals(listOf("2333", "2333", "2333"), responses.map { it.user.schoolid })
     assertEquals(1, counters.loadLoginPage.get())
@@ -76,14 +75,12 @@ class AuthServiceConcurrencyTest {
   @Test
   fun reusedSessionValidationTimeoutDoesNotFallbackToFreshLogin() = runBlocking {
     val counters = RequestCounters()
-    val sessionManager =
-        createSessionManager {
-          authMockClient(
-              counters = counters,
-              ucStatusException =
-                  UpstreamTimeoutException("认证服务响应超时，请稍后重试", "auth_upstream_timeout"),
-          )
-        }
+    val sessionManager = createSessionManager {
+      authMockClient(
+          counters = counters,
+          ucStatusException = UpstreamTimeoutException("认证服务响应超时，请稍后重试", "auth_upstream_timeout"),
+      )
+    }
     val refreshTokenService = RefreshTokenService(refreshTokenStore = InMemoryRefreshTokenStore())
     val authService = AuthService(sessionManager, refreshTokenService)
 
@@ -138,14 +135,12 @@ class AuthServiceConcurrencyTest {
 
   @Test
   fun preloadTimeoutDegradesAndCleansPreloginSession() = runBlocking {
-    val sessionManager =
-        createSessionManager {
-          authMockClient(
-              counters = RequestCounters(),
-              loginPageException =
-                  UpstreamTimeoutException("认证服务响应超时，请稍后重试", "auth_upstream_timeout"),
-          )
-        }
+    val sessionManager = createSessionManager {
+      authMockClient(
+          counters = RequestCounters(),
+          loginPageException = UpstreamTimeoutException("认证服务响应超时，请稍后重试", "auth_upstream_timeout"),
+      )
+    }
     val refreshTokenService = RefreshTokenService(refreshTokenStore = InMemoryRefreshTokenStore())
     val authService = AuthService(sessionManager, refreshTokenService)
 
@@ -159,23 +154,22 @@ class AuthServiceConcurrencyTest {
   @Test
   fun concurrentSessionValidationSharesSingleUcRequest() = runBlocking {
     val counters = RequestCounters()
-    val sessionManager =
-        createSessionManager {
-          authMockClient(
-              counters = counters,
-              ucStatusDelayMillis = 50L,
-          )
-        }
+    val sessionManager = createSessionManager {
+      authMockClient(
+          counters = counters,
+          ucStatusDelayMillis = 50L,
+      )
+    }
     val refreshTokenService = RefreshTokenService(refreshTokenStore = InMemoryRefreshTokenStore())
     val authService = AuthService(sessionManager, refreshTokenService)
 
     val candidate = sessionManager.prepareSession("2333")
-    val session = sessionManager.commitSession(candidate, UserData(name = "Alice", schoolid = "2333"))
+    val session =
+        sessionManager.commitSession(candidate, UserData(name = "Alice", schoolid = "2333"))
 
-    val results =
-        coroutineScope {
-          List(3) { async { authService.validateSession(session) } }.awaitAll()
-        }
+    val results = coroutineScope {
+      List(3) { async { authService.validateSession(session) } }.awaitAll()
+    }
 
     assertTrue(results.all { it is AuthService.SessionValidationResult.Valid })
     assertEquals(1, counters.fetchUcUser.get())

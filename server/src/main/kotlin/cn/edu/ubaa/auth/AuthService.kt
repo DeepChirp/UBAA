@@ -615,8 +615,7 @@ class AuthService(
             }
           }
       when (validationResult) {
-        is SessionValidationResult.Valid ->
-            AppObservability.recordAuthValidationResult("success")
+        is SessionValidationResult.Valid -> AppObservability.recordAuthValidationResult("success")
         SessionValidationResult.Invalid -> AppObservability.recordAuthValidationResult("invalid")
         is SessionValidationResult.RetryableFailure -> Unit
       }

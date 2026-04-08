@@ -67,10 +67,7 @@ fun main() {
 
   embeddedServer(
           factory = Netty,
-          rootConfig =
-              serverConfig {
-                module { module() }
-              },
+          rootConfig = serverConfig { module { module() } },
           configure = {
             connector {
               port = serverPort

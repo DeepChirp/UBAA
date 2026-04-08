@@ -36,17 +36,16 @@ class AuthRoutesTest {
 
   @Test
   fun loginTimeoutReturnsServiceUnavailable() = testApplication {
-    val sessionManager =
-        createSessionManager {
-          authMockClient(
-              loginPageException =
-                  UpstreamTimeoutException("认证服务响应超时，请稍后重试", "auth_upstream_timeout")
-          )
-        }
+    val sessionManager = createSessionManager {
+      authMockClient(
+          loginPageException = UpstreamTimeoutException("认证服务响应超时，请稍后重试", "auth_upstream_timeout")
+      )
+    }
     val authService =
         AuthService(
             sessionManager = sessionManager,
-            refreshTokenService = RefreshTokenService(refreshTokenStore = InMemoryRefreshTokenStore()),
+            refreshTokenService =
+                RefreshTokenService(refreshTokenStore = InMemoryRefreshTokenStore()),
         )
 
     application {
@@ -70,7 +69,8 @@ class AuthRoutesTest {
     val authService =
         AuthService(
             sessionManager = sessionManager,
-            refreshTokenService = RefreshTokenService(refreshTokenStore = InMemoryRefreshTokenStore()),
+            refreshTokenService =
+                RefreshTokenService(refreshTokenStore = InMemoryRefreshTokenStore()),
         )
     val token = prepareSession(sessionManager, "2333")
 
@@ -80,9 +80,7 @@ class AuthRoutesTest {
     }
 
     val response =
-        client.get("/api/v1/auth/status") {
-          header(HttpHeaders.Authorization, "Bearer $token")
-        }
+        client.get("/api/v1/auth/status") { header(HttpHeaders.Authorization, "Bearer $token") }
 
     assertEquals(HttpStatusCode.OK, response.status)
     assertTrue(response.bodyAsText().contains("2333"))
@@ -90,14 +88,14 @@ class AuthRoutesTest {
 
   @Test
   fun statusReturnsUnauthorizedAndClearsSessionWhenUcValidationFails() = testApplication {
-    val sessionManager =
-        createSessionManager {
-          authMockClient(ucStatusContent = """{"code":10600,"data":null}""")
-        }
+    val sessionManager = createSessionManager {
+      authMockClient(ucStatusContent = """{"code":10600,"data":null}""")
+    }
     val authService =
         AuthService(
             sessionManager = sessionManager,
-            refreshTokenService = RefreshTokenService(refreshTokenStore = InMemoryRefreshTokenStore()),
+            refreshTokenService =
+                RefreshTokenService(refreshTokenStore = InMemoryRefreshTokenStore()),
         )
     val token = prepareSession(sessionManager, "2444")
 
@@ -107,9 +105,7 @@ class AuthRoutesTest {
     }
 
     val response =
-        client.get("/api/v1/auth/status") {
-          header(HttpHeaders.Authorization, "Bearer $token")
-        }
+        client.get("/api/v1/auth/status") { header(HttpHeaders.Authorization, "Bearer $token") }
 
     assertEquals(HttpStatusCode.Unauthorized, response.status)
     assertTrue(response.bodyAsText().contains("invalid_token"))
@@ -119,16 +115,15 @@ class AuthRoutesTest {
   @Test
   fun statusReturnsServiceUnavailableAndPreservesSessionWhenUcValidationTimesOut() =
       testApplication {
-        val sessionManager =
-            createSessionManager {
-              authMockClient(
-                  ucStatusException =
-                      UpstreamTimeoutException(
-                          "认证服务响应超时，请稍后重试",
-                          "auth_upstream_timeout",
-                      )
-              )
-            }
+        val sessionManager = createSessionManager {
+          authMockClient(
+              ucStatusException =
+                  UpstreamTimeoutException(
+                      "认证服务响应超时，请稍后重试",
+                      "auth_upstream_timeout",
+                  )
+          )
+        }
         val authService =
             AuthService(
                 sessionManager = sessionManager,
@@ -143,9 +138,7 @@ class AuthRoutesTest {
         }
 
         val response =
-            client.get("/api/v1/auth/status") {
-              header(HttpHeaders.Authorization, "Bearer $token")
-            }
+            client.get("/api/v1/auth/status") { header(HttpHeaders.Authorization, "Bearer $token") }
 
         assertEquals(HttpStatusCode.ServiceUnavailable, response.status)
         assertTrue(response.bodyAsText().contains("auth_upstream_timeout"))
@@ -212,13 +205,19 @@ class AuthRoutesTest {
             request.method == HttpMethod.Get &&
                 request.url.toString() == "https://uc.buaa.edu.cn/api/uc/status" -> {
               ucStatusException?.let { throw it }
-              respond(content = ucStatusContent, status = HttpStatusCode.OK, headers = jsonHeaders())
+              respond(
+                  content = ucStatusContent,
+                  status = HttpStatusCode.OK,
+                  headers = jsonHeaders(),
+              )
             }
             request.method == HttpMethod.Get &&
                 request.url.toString().contains("/jwapp/sys/homeapp/api/home/currentUser.do") ->
                 respond(content = "{}", status = HttpStatusCode.OK, headers = jsonHeaders())
             request.method == HttpMethod.Get &&
-                request.url.toString().contains("/gsapp/sys/yjsemaphome/modules/pubWork/getUserInfo.do") ->
+                request.url
+                    .toString()
+                    .contains("/gsapp/sys/yjsemaphome/modules/pubWork/getUserInfo.do") ->
                 respond(
                     content = """{"code":"0","data":{"userId":"2333"}}""",
                     status = HttpStatusCode.OK,
