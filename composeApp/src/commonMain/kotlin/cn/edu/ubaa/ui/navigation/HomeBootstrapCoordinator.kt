@@ -2,6 +2,7 @@ package cn.edu.ubaa.ui.navigation
 
 import kotlin.coroutines.coroutineContext
 import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.CoroutineStart
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -31,7 +32,7 @@ internal class HomeBootstrapCoordinator(private val scope: CoroutineScope) {
     previous?.cancel()
 
     val newJob =
-        scope.launch {
+        scope.launch(start = CoroutineStart.LAZY) {
           try {
             actions.loadTodaySchedule(forceRefresh)
             delay(250)
@@ -50,6 +51,7 @@ internal class HomeBootstrapCoordinator(private val scope: CoroutineScope) {
 
     job = newJob
     _isRunning.value = showLoading
+    newJob.start()
   }
 
   fun cancel() {

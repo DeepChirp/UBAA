@@ -98,7 +98,17 @@ cp .env.sample .env
 | `ACCESS_TOKEN_TTL_MINUTES` | `30`                     | access token 有效期            |
 | `REFRESH_TOKEN_TTL_DAYS`   | `7`                      | refresh token 有效期           |
 | `SESSION_TTL_DAYS`         | `7`                      | Redis 会话与 Cookie 有效期     |
+| `LOGIN_MAX_CONCURRENCY`    | `6`                      | 服务端允许并行 fresh login 的最大数量 |
+| `AUTH_VALIDATION_TIMEOUT_MS` | `3000`                 | 认证状态校验/会话复用校验的上游超时预算（毫秒） |
+| `AUTH_PRELOAD_TIMEOUT_MS`  | `3000`                   | `/api/v1/auth/preload` 探测的上游超时预算（毫秒） |
+| `AUTH_LOGIN_TIMEOUT_MS`    | `18000`                  | 单次 fresh login 的总超时预算（毫秒） |
 | `REDIS_URI`                | `redis://localhost:6379` | Redis 会话持久化地址           |
+
+认证调优说明：
+*   `AUTH_VALIDATION_TIMEOUT_MS` 命中后，服务端会返回可重试的 `503 auth_upstream_timeout`，不会清理现有会话。
+*   `AUTH_PRELOAD_TIMEOUT_MS` 命中后，`/api/v1/auth/preload` 会降级返回最小可用结果，不会阻塞等待上游。
+*   `AUTH_LOGIN_TIMEOUT_MS` 控制 fresh login 的整体截止时间，避免上游卡顿导致 50-100 秒长挂。
+*   `LOGIN_MAX_CONCURRENCY` 只限制 fresh login，不影响已建立会话的状态查询。
 
 ---
 

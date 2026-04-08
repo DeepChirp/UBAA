@@ -4,7 +4,10 @@ import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertFalse
 import kotlin.test.assertTrue
+import kotlinx.coroutines.CoroutineExceptionHandler
+import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.ExperimentalCoroutinesApi
+import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.test.advanceTimeBy
 import kotlinx.coroutines.test.advanceUntilIdle
 import kotlinx.coroutines.test.runCurrent
@@ -80,6 +83,27 @@ class HomeBootstrapCoordinatorTest {
 
     assertEquals(listOf("schedule:false@0"), events)
     assertFalse(coordinator.isRunning.value)
+  }
+
+  @Test
+  fun restartClearsRunningWhenFirstStageThrows() = runTest {
+    val failures = mutableListOf<Throwable>()
+    val exceptionHandler = CoroutineExceptionHandler { _, throwable -> failures += throwable }
+    val coordinator = HomeBootstrapCoordinator(CoroutineScope(coroutineContext + SupervisorJob() + exceptionHandler))
+    val actions =
+        HomeBootstrapActions(
+            loadTodaySchedule = { throw IllegalStateException("boom") },
+            loadSignin = {},
+            loadSpoc = {},
+            loadBykc = {},
+        )
+
+    coordinator.restart(actions)
+
+    assertTrue(coordinator.isRunning.value)
+    runCurrent()
+    assertFalse(coordinator.isRunning.value)
+    assertEquals(listOf("boom"), failures.map { it.message })
   }
 
   private fun actionsFor(
